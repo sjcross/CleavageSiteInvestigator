@@ -1,4 +1,5 @@
 # Imports
+from Bio import Align
 from filereader import FileReader
 
 # Setting some parameters
@@ -7,46 +8,94 @@ ref_seq_name = "pRMA03+L2L2.dna"
 cass_seq_path = "C:\\Users\\steph\\OneDrive\\Desktop\\Mark Szczelkun\\"
 cass_seq_name = "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
 test_seq_path = "C:\\Users\\steph\\OneDrive\\Desktop\\Mark Szczelkun\\Sequencing files\\Run250808-04\\"
-test_seq_name = "02_007.ab1"
+test_seq_name = "01_008.ab1"
 
 cass_end_length = 20
-cass_end_offset = 30
 
 # Creating FileHandler object
 filereader = FileReader()
 filereader.set_verbose(True)
 
 # Loading reference, cassette and test sequences
-ref_seq = filereader.read_sequence(ref_seq_path, ref_seq_name)
-# print("Reference sequence:\n%s" % ref_seq.get_sequence_string())
+ref = filereader.read_sequence(ref_seq_path, ref_seq_name)
+# print("Reference sequence:\n%s" % ref)
 print("\n")
 
-cass_seq = filereader.read_sequence(cass_seq_path, cass_seq_name)
-# print("Cassette sequence:\n%s" % cass_seq.get_sequence_string())
+cass = filereader.read_sequence(cass_seq_path, cass_seq_name)
+# print("Cassette sequence:\n%s" % cass)
 print("\n")
 
-test_seq = filereader.read_sequence(test_seq_path, test_seq_name)
-# print("Test sequence:\n%s" % test_seq.get_sequence_string())
+test = filereader.read_sequence(test_seq_path, test_seq_name)
+# print("Test sequence:\n%s" % test)
 print("\n")
 
-## Finding cassette ends in test sequence
-# Finding start sequence
-cass_start_seq = cass_seq.get_start_sequence(cass_end_length,offset=cass_end_offset)
-# cass_start_r_seq = cass_start_seq.get_reverse_sequence()
-# cass_start_c_seq = cass_start_seq.get_complement_sequence()
-cass_start_rc_seq = cass_start_seq.get_reverse_complement_sequence()
+# Finding cassette ends in test sequence
+# Creating the PairwiseAligner object
+aligner = Align.PairwiseAligner()
+aligner.mode = 'local'
+aligner.match_score = 1.0
+aligner.mismatch_score = -1.0
+aligner.gap_score = -1.0
 
-print("Start sequence: %s (%i matches)" % (cass_start_seq.get_sequence_string(), test_seq.find_sequence_match(cass_start_seq)))
-# print("Start sequence (R): %s (%i matches)" % (cass_start_r_seq.get_sequence_string(), test_seq.find_sequence_match(cass_start_r_seq)))
-# print("Start sequence (C): %s (%i matches)" % (cass_start_c_seq.get_sequence_string(), test_seq.find_sequence_match(cass_start_c_seq)))
-print("Start sequence (RC): %s (%i matches)" % (cass_start_rc_seq.get_sequence_string(), test_seq.find_sequence_match(cass_start_rc_seq)))
+max_alignment = Align.PairwiseAlignment(
+    target="", query="", path=((0, 0), (0, 0)), score=0.0)
+orientation = 0
 
-cass_end_seq = cass_seq.get_end_sequence(cass_end_length,offset=cass_end_offset)
-# cass_end_r_seq = cass_end_seq.get_reverse_sequence()
-# cass_end_c_seq = cass_end_seq.get_complement_sequence()
-cass_end_rc_seq = cass_end_seq.get_reverse_complement_sequence()
+# Testing against cassette start
+cass_start = cass[0:cass_end_length]
+alignments = aligner.align(test, cass_start)
+for alignment in alignments:
+    if alignment.score > max_alignment.score:
+        max_alignment = alignment
+        orientation = 1
 
-print("End sequence: %s (%i matches)" % (cass_end_seq.get_sequence_string(), test_seq.find_sequence_match(cass_end_seq)))
-# print("End sequence (R): %s (%i matches)" % (cass_end_r_seq.get_sequence_string(), test_seq.find_sequence_match(cass_end_r_seq)))
-# print("End sequence (C): %s (%i matches)" % (cass_end_c_seq.get_sequence_string(), test_seq.find_sequence_match(cass_end_c_seq)))
-print("End sequence (RC): %s (%i matches)" % (cass_end_rc_seq.get_sequence_string(), test_seq.find_sequence_match(cass_end_rc_seq)))
+# Testing against cassette start (RC)
+cass_start_rc = cass[0:cass_end_length].reverse_complement()
+alignments = aligner.align(test, cass_start_rc)
+for alignment in alignments:
+    if alignment.score > max_alignment.score:
+        max_alignment = alignment
+        orientation = 2
+
+# Testing against cassette end
+cass_end = cass[-cass_end_length::]
+alignments = aligner.align(test, cass_end)
+for alignment in alignments:
+    if alignment.score > max_alignment.score:
+        max_alignment = alignment
+        orientation = 3
+
+# Testing against cassette end (RC)
+cass_end_rc = cass[-cass_end_length::].reverse_complement()
+alignments = aligner.align(test, cass_end_rc)
+for alignment in alignments:
+    if alignment.score > max_alignment.score:
+        max_alignment = alignment
+        orientation = 4
+
+# SHOULD BE POSSIBLE TO SWAP ORIENTATION TO BE 1 OR -1 TO INDIATE IF WE SHOULD BE
+# TAKING THE SEQUENCE AFTER OR BEFORE THE MATCH AS THE END
+if orientation == 1:
+    print("Best match for cassette start (score = %d)" % max_alignment.score)
+elif orientation == 2:
+    print("Best match for cassette start RC (score = %d)" % max_alignment.score)
+elif orientation == 3:
+    print("Best match for cassette end (score = %d)" % max_alignment.score)
+elif orientation == 4:
+    print("Best match for cassette end RC (score = %d)" % max_alignment.score)
+
+print("Matched sequence: %s" % max_alignment.query)
+print("Alignment quality = %f" % (max_alignment.score / cass_end_length))
+print("\n")
+
+# Getting region of test sequence to match to reference
+if orientation == 3:
+    pos = max_alignment.path[1][0]
+    test_target = test[pos:pos+20].reverse_complement()
+
+print("Test target: %s" % test_target)
+
+# Finding test target in reference sequence
+alignments = aligner.align(ref, test_target)
+for alignment in alignments:
+    print(alignment.score)

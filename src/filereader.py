@@ -1,7 +1,7 @@
 import os
 import re
 
-from sequence import Sequence
+from Bio.Seq import Seq
 
 class FileReader():
     def __init__(self):
@@ -41,7 +41,7 @@ class FileReader():
 
         sequence_string = self._remove_repeats(sequence_string)
 
-        return Sequence(sequence_string)
+        return Seq(sequence_string)
 
     def _read_dna(self, path, name):
         if self.verbose:
@@ -55,7 +55,7 @@ class FileReader():
 
         sequence_string = self._get_longest_sequence(instances).decode()
 
-        return Sequence(sequence_string)
+        return Seq(sequence_string)
 
     def _read_seq(self, path, name):
         if self.verbose:
@@ -67,14 +67,14 @@ class FileReader():
         # Removing linebreaks
         sequence_string = sequence_string.replace("\n", "")
 
-        return Sequence(sequence_string)
+        return Seq(sequence_string)
 
     def _read_txt(self, path, name):
         if self.verbose:
             print("    Reading as \".txt\" format")
 
         file = open(path + name, "r")
-        return Sequence(file.read())
+        return Seq(file.read())
 
     def _get_longest_sequence(self,instances):
         max_len = 0
