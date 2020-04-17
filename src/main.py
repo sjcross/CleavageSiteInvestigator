@@ -8,8 +8,10 @@ import sequenceutils as su
 # Setting some parameters
 ref_seq_path = "C:\\Users\\steph\\Desktop\\Mark Szczelkun\\"
 ref_seq_name = "pRMA03+L2L2.dna"
+
 cass_seq_path = "C:\\Users\\steph\\Desktop\\Mark Szczelkun\\"
 cass_seq_name = "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
+
 test_seq_path = "C:\\Users\\steph\\Desktop\\Mark Szczelkun\\Sequencing files\\Run250808-10\\"
 test_seq_name = "48_041.ab1"
 
