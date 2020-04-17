@@ -41,14 +41,6 @@ max_alignment = Align.PairwiseAlignment(
     target="", query="", path=((0, 0), (0, 0)), score=0.0)
 end = 0
 
-# Testing against cassette start
-cass_start = cass[0:cass_end_length]
-alignments = aligner.align(test, cass_start)
-for alignment in alignments:
-    if alignment.score > max_alignment.score:
-        max_alignment = alignment
-        end = Ends.CASS_START
-
 # Testing against cassette start (RC)
 cass_start_rc = cass[0:cass_end_length].reverse_complement()
 alignments = aligner.align(test, cass_start_rc)
@@ -65,28 +57,15 @@ for alignment in alignments:
         max_alignment = alignment
         end = Ends.CASS_END
 
-# Testing against cassette end (RC)
-cass_end_rc = cass[-cass_end_length::].reverse_complement()
-alignments = aligner.align(test, cass_end_rc)
-for alignment in alignments:
-    if alignment.score > max_alignment.score:
-        max_alignment = alignment
-        end = Ends.CASS_END_RC
-
-if end == Ends.CASS_START:
-    pos_string = "start"
-elif end == Ends.CASS_START_RC:
+if end == Ends.CASS_START_RC:
     pos_string = "start RC"
 elif end == Ends.CASS_END:
     pos_string = "end"
-elif end == Ends.CASS_END_RC:
-    pos_string = "end RC"
 
 print("    Best match for cassette %s (%s)" %
       (pos_string, max_alignment.query))
-print("    Match score = %0.2f (quality %0.2f)" %
+print("    Match score = %0.2f (quality %0.2f)\n" %
       (max_alignment.score, su.get_quality(max_alignment)))
-print("\r")
 
 # Getting region of test sequence to match to reference
 print("Finding cassette-adjacent sequence in reference")
@@ -101,25 +80,14 @@ if alignment is None:
 print("    Match score = %0.2f (quality %0.2f)" %
       (alignment.score, su.get_quality(alignment)))
 
-if end == Ends.CASS_START_RC:
-    if isRC:
-        break_position = alignment.path[-1][0]
-    else:
-        break_position = alignment.path[0][0]
+if isRC:
+    break_position = alignment.path[-1][0]
+else:
+    break_position = alignment.path[0][0]
 
-    ref_break_seq_left = ref[break_position - break_range:break_position]
-    ref_break_seq_right = ref[break_position: break_position + break_range]
-    
-elif end == Ends.CASS_END:
-    if isRC:
-        break_position = alignment.path[-1][0]
-    else:
-        break_position = alignment.path[0][0]
-
-    ref_break_seq_left = ref[break_position - break_range:break_position]
-    ref_break_seq_right = ref[break_position:break_position+break_range]
+ref_break_seq_left = ref[break_position - break_range:break_position]
+ref_break_seq_right = ref[break_position: break_position + break_range]
 
 print("    Reference break at position %i" % break_position)
-print("    Reference break at sequence %s | %s" %
+print("    Reference break at sequence %s | %s\n" %
       (ref_break_seq_left, ref_break_seq_right))
-print("\r")

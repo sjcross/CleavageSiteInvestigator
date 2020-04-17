@@ -35,13 +35,8 @@ class SequenceSearcher():
         return (alignments[0], isRC)
 
     def _find_target_in_ref(self, ref, test, end, path, num_bases, min_quality):
-        if end == Ends.CASS_START_RC:
-            pos = path[-1][0]
-            test_target = test[pos: pos + num_bases]
-
-        elif end == Ends.CASS_END:
-            pos = path[-1][0]
-            test_target = test[pos: pos + num_bases]
+        pos = path[-1][0]
+        test_target = test[pos: pos + num_bases]
 
         # Finding test target in reference sequence
         alignments = self._aligner.align(ref, test_target)
