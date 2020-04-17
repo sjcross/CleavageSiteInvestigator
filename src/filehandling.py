@@ -4,12 +4,12 @@ import re
 from Bio.Seq import Seq
 
 class FileReader():
-    def __init__(self):
-        self._verbose = False
+    def __init__(self, verbose=False):
+        self._verbose = verbose
 
     def read_sequence(self, path, name):
-        if self.verbose:
-            print("Loading file \"%s\"" % name)
+        if self._verbose:
+            print("    Loading file \"%s\"" % name)
 
         # Get extension and run appropriate reader
         rootname, ext = os.path.splitext(name)
@@ -27,11 +27,11 @@ class FileReader():
         return self._verbose
 
     def set_verbose(self, verbose):
-        self.verbose = verbose
+        self._verbose = verbose
 
     def _read_ab1(self, path, name):
-        if self.verbose:
-            print("    Reading as \".ab1\" format")
+        if self._verbose:
+            print("        Reading as \".ab1\" format")
 
         file = open(path + name, "rb")
         full_text = file.read()
@@ -44,8 +44,8 @@ class FileReader():
         return Seq(sequence_string)
 
     def _read_dna(self, path, name):
-        if self.verbose:
-            print("    Reading as \".dna\" format")
+        if self._verbose:
+            print("        Reading as \".dna\" format")
 
         file = open(path + name, "rb")
         full_text = file.read()
@@ -58,8 +58,8 @@ class FileReader():
         return Seq(sequence_string)
 
     def _read_seq(self, path, name):
-        if self.verbose:
-            print("    Reading as \".seq\" format")
+        if self._verbose:
+            print("        Reading as \".seq\" format")
 
         file = open(path + name, "r")
         sequence_string = file.read()
@@ -70,8 +70,8 @@ class FileReader():
         return Seq(sequence_string)
 
     def _read_txt(self, path, name):
-        if self.verbose:
-            print("    Reading as \".txt\" format")
+        if self._verbose:
+            print("        Reading as \".txt\" format")
 
         file = open(path + name, "r")
         return Seq(file.read())
@@ -94,7 +94,7 @@ class FileReader():
         pattern = re.compile(intro)
         instances = pattern.split(seq_string)
 
-        if self.verbose:
-            print("    Found %i instances of repeated sequence (loading first)" % (len(instances)-1))
+        if self._verbose:
+            print("        Found %i instances of repeated sequence (loading first)" % (len(instances)-1))
 
         return instances[1]
