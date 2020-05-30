@@ -1,3 +1,4 @@
+from Bio import Align
 from ends import Ends
 
 
@@ -18,8 +19,46 @@ class SequenceSearcher():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
-    def find_target_in_ref(self, ref, test, end, path, num_bases=20, min_quality=1.0):
-        (alignments, isRC) = self._find_target_in_ref(
+    def _find_cassette_end(self, cass, test, num_bases=20):
+        # Finding cassette ends in test sequence
+        if self._verbose:
+            print("    Finding cassette end in test sequence")
+
+        max_alignment = Align.PairwiseAlignment(
+            target="", query="", path=((0, 0), (0, 0)), score=0.0)
+        end = 0
+
+        # Testing against cassette start (RC)
+        cass_start_rc = cass[0:num_bases].reverse_complement()
+        alignments = self._aligner.align(test, cass_start_rc)
+        for alignment in alignments:
+            if alignment.score > max_alignment.score:
+                max_alignment = alignment
+                end = Ends.CASS_START_RC
+
+        # Testing against cassette end
+        cass_end = cass[-num_bases::]
+        alignments = self._aligner.align(test, cass_end)
+        for alignment in alignments:
+            if alignment.score > max_alignment.score:
+                max_alignment = alignment
+                end = Ends.CASS_END
+
+        if self._verbose:
+            if end == Ends.CASS_START_RC:
+                pos_string = "start RC"
+            elif end == Ends.CASS_END:
+                pos_string = "end"
+
+            print("        Best match for cassette %s (%s)" %
+                (pos_string, max_alignment.query))
+            print("        Match score = %0.2f (quality %0.2f)\n" %
+                (max_alignment.score, get_quality(max_alignment)))
+
+        return (max_alignment.path[-1][0], end, max_alignment.score)
+
+    def _find_target_in_ref(self, ref, test, end, path, num_bases=20, min_quality=1.0):
+        (alignments, isRC) = self._find_all_targets_in_ref(
             ref, test, end, path, num_bases, min_quality)
 
         # If more than one match was found, increasing the number of bases used in the recognition
@@ -34,8 +73,7 @@ class SequenceSearcher():
 
         return (alignments[0], isRC)
 
-    def _find_target_in_ref(self, ref, test, end, path, num_bases, min_quality):
-        pos = path[-1][0]
+    def _find_all_targets_in_ref(self, ref, test, end, pos, num_bases, min_quality):
         test_target = test[pos: pos + num_bases]
 
         # Finding test target in reference sequence
@@ -69,6 +107,39 @@ class SequenceSearcher():
                 valid_alignments.append(alignment)
 
         return valid_alignments
+
+    def find_clevage_site(self, ref, cass, test, num_bases=20, min_quality=1.0, break_range=5):
+        (pos, end, score) = self._find_cassette_end(cass, test, num_bases=num_bases)
+        
+        # Getting region of test sequence to match to reference
+        if self._verbose:
+            print("    Finding cassette-adjacent sequence in reference")
+            
+        (alignment, isRC) = self._find_target_in_ref(ref, test, end, pos, num_bases=num_bases, min_quality=min_quality)
+
+        if alignment is None:
+            return
+
+        if self._verbose:
+            print("        Match score = %0.2f (quality %0.2f)" %
+                (alignment.score, get_quality(alignment)))
+        if isRC:
+            clevage_position = alignment.path[-1][0]
+        else:
+            clevage_position = alignment.path[0][0]
+
+        ref_break_seq_left = ref[clevage_position - break_range:clevage_position]
+        ref_break_seq_right = ref[clevage_position: clevage_position + break_range]
+
+        if self._verbose:
+            print("        Reference break at position %i" % clevage_position)
+        
+        if self._verbose:
+            print("        Reference break at sequence %s | %s\n" %
+                (ref_break_seq_left, ref_break_seq_right))
+
+        return (clevage_position, isRC)
+            
 
 
 def get_quality(alignment):
