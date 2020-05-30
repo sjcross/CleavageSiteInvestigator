@@ -13,16 +13,16 @@ cass_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\"
 cass_seq_name = "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
 
 # KpnI (3' overhang) examples
-# test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run220808-04\\"
-# test1_seq_name = "45_044.ab1"
-# test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-04\\"
-# test2_seq_name = "02_007.ab1"
+test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run220808-04\\"
+test1_seq_name = "45_044.ab1"
+test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-04\\"
+test2_seq_name = "02_007.ab1"
 
-# SmaI (blunt ends) examples
-test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run210808-04\\"
-test1_seq_name = "40_033.ab1"
-test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run200808-06\\"
-test2_seq_name = "45_044.ab1"
+# # SmaI (blunt ends) examples
+# test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run210808-04\\"
+# test1_seq_name = "40_033.ab1"
+# test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run200808-06\\"
+# test2_seq_name = "45_044.ab1"
 
 # XhoI (5' overhang) examples
 # test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-10\\"
@@ -98,7 +98,7 @@ elif (clevage_site1 == clevage_site2):
     left_seq2 = left_seq1.complement()
     right_seq2 = right_seq1.complement()
 
-    print("Restriction site (3' overhang):")
+    print("Restriction site (blunt end):")
     print("    5'...%s↓%s...3'\r\n    3'...%s↑%s...5'\r\n" % (left_seq1, right_seq1, left_seq2, right_seq2))
 
 elif clevage_site1 > clevage_site2:
