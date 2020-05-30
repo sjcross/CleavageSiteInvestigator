@@ -18,6 +18,10 @@ class FileReader():
             return self._read_ab1(path, name)
         elif (ext == ".dna"):
             return self._read_dna(path, name)
+        elif (ext == ".fa"):
+            return self._read_fa(path, name)
+        elif (ext == ".fasta"):
+            return self._read_fasta(path, name)
         elif (ext == ".txt"):
             return self._read_txt(path, name)
         elif (ext == ".seq"):
@@ -41,7 +45,7 @@ class FileReader():
 
         sequence_string = self._remove_repeats(sequence_string)
 
-        return Seq(sequence_string)
+        return [Seq(sequence_string)]
 
     def _read_dna(self, path, name):
         if self._verbose:
@@ -55,7 +59,42 @@ class FileReader():
 
         sequence_string = self._get_longest_sequence(instances).decode()
 
-        return Seq(sequence_string)
+        return [Seq(sequence_string)]
+
+    def _read_fa(self, path, name):
+        if self._verbose:
+            print("        Reading as \".fa\" format")
+
+        file = open(path + name, "r")
+        full_text = file.read()
+
+        # Removing linebreaks
+        full_text = full_text.replace("\n", "")
+
+        pattern = re.compile("([ACGTacgt]+)")
+        instances = pattern.findall(full_text)
+
+        sequence_string = self._get_longest_sequence(instances)
+
+        return [Seq(sequence_string)]
+
+    def _read_fasta(self, path, name):
+        if self._verbose:
+            print("        Reading as \".fasta\" format")
+
+        file = open(path + name, "r")
+        full_text = file.read()
+
+        # Removing linebreaks
+        full_text = full_text.replace("\n", "")
+
+        pattern = re.compile("([ACGTacgt]+)")
+        instances = pattern.findall(full_text)
+        
+        for i, instance in enumerate(instances):
+            instances[i] = Seq(instance)
+
+        return instances
 
     def _read_seq(self, path, name):
         if self._verbose:
@@ -67,14 +106,14 @@ class FileReader():
         # Removing linebreaks
         sequence_string = sequence_string.replace("\n", "")
 
-        return Seq(sequence_string)
+        return [Seq(sequence_string)]
 
     def _read_txt(self, path, name):
         if self._verbose:
             print("        Reading as \".txt\" format")
 
         file = open(path + name, "r")
-        return Seq(file.read())
+        return [Seq(file.read())]
 
     def _get_longest_sequence(self,instances):
         max_len = 0
