@@ -1,41 +1,34 @@
-# Imports
+### Imports ###
 from Bio import Align, Seq
 from ends import Ends
 from filehandling import FileReader
 
 import sequenceutils as su
 
-# Setting some parameters
+
+### Parameters ###
+# The sequence for the plasmid into which the cassette has been inserted
 ref_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\"
 ref_seq_name = "pRMA03+L2L2.dna"
 
+# The cassette sequence
 cass_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\"
 cass_seq_name = "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
 
-# KpnI (3' overhang) examples
+# The first sequencing result
 test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run220808-04\\"
 test1_seq_name = "45_044.ab1"
+
+# The second sequencing result (must be opposite primer to first sequencing result)
 test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-04\\"
 test2_seq_name = "02_007.ab1"
 
-# # SmaI (blunt ends) examples
-# test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run210808-04\\"
-# test1_seq_name = "40_033.ab1"
-# test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run200808-06\\"
-# test2_seq_name = "45_044.ab1"
+num_bases = 20 # Number of bases to match
+min_quality = 0.75 # Minimum match quality ("1" is perfect)
+verbose = True # Display messages during execution
 
-# XhoI (5' overhang) examples
-# test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-10\\"
-# test1_seq_name = "44_045.ab1"
-# test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-10\\"
-# test2_seq_name = "48_041.ab1"
 
-cass_end_length = 20
-break_range = 5
-num_bases = 20
-min_quality = 0.75
-verbose = True
-
+### Processing ###
 # Creating FileHandler object
 filereader = FileReader(verbose=verbose)
 
@@ -91,7 +84,6 @@ if clevage_site1 < clevage_site2:
     
 elif (clevage_site1 == clevage_site2):
     # Blunt end
-    # 3' overhang
     left_seq1 = ref[clevage_site1 - 3 :clevage_site1]
     right_seq1 = ref[clevage_site2: clevage_site2 + 3]
 

@@ -6,7 +6,7 @@
 ```
 pip install biopython
 ```
-3. Open "main.[]()py" file in "src" folder and edit filepaths on lines 9-16 to point to local files
+3. Open "main.[]()py" file in "src" folder and edit filepaths on lines 11-24 to point to local files
 4. From command line, navigate to "src" folder and run "main.[]()py"
 ```
 python main.py
@@ -18,19 +18,39 @@ Loading sequences from file
         Reading as ".dna" format
     Loading file "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
         Reading as ".dna" format
-    Loading file "48_041.ab1"
+    Loading file "45_044.ab1"
+        Reading as ".ab1" format
+        Found 2 instances of repeated sequence (loading first)
+    Loading file "02_007.ab1"
         Reading as ".ab1" format
         Found 2 instances of repeated sequence (loading first)
 
-Finding cassette end in test sequence
-    Best match for cassette start RC (TTGGTGCCgccggctttttt)
-    Match score = 20.00 (quality 1.00)
+Finding break in test sequence 1
+    Finding cassette end in test sequence
+        Best match for cassette end (TTCGCCAAgccggctttttt)
+        Match score = 20.00 (quality 1.00)
 
-Finding cassette-adjacent sequence in reference
+    Finding cassette-adjacent sequence in reference
     Testing reference with 20 bases (1 matches found)
-    Match score = 20.00 (quality 1.00)
-    Reference break at position 2396
-    Reference break at sequence AcTCC | TCGAG
+        Match score = 20.00 (quality 1.00)
+        Reference break at position 412
+        Reference break at sequence GGTAC | CCGCT
+
+Finding break in test sequence 2
+    Finding cassette end in test sequence
+        Best match for cassette start RC (TTGGTGCCgccggctttttt)
+        Match score = 16.00 (quality 0.80)
+
+    Finding cassette-adjacent sequence in reference
+    Reversing test target sequence
+    Testing reference with 20 bases (1 matches found)
+        Match score = 18.00 (quality 0.90)
+        Reference break at position 408
+        Reference break at sequence GCTCG | GTACC
+
+Restriction site (3' overhang):
+    5'...G GTAC↓C...3'
+    3'...C↑CATG G...5'
 ```
 
 ## Required libraries
