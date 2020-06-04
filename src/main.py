@@ -23,7 +23,7 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
 test1_seq_path = root_folder
-test1_seq_name = "pUC_PstI_12.fasta"
+test1_seq_name = "mix.fasta"
 
 
 ### SANGER EXAMPLES
@@ -55,10 +55,11 @@ verbose = False # Display messages during execution
 
 ### Processing ###
 # Creating FileHandler object
-filereader = FileReader(verbose=verbose)
+filereader = FileReader()
 
 # Loading reference, cassette and test sequences
 print("INPUT: Loading sequences from file")
+
 ref = filereader.read_sequence(ref_seq_path, ref_seq_name)[0]
 cass = filereader.read_sequence(cass_seq_path, cass_seq_name)[0]
 tests1 = filereader.read_sequence(test1_seq_path, test1_seq_name)
@@ -67,6 +68,7 @@ if seq_type is Seqtype.SANGER:
     tests = zip(tests1, tests2)
 else:
     tests = tests1
+
 print("\r")
 
 # Creating the PairwiseAligner and SequenceSearcher objects
@@ -77,16 +79,58 @@ aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
 searcher = su.SequenceSearcher(aligner, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
+# Dict to store results as dual clevage site tuple
+results = {}
+
 if seq_type is Seqtype.SANGER:
-    print("PROCESSING: Sanger sequence(s)")
+    if verbose:
+        print("PROCESSING: Sanger sequence(s)")
+
     for count, (test1, test2) in enumerate(tests):
-        print("Processing test sequence %i" % (count+1))
+        if verbose:
+            print("Processing test sequence %i" % (count + 1))
+            
         (clevage_site1, clevage_site2) = searcher.process_sanger(ref, cass, test1, test2)
-        su.print_clevage_site(ref, clevage_site1, clevage_site2)
+        k = (clevage_site1, clevage_site2)
+        if k not in results:
+            results[(clevage_site1, clevage_site2)] = 1
+        else:
+            results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
+
+        if verbose:
+            su.print_position(clevage_site1, clevage_site2)
+            su.print_type(clevage_site1, clevage_site2)
+            su.print_sequence(ref, clevage_site1, clevage_site2)
     
 elif seq_type is Seqtype.OTHER:
-    print("PROCESSING: \"Other\" sequence(s)")
+    if verbose:
+        print("PROCESSING: \"Other\" sequence(s)")
+
     for count, test in enumerate(tests):
-        print("Processing test sequence %i" % (count+1))
+        if verbose:
+            print("Processing test sequence %i" % (count + 1))
+            
         (clevage_site1, clevage_site2) = searcher.process_other(ref, cass, test)
-        su.print_clevage_site(ref, clevage_site1, clevage_site2)
+        k = (clevage_site1, clevage_site2)
+        if k not in results:
+            results[(clevage_site1, clevage_site2)] = 1
+        else:
+            results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
+
+        if verbose:
+            su.print_position(clevage_site1, clevage_site2)
+            su.print_type(clevage_site1, clevage_site2)
+            su.print_sequence(ref, clevage_site1, clevage_site2)
+
+print("RESULTS:")
+for result in results.keys():
+    clevage_site1 = result[0]
+    clevage_site2 = result[1]
+    count = results.get(result)
+
+    su.print_position(clevage_site1, clevage_site2)
+    su.print_count(count)
+    su.print_type(clevage_site1, clevage_site2)
+    su.print_sequence(ref, clevage_site1, clevage_site2)
+    
+print("\n")

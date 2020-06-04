@@ -5,7 +5,7 @@ from Bio.Seq import Seq
 
 
 class FileReader():
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=True):
         self._verbose = verbose
 
     def read_sequence(self, path, name):

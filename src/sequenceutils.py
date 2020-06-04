@@ -252,7 +252,30 @@ class SequenceSearcher():
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
 
-def print_clevage_site(ref, clevage_site1, clevage_site2):
+def print_position(clevage_site1, clevage_site2):
+    if clevage_site1 is None or clevage_site2 is None:
+        return
+
+    print("    Position:    %i, %i" % (clevage_site1, clevage_site2))
+
+def print_count(count):
+    print("    Count:       %i" % count)
+
+def print_type(clevage_site1, clevage_site2):
+    if clevage_site1 is None or clevage_site2 is None:
+        return
+
+    # Identifying break type
+    if clevage_site1 < clevage_site2:
+        print("    Type:        3' overhang")
+        
+    elif (clevage_site1 == clevage_site2):
+        print("    Type:        Blunt end")
+
+    elif clevage_site1 > clevage_site2:
+        print("    Type:        5' overhang")
+
+def print_sequence(ref, clevage_site1, clevage_site2):
     if clevage_site1 is None or clevage_site2 is None:
         return
 
@@ -267,8 +290,7 @@ def print_clevage_site(ref, clevage_site1, clevage_site2):
         mid_seq2 = mid_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        print("    Restriction site (3' overhang):")
-        print("        5'...%s %s↓%s...3'\r\n        3'...%s↑%s %s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))
+        print("    Sequence:    5'...%s %s↓%s...3'\r\n                 3'...%s↑%s %s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))
         
     elif (clevage_site1 == clevage_site2):
         # Blunt end
@@ -278,8 +300,7 @@ def print_clevage_site(ref, clevage_site1, clevage_site2):
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        print("    Restriction site (blunt end):")
-        print("        5'...%s↓%s...3'\r\n        3'...%s↑%s...5'\r\n" % (left_seq1, right_seq1, left_seq2, right_seq2))
+        print("    Sequence:    5'...%s↓%s...3'\r\n                 3'...%s↑%s...5'\r\n" % (left_seq1, right_seq1, left_seq2, right_seq2))
 
     elif clevage_site1 > clevage_site2:
         # 5' overhang
@@ -291,6 +312,4 @@ def print_clevage_site(ref, clevage_site1, clevage_site2):
         mid_seq2 = mid_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        print("    Restriction site (5' overhang):")
-        print("        5'...%s↓%s %s...3'\r\n        3'...%s %s↑%s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))
-
+        print("    Sequence:    5'...%s↓%s %s...3'\r\n                 3'...%s %s↑%s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))
