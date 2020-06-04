@@ -11,19 +11,19 @@ import sequenceutils as su
 ### Parameters ###
 ### ROLLING CIRCLE EXAMPLES ###
 # Root folder containing all files
-root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\2020-04-28 New files\\"
+root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
-ref_seq_path = root_folder
+ref_seq_path = root_folder + "2020-04-28 New files\\"
 ref_seq_name = "pUC19.fa"
 
 # The cassette sequence
-cass_seq_path = root_folder
+cass_seq_path = root_folder + "2020-04-28 New files\\"
 cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
-test1_seq_path = root_folder
-test1_seq_name = "mix.fasta"
+test1_seq_path = root_folder + "2020-06-04 Mix files\\"
+test1_seq_name = "PstI_R2C2_Consensus.fasta"
 
 
 ### SANGER EXAMPLES
@@ -49,8 +49,8 @@ test1_seq_name = "mix.fasta"
 
 seq_type = Seqtype.OTHER # Sequencing type (must be either SANGER or OTHER)
 num_bases = 20 # Number of bases to match
-min_quality = 0.75 # Minimum match quality ("1" is perfect)
-verbose = False # Display messages during execution
+min_quality = 0.95 # Minimum match quality ("1" is perfect)
+verbose = True # Display messages during execution
 
 
 ### Processing ###
@@ -83,12 +83,10 @@ searcher = su.SequenceSearcher(aligner, min_quality=min_quality, num_bases=num_b
 results = {}
 
 if seq_type is Seqtype.SANGER:
-    if verbose:
-        print("PROCESSING: Sanger sequence(s)")
+    print("PROCESSING: Sanger sequence(s)")
 
     for count, (test1, test2) in enumerate(tests):
-        if verbose:
-            print("Processing test sequence %i" % (count + 1))
+        print("Processing test sequence %i" % (count + 1))
             
         (clevage_site1, clevage_site2) = searcher.process_sanger(ref, cass, test1, test2)
         k = (clevage_site1, clevage_site2)
@@ -103,13 +101,11 @@ if seq_type is Seqtype.SANGER:
             su.print_sequence(ref, clevage_site1, clevage_site2)
     
 elif seq_type is Seqtype.OTHER:
-    if verbose:
-        print("PROCESSING: \"Other\" sequence(s)")
+    print("PROCESSING: \"Other\" sequence(s)")
 
     for count, test in enumerate(tests):
-        if verbose:
-            print("Processing test sequence %i" % (count + 1))
-            
+        print("Processing test sequence %i" % (count + 1))
+        
         (clevage_site1, clevage_site2) = searcher.process_other(ref, cass, test)
         k = (clevage_site1, clevage_site2)
         if k not in results:

@@ -202,42 +202,42 @@ class SequenceSearcher():
         return max_alignment
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
-        (alignments, isRC) = self._find_all_targets_in_ref(ref, test, pos, search_length)
-
-        # If more than one match was found, increasing the number of bases used in the recognition
-        while len(alignments) > 1:
-            search_length = search_length + 1
-            (alignments, isRC) = self._find_all_targets_in_ref(ref, test, pos, search_length)
-
-        if len(alignments) == 0:
-            print("\nNo match found\n")
-            return (None, False)
-
-        return (alignments[0], isRC)
-
-    def _find_all_targets_in_ref(self, ref, test, pos, search_length):
         test_target = test[pos: pos + search_length]
 
         # Finding test target in reference sequence
         alignments = self._aligner.align(ref, test_target)
-        valid_alignments = self._get_valid_alignments(alignments)
+        alignments = self._get_valid_alignments(alignments)
 
         # If no matches were found, try the reverse complement of the test target
         isRC = False
-        if len(valid_alignments) == 0:
+        if len(alignments) == 0:
             if self._verbose:
                 print("        Reversing test target sequence")
 
             isRC = True
             test_target = test_target.reverse_complement()
             alignments = self._aligner.align(ref, test_target)
-            valid_alignments = self._get_valid_alignments(alignments)
+            alignments = self._get_valid_alignments(alignments)
 
         if self._verbose:
-            print("        Testing reference (%s) with %i bases (%i matches found)" %
-                  (test_target, search_length, len(valid_alignments)))
+            print("        Testing reference (%s)" % test_target)
 
-        return (valid_alignments, isRC)
+        if len(alignments) == 0:
+            print("\nNo match found\n")
+            return (None, False)
+
+        max_alignment = Align.PairwiseAlignment(
+            target="", query="", path=((0, 0), (0, 0)), score=0.0)
+
+        for alignment in alignments:
+            if alignment.score > max_alignment.score:
+                max_alignment = alignment
+
+        if self._verbose:
+            print("            %i match(es) found, best score = %f" %
+                  (len(alignments), max_alignment.score))
+
+        return (max_alignment, isRC)
 
     def _get_valid_alignments(self, alignments):
         valid_alignments = []
