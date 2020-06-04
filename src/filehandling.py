@@ -3,6 +3,7 @@ import re
 
 from Bio.Seq import Seq
 
+
 class FileReader():
     def __init__(self, verbose=False):
         self._verbose = verbose
@@ -14,17 +15,15 @@ class FileReader():
         # Get extension and run appropriate reader
         rootname, ext = os.path.splitext(name)
 
-        if (ext == ".ab1"):
+        if ext == ".ab1":
             return self._read_ab1(path, name)
-        elif (ext == ".dna"):
+        elif ext == ".dna":
             return self._read_dna(path, name)
-        elif (ext == ".fa"):
-            return self._read_fa(path, name)
-        elif (ext == ".fasta"):
+        elif ext == ".fa" or ext == ".fasta":
             return self._read_fasta(path, name)
-        elif (ext == ".txt"):
+        elif ext == ".txt":
             return self._read_txt(path, name)
-        elif (ext == ".seq"):
+        elif ext == ".seq":
             return self._read_seq(path, name)
 
     def get_verbose(self):
@@ -61,37 +60,19 @@ class FileReader():
 
         return [Seq(sequence_string)]
 
-    def _read_fa(self, path, name):
-        if self._verbose:
-            print("        Reading as \".fa\" format")
-
-        file = open(path + name, "r")
-        full_text = file.read()
-
-        # Removing linebreaks
-        full_text = full_text.replace("\n", "")
-
-        pattern = re.compile("([ACGTacgt]+)")
-        instances = pattern.findall(full_text)
-
-        sequence_string = self._get_longest_sequence(instances)
-
-        return [Seq(sequence_string)]
-
     def _read_fasta(self, path, name):
         if self._verbose:
             print("        Reading as \".fasta\" format")
 
         file = open(path + name, "r")
         full_text = file.read()
-
-        # Removing linebreaks
-        full_text = full_text.replace("\n", "")
-
-        pattern = re.compile("([ACGTacgt]+)")
-        instances = pattern.findall(full_text)
         
+        pattern = re.compile(">.+\n([ACGTacgt\n]+)")
+        instances = pattern.findall(full_text)
+
         for i, instance in enumerate(instances):
+            # Removing linebreaks
+            instance = instance.replace("\n", "")
             instances[i] = Seq(instance)
 
         return instances
@@ -115,7 +96,7 @@ class FileReader():
         file = open(path + name, "r")
         return [Seq(file.read())]
 
-    def _get_longest_sequence(self,instances):
+    def _get_longest_sequence(self, instances):
         max_len = 0
         max_pos = 0
         for i, instance in enumerate(instances):
@@ -134,6 +115,7 @@ class FileReader():
         instances = pattern.split(seq_string)
 
         if self._verbose:
-            print("        Found %i instances of repeated sequence (loading first)" % (len(instances)-1))
+            print("        Found %i instances of repeated sequence (loading first)" % (
+                len(instances)-1))
 
         return instances[1]

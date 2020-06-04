@@ -9,34 +9,43 @@ import sequenceutils as su
 
 
 ### Parameters ###
+### ROLLING CIRCLE EXAMPLES ###
+# Root folder containing all files
+root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\2020-04-28 New files\\"
+
 # The sequence for the plasmid into which the cassette has been inserted
-ref_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\2020-04-28 New files\\"
+ref_seq_path = root_folder
 ref_seq_name = "pUC19.fa"
 
 # The cassette sequence
-cass_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\2020-04-28 New files\\"
+cass_seq_path = root_folder
 cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
-test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\2020-04-28 New files\\"
-test1_seq_name = "mix.fasta"
+test1_seq_path = root_folder
+test1_seq_name = "pUC_PstI_12.fasta"
 
+
+### SANGER EXAMPLES
+# # Root folder containing all files
+# root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
 
 # # The sequence for the plasmid into which the cassette has been inserted
-# ref_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\"
+# ref_seq_path = root_folder
 # ref_seq_name = "pRMA03+L2L2.dna"
 
 # # The cassette sequence
-# cass_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\"
+# cass_seq_path = root_folder
 # cass_seq_name = "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
 
 # # The first sequencing result
-# test1_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run220808-04\\"
+# test1_seq_path = root_folder + "Sequencing files\\Run220808-04\\"
 # test1_seq_name = "45_044.ab1"
 
 # # (Optional) The second sequencing result (must be opposite primer to first sequencing result)
-# test2_seq_path = "C:\\Users\\Stephen\\Desktop\\Users\\Mark Szczelkun\\Sequencing files\\Run250808-04\\"
+# test2_seq_path = root_folder + "Sequencing files\\Run250808-04\\"
 # test2_seq_name = "02_007.ab1"
+
 
 seq_type = Seqtype.OTHER # Sequencing type (must be either SANGER or OTHER)
 num_bases = 20 # Number of bases to match
