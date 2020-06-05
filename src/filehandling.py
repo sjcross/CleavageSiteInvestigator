@@ -75,6 +75,9 @@ class FileReader():
             instance = instance.replace("\n", "")
             instances[i] = Seq(instance)
 
+        if self._verbose:
+            print("        Loaded %i sequence(s)" % len(instances))
+
         return instances
 
     def _read_seq(self, path, name):

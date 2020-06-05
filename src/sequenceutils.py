@@ -36,7 +36,7 @@ class SequenceSearcher():
     def process_sanger(self, ref, cass, test1, test2):
         # Finding break in test sequence 1
         if self._verbose:
-            print("    Finding break in test sequence 1")
+            print("        Finding break in test sequence 1")
 
         (pos1, score) = self._find_cassette_end(cass, test1)
         (clevage_site1, isRC1) = self._find_clevage_site(ref, test1, pos1)
@@ -45,7 +45,7 @@ class SequenceSearcher():
 
         # Finding break in test sequence 2
         if self._verbose:
-            print("    Finding break in test sequence 2")
+            print("        Finding break in test sequence 2")
 
         (pos2, score) = self._find_cassette_end(cass, test2)
         (clevage_site2, isRC2) = self._find_clevage_site(ref, test2, pos2)
@@ -54,10 +54,12 @@ class SequenceSearcher():
 
         # Only one should be RC
         if isRC1 and isRC2:
-            print("    ERROR: Both identified as reverse complement")
+            if self._verbose:
+                print("        ERROR: Both identified as reverse complement")
             return(None,None)
         elif not isRC1 and not isRC2:
-            print("    ERROR: Neither identified as reverse complement")
+            if self._verbose:
+                print("        ERROR: Neither identified as reverse complement")
             return(None,None)
 
         # If clevage_site1 is RC, switch clevage sites
@@ -72,37 +74,52 @@ class SequenceSearcher():
     def process_other(self, ref, cass, test):
         # Finding start of test sequence
         if self._verbose:
-            print("    Finding start of test sequence")
+            print("        Finding start of cassette in test sequence")
 
-        alignment1 = self._search_sequence(cass, test, Ends.CASS_START)
-        if alignment1.score == 0:
+        cass_pos_1 = self._search_sequence(cass, test, Ends.CASS_START)
+        if cass_pos_1.score == 0:
             if self._verbose:
-                print("    Inverting cassette")
+                print("        Inverting cassette")
 
             cass = cass.reverse_complement()      
-            alignment1 = self._search_sequence(cass, test, Ends.CASS_START)
+            cass_pos_1 = self._search_sequence(cass, test, Ends.CASS_START)
         
-        pos1 = alignment1.path[0][0]
-        (alignment1, isRC1) = self._find_target_in_ref(ref, test, pos1-self._num_bases, self._num_bases)
-        clevage_site1 = alignment1.path[1][0]
-
         # Finding end of test sequence
         if self._verbose:
-            print("    Finding end of test sequence")
+            print("        Finding end of cassette in test sequence")
 
-        pos2 = self._search_sequence(cass, test, Ends.CASS_END).path[1][0]
-        (alignment2, isRC2) = self._find_target_in_ref(ref, test, pos2, self._num_bases)
-        clevage_site2 = alignment2.path[0][0]    
+        cass_pos_2 = self._search_sequence(cass, test, Ends.CASS_END)
 
-        if self._verbose:
-            print("\r")
+        # Checking results are OK
+        if cass_pos_1.score == 0 or cass_pos_2.score == 0:
+            if self._verbose:
+                print("ERROR: Cassette ends not found")
+            return (None, None)
 
-        return (clevage_site1, clevage_site2)
+        # Finding cassette-adjacent test sequence in reference
+        (alignment1, isRC1) = self._find_target_in_ref(ref, test, cass_pos_1.path[0][0] - self._num_bases, self._num_bases)
+        (alignment2, isRC2) = self._find_target_in_ref(ref, test, cass_pos_2.path[1][0], self._num_bases)
+
+        if alignment1 is None or alignment2 is None:
+            if self._verbose:
+                print("ERROR: Test sequence not found in reference")
+            return (None, None)
+
+        # Both should be RC or normal
+        if isRC1 and not isRC2 or isRC2 and not isRC1:
+            if self._verbose:
+                print("ERROR: RC mismatch")
+            return (None, None)
+
+        if isRC1:
+            return (alignment2.path[1][0], alignment1.path[0][0])
+        else:
+            return (alignment1.path[1][0], alignment2.path[0][0])           
 
     def _find_cassette_end(self, cass, test):
         # Finding cassette ends in test sequence
         if self._verbose:
-            print("        Finding cassette end in test sequence")
+            print("            Finding cassette end in test sequence")
         
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
@@ -126,9 +143,9 @@ class SequenceSearcher():
             elif end == Ends.CASS_END:
                 pos_string = "end"
 
-            print("            Best match for cassette %s (%s)" %
+            print("                Best match for cassette %s (%s)" %
                 (pos_string, max_alignment.query))
-            print("            Match score = %0.2f (quality %0.2f)" %
+            print("                Match score = %0.2f (quality %0.2f)" %
                 (max_alignment.score, get_quality(max_alignment)))
 
         return (max_alignment.path[-1][0], max_alignment.score)
@@ -136,7 +153,7 @@ class SequenceSearcher():
     def _find_clevage_site(self, ref, test, pos):
         # Getting region of test sequence to match to reference
         if self._verbose:
-            print("        Finding cassette-adjacent sequence in reference")
+            print("            Finding cassette-adjacent sequence in reference")
             
         (alignment, isRC) = self._find_target_in_ref(ref, test, pos, self._num_bases)
         
@@ -144,7 +161,7 @@ class SequenceSearcher():
             return(alignment, False)
 
         if self._verbose:
-            print("            Match score = %0.2f (quality %0.2f)" %
+            print("                Match score = %0.2f (quality %0.2f)" %
                 (alignment.score, get_quality(alignment)))
         if isRC:
             clevage_position = alignment.path[-1][0]
@@ -155,10 +172,10 @@ class SequenceSearcher():
         ref_break_seq_right = ref[clevage_position: clevage_position + 5]
 
         if self._verbose:
-            print("            Reference break at position %i" % clevage_position)
+            print("                Reference break at position %i" % clevage_position)
         
         if self._verbose:
-            print("            Reference break at sequence %s | %s" %
+            print("                Reference break at sequence %s | %s" %
                 (ref_break_seq_left, ref_break_seq_right))
 
         return (clevage_position, isRC)
@@ -212,7 +229,7 @@ class SequenceSearcher():
         isRC = False
         if len(alignments) == 0:
             if self._verbose:
-                print("        Reversing test target sequence")
+                print("            Reversing test target sequence")
 
             isRC = True
             test_target = test_target.reverse_complement()
@@ -220,10 +237,9 @@ class SequenceSearcher():
             alignments = self._get_valid_alignments(alignments)
 
         if self._verbose:
-            print("        Testing reference (%s)" % test_target)
+            print("            Testing reference (%s)" % test_target)
 
         if len(alignments) == 0:
-            print("\nNo match found\n")
             return (None, False)
 
         max_alignment = Align.PairwiseAlignment(
@@ -234,7 +250,7 @@ class SequenceSearcher():
                 max_alignment = alignment
 
         if self._verbose:
-            print("            %i match(es) found, best score = %f" %
+            print("                %i match(es) found, best score = %f" %
                   (len(alignments), max_alignment.score))
 
         return (max_alignment, isRC)
@@ -251,65 +267,3 @@ class SequenceSearcher():
 
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
-
-def print_position(clevage_site1, clevage_site2):
-    if clevage_site1 is None or clevage_site2 is None:
-        return
-
-    print("    Position:    %i, %i" % (clevage_site1, clevage_site2))
-
-def print_count(count):
-    print("    Count:       %i" % count)
-
-def print_type(clevage_site1, clevage_site2):
-    if clevage_site1 is None or clevage_site2 is None:
-        return
-
-    # Identifying break type
-    if clevage_site1 < clevage_site2:
-        print("    Type:        3' overhang")
-        
-    elif (clevage_site1 == clevage_site2):
-        print("    Type:        Blunt end")
-
-    elif clevage_site1 > clevage_site2:
-        print("    Type:        5' overhang")
-
-def print_sequence(ref, clevage_site1, clevage_site2):
-    if clevage_site1 is None or clevage_site2 is None:
-        return
-
-    # Identifying break type
-    if clevage_site1 < clevage_site2:
-        # 3' overhang
-        left_seq1 = ref[clevage_site1 - 1 :clevage_site1]
-        mid_seq1 = ref[clevage_site1:clevage_site2]
-        right_seq1 = ref[clevage_site2: clevage_site2 + 1]
-
-        left_seq2 = left_seq1.complement()
-        mid_seq2 = mid_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("    Sequence:    5'...%s %s↓%s...3'\r\n                 3'...%s↑%s %s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))
-        
-    elif (clevage_site1 == clevage_site2):
-        # Blunt end
-        left_seq1 = ref[clevage_site1 - 3 :clevage_site1]
-        right_seq1 = ref[clevage_site2: clevage_site2 + 3]
-
-        left_seq2 = left_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("    Sequence:    5'...%s↓%s...3'\r\n                 3'...%s↑%s...5'\r\n" % (left_seq1, right_seq1, left_seq2, right_seq2))
-
-    elif clevage_site1 > clevage_site2:
-        # 5' overhang
-        left_seq1 = ref[clevage_site2 - 1 :clevage_site2]
-        mid_seq1 = ref[clevage_site2:clevage_site1]
-        right_seq1 = ref[clevage_site1: clevage_site1 + 1]
-
-        left_seq2 = left_seq1.complement()
-        mid_seq2 = mid_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("    Sequence:    5'...%s↓%s %s...3'\r\n                 3'...%s %s↑%s...5'\r\n" % (left_seq1, mid_seq1, right_seq1, left_seq2, mid_seq2, right_seq2))

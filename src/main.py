@@ -5,6 +5,7 @@ from seqtype import Seqtype
 from filehandling import FileReader
 
 import os
+import reportutils as ru
 import sequenceutils as su
 
 
@@ -49,8 +50,8 @@ test1_seq_name = "PstI_R2C2_Consensus.fasta"
 
 seq_type = Seqtype.OTHER # Sequencing type (must be either SANGER or OTHER)
 num_bases = 20 # Number of bases to match
-min_quality = 0.95 # Minimum match quality ("1" is perfect)
-verbose = True # Display messages during execution
+min_quality = 0.75 # Minimum match quality ("1" is perfect)
+verbose = False # Display messages during execution
 
 
 ### Processing ###
@@ -81,12 +82,14 @@ searcher = su.SequenceSearcher(aligner, min_quality=min_quality, num_bases=num_b
 
 # Dict to store results as dual clevage site tuple
 results = {}
+error_count = 0
 
 if seq_type is Seqtype.SANGER:
     print("PROCESSING: Sanger sequence(s)")
 
     for count, (test1, test2) in enumerate(tests):
-        print("Processing test sequence %i" % (count + 1))
+        if verbose:
+            print("    Processing test sequence %i" % (count + 1))
             
         (clevage_site1, clevage_site2) = searcher.process_sanger(ref, cass, test1, test2)
         k = (clevage_site1, clevage_site2)
@@ -96,17 +99,21 @@ if seq_type is Seqtype.SANGER:
             results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
 
         if verbose:
-            su.print_position(clevage_site1, clevage_site2)
-            su.print_type(clevage_site1, clevage_site2)
-            su.print_sequence(ref, clevage_site1, clevage_site2)
+            ru.print_position(clevage_site1, clevage_site2, offset="    ")
+            ru.print_type(clevage_site1, clevage_site2, offset="    ")
+            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="    ")
     
 elif seq_type is Seqtype.OTHER:
     print("PROCESSING: \"Other\" sequence(s)")
 
     for count, test in enumerate(tests):
-        print("Processing test sequence %i" % (count + 1))
-        
+        if verbose:
+            print("    Processing test sequence %i" % (count + 1))
+
         (clevage_site1, clevage_site2) = searcher.process_other(ref, cass, test)
+        if clevage_site1 == None:
+            error_count = error_count + 1
+
         k = (clevage_site1, clevage_site2)
         if k not in results:
             results[(clevage_site1, clevage_site2)] = 1
@@ -114,19 +121,24 @@ elif seq_type is Seqtype.OTHER:
             results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
 
         if verbose:
-            su.print_position(clevage_site1, clevage_site2)
-            su.print_type(clevage_site1, clevage_site2)
-            su.print_sequence(ref, clevage_site1, clevage_site2)
+            ru.print_position(clevage_site1, clevage_site2, offset="    ")
+            ru.print_type(clevage_site1, clevage_site2, offset="    ")
+            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="    ")
 
 print("RESULTS:")
+# Sorting results by frequency
+results = ru.sort_results(results)
+
+# Displaying results
 for result in results.keys():
     clevage_site1 = result[0]
     clevage_site2 = result[1]
     count = results.get(result)
 
-    su.print_position(clevage_site1, clevage_site2)
-    su.print_count(count)
-    su.print_type(clevage_site1, clevage_site2)
-    su.print_sequence(ref, clevage_site1, clevage_site2)
-    
-print("\n")
+    ru.print_position(clevage_site1, clevage_site2)
+    ru.print_count(count)
+    ru.print_type(clevage_site1, clevage_site2)
+    ru.print_sequence(ref, clevage_site1, clevage_site2)
+
+ru.print_error_rate(error_count,len(tests), offset="    ")
+print("\r")
