@@ -12,7 +12,8 @@ import sequenceutils as su
 ### Parameters ###
 ### ROLLING CIRCLE EXAMPLES ###
 # Root folder containing all files
-root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
+# root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
+root_folder = "F:\\Users\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
 ref_seq_path = root_folder + "2020-04-28 New files\\"
@@ -24,7 +25,7 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
 test1_seq_path = root_folder + "2020-06-04 Mix files\\"
-test1_seq_name = "PstI_R2C2_Consensus.fasta"
+test1_seq_name = "XbaI_R2C2_Consensus.fasta"
 
 
 ### SANGER EXAMPLES
@@ -69,7 +70,6 @@ if seq_type is Seqtype.SANGER:
     tests = zip(tests1, tests2)
 else:
     tests = tests1
-
 print("\r")
 
 # Creating the PairwiseAligner and SequenceSearcher objects
@@ -99,9 +99,10 @@ if seq_type is Seqtype.SANGER:
             results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
 
         if verbose:
-            ru.print_position(clevage_site1, clevage_site2, offset="    ")
-            ru.print_type(clevage_site1, clevage_site2, offset="    ")
-            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="    ")
+            print("        Result:")
+            ru.print_position(clevage_site1, clevage_site2, offset="        ")
+            ru.print_type(clevage_site1, clevage_site2, offset="        ")
+            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="        ")
     
 elif seq_type is Seqtype.OTHER:
     print("PROCESSING: \"Other\" sequence(s)")
@@ -121,9 +122,11 @@ elif seq_type is Seqtype.OTHER:
             results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
 
         if verbose:
-            ru.print_position(clevage_site1, clevage_site2, offset="    ")
-            ru.print_type(clevage_site1, clevage_site2, offset="    ")
-            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="    ")
+            print("        Result:")
+            ru.print_position(clevage_site1, clevage_site2, offset="        ")
+            ru.print_type(clevage_site1, clevage_site2, offset="        ")
+            ru.print_sequence(ref, clevage_site1, clevage_site2, offset="        ")
+print("\r")
 
 print("RESULTS:")
 # Sorting results by frequency
