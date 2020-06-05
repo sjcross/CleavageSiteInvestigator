@@ -112,9 +112,9 @@ class SequenceSearcher():
             return (None, None)
 
         if isRC1:
-            return (alignment2.path[1][0], alignment1.path[0][0])
+            return (alignment2.path[-1][0], alignment1.path[0][0])
         else:
-            return (alignment1.path[1][0], alignment2.path[0][0])           
+            return (alignment1.path[-1][0], alignment2.path[0][0])           
 
     def _find_cassette_end(self, cass, test):
         # Finding cassette ends in test sequence
