@@ -68,3 +68,4 @@ def print_sequence(ref, clevage_site1, clevage_site2, offset=""):
 def print_error_rate(error_count, sample_count, offset=""):
     error_rate = 100*error_count/sample_count
     print("%sCompleted with %i errors (%f%%)" % (offset, error_count, error_rate))
+    
