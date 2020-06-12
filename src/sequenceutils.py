@@ -40,7 +40,7 @@ class SequenceSearcher():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
-    def process_other(self, ref, cass, test):
+    def process(self, ref, cass, test):
         if self._verbose:
             print("        Finding first cassette end in test sequence")
         (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START)
@@ -64,11 +64,12 @@ class SequenceSearcher():
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence")
-        (alignment1, isRC1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
-        
+        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
+        test_cut_1 = test_cut_1 + self._num_bases
+
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence")
-        (alignment2, isRC2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
+        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
 
         if alignment1 is None or alignment2 is None:
             if self._verbose:
@@ -83,7 +84,8 @@ class SequenceSearcher():
 
         if isRC1:
             clevage_site_1 = alignment2.path[-1][0]
-            clevage_site_2 = alignment1.path[0][0]         
+            clevage_site_2 = alignment1.path[0][0]
+            # (test_cut_1,test_cut_2) = (test_cut_2,test_cut_1)
         else:
             clevage_site_1 = alignment1.path[-1][0]
             clevage_site_2 = alignment2.path[0][0]
@@ -94,6 +96,18 @@ class SequenceSearcher():
             if self._verbose:
                 print("ERROR: Clevage site gap (%i) exceeds maximum permitted\n" % abs(clevage_site_1 - clevage_site_2))
             return (None, None)
+
+        # (5' overhangs only) both sequences should match
+        if clevage_site_1 > clevage_site_2:
+            diff = clevage_site_1 - clevage_site_2
+            overhang_1 = test[test_cut_1 - diff :test_cut_1]
+            overhang_2 = test[test_cut_2: test_cut_2 + diff]
+            
+            if overhang_1 != overhang_2:
+                if self._verbose:
+                    print("ERROR: Missmatch in 5' overhang (%s, %s)\n" % (overhang_1, overhang_2))
+                return (None, None)
+
             
         return (clevage_site_1, clevage_site_2)
     
@@ -154,6 +168,7 @@ class SequenceSearcher():
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
 
         max_isRC = False
+        max_en = 0
         for en in range(len(path)):
             (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, self._num_bases)
 
@@ -163,11 +178,12 @@ class SequenceSearcher():
             if alignment.score > max_alignment.score:
                 max_alignment = alignment
                 max_isRC = isRC
+                max_en = en
 
         if max_alignment.score == 0 or get_quality(max_alignment) < self._min_quality:
-            return (None, False)
+            return (None, False, 0)
 
-        return (max_alignment, max_isRC)
+        return (max_alignment, max_isRC, path[max_en][0]-search_offset)
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
         test_target = test[pos: pos + search_length]
