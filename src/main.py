@@ -13,7 +13,7 @@ import sequenceutils as su
 ### ROLLING CIRCLE EXAMPLES ###
 # Root folder containing all files
 # root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
-root_folder = "F:\\Users\\Mark Szczelkun\\"
+root_folder = "F:\\People\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
 ref_seq_path = root_folder + "2020-04-28 New files\\"
@@ -25,13 +25,13 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
 test_seq_path = root_folder + "2020-06-04 Mix files\\"
-test_seq_name = "PstI_R2C2_Consensus_fix.fasta"
+test_seq_name = "XbaI_R2C2_Consensus_fix.fasta"
 
 
 max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
 min_quality = 0.75  # Minimum match quality ("1" is perfect)
 num_bases = 20  # Number of bases to match
-verbose = False # Display messages during execution
+verbose = True # Display messages during execution
 
 ### Processing ###
 # Creating FileHandler object
@@ -64,7 +64,7 @@ for count, test in enumerate(tests):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (clevage_site1, clevage_site2) = searcher.process_other(ref, cass, test)
+    (clevage_site1, clevage_site2) = searcher.process(ref, cass, test)
     if clevage_site1 == None:
         error_count = error_count + 1
         continue
