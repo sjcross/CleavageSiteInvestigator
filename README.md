@@ -5,6 +5,7 @@
 2. Install required libraries from command line
 ```
 pip install biopython
+pip install seaborn
 ```
 3. Open "main.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
 4. From command line, navigate to "src" folder and run "main.[]()py"
@@ -13,44 +14,88 @@ python main.py
 ```
 5. Results should be shown almost instantly (example output below)
 ```
-Loading sequences from file
-    Loading file "pRMA03+L2L2.dna"
-        Reading as ".dna" format
-    Loading file "CAT cassette as amplified by RA101 & 102 from pACYC184.dna"
-        Reading as ".dna" format
-    Loading file "45_044.ab1"
-        Reading as ".ab1" format
-        Found 2 instances of repeated sequence (loading first)
-    Loading file "02_007.ab1"
-        Reading as ".ab1" format
-        Found 2 instances of repeated sequence (loading first)
+INPUT: Loading sequences from file
+    Loading file "pUC19.fa"
+        Reading as ".fasta" format
+        Loaded 1 sequence(s)
+    Loading file "Chloramphenicol Cassette overhang.fa"
+        Reading as ".fasta" format
+        Loaded 1 sequence(s)
+    Loading file "Merge_test.fasta"
+        Reading as ".fasta" format
+        Loaded 475 sequence(s)
 
-Finding break in test sequence 1
-    Finding cassette end in test sequence
-        Best match for cassette end (TTCGCCAAgccggctttttt)
-        Match score = 20.00 (quality 1.00)
+PROCESSING: Sequence(s)
 
-    Finding cassette-adjacent sequence in reference
-    Testing reference with 20 bases (1 matches found)
-        Match score = 20.00 (quality 1.00)
-        Reference break at position 412
-        Reference break at sequence GGTAC | CCGCT
+RESULTS:
+    Position:    427, 423
+    Count:       163
+    Type:        5' overhang
+    Sequence:    5'...T↓CTAG A...3'
+                 3'...A GATC↑T...5'
 
-Finding break in test sequence 2
-    Finding cassette end in test sequence
-        Best match for cassette start RC (TTGGTGCCgccggctttttt)
-        Match score = 16.00 (quality 0.80)
+    Position:    2179, 2179
+    Count:       155
+    Type:        Blunt end
+    Sequence:    5'...AGT↓ACT...3'
+                 3'...TCA↑TGA...5'
 
-    Finding cassette-adjacent sequence in reference
-    Reversing test target sequence
-    Testing reference with 20 bases (1 matches found)
-        Match score = 18.00 (quality 0.90)
-        Reference break at position 408
-        Reference break at sequence GCTCG | GTACC
+    Position:    435, 439
+    Count:       36
+    Type:        3' overhang
+    Sequence:    5'...C TGCA↓G...3'
+                 3'...G↑ACGT C...5'
 
-Restriction site (3' overhang):
-    5'...G GTAC↓C...3'
-    3'...C↑CATG G...5'
+    Position:    427, 424
+    Count:       34
+    Type:        5' overhang
+    Sequence:    5'...C↓TAG A...3'
+                 3'...G ATC↑T...5'
+
+    Position:    426, 423
+    Count:       8
+    Type:        5' overhang
+    Sequence:    5'...T↓CTA G...3'
+                 3'...A GAT↑C...5'
+
+
+    Local dinucleotide frequencies:
+
+    AA: 0
+    AT: 0
+    AG: 73
+    AC: 1
+    TA: 333
+    TT: 0
+    TG: 0
+    TC: 383
+    GA: 3
+    GT: 0
+    GG: 0
+    GC: 0
+    CA: 2
+    CT: 49
+    CG: 1
+    CC: 1
+
+
+    Local 5' nucleotide frequencies:
+
+    A: 74
+    T: 716
+    G: 3
+    C: 53
+
+
+    Local 3' nucleotide frequencies:
+
+    A: 338
+    T: 49
+    G: 74
+    C: 385
+
+
+    Completed with 52 errors (10.947368%)
 ```
 
 ## Required libraries

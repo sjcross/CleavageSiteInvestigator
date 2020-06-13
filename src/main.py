@@ -1,18 +1,18 @@
 ### Imports ###
-from Bio import Align, Seq
-from ends import Ends
-from seqtype import Seqtype
-from filehandling import FileReader
-
 import os
-import reportutils as ru
-import sequenceutils as su
+
+from Bio import Align, Seq
+from enums.ends import Ends
+from enums.seqtype import Seqtype
+from utils.fileutils import FileReader
+
+from utils import plotutils as pu
+from utils import reportutils as ru
+from utils import sequenceutils as su
 
 
 ### Parameters ###
-### ROLLING CIRCLE EXAMPLES ###
 # Root folder containing all files
-# root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
 root_folder = "F:\\People\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
@@ -25,13 +25,14 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
 test_seq_path = root_folder + "2020-06-04 Mix files\\"
-test_seq_name = "XbaI_R2C2_Consensus_fix.fasta"
+test_seq_name = "Merge_test.fasta"
 
 
+local_r = 1 # Half width of the local sequences to be extracted at restriction sites
 max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
 min_quality = 0.75  # Minimum match quality ("1" is perfect)
 num_bases = 20  # Number of bases to match
-verbose = True # Display messages during execution
+verbose = False # Display messages during execution
 
 ### Processing ###
 # Creating FileHandler object
@@ -52,9 +53,9 @@ aligner.mode = 'local'
 aligner.match_score = 1.0
 aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
-searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
+searcher = su.SequenceSearcher(aligner, local_r=local_r,max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
-# Dict to store results as dual clevage site tuple
+# Dict to store results as dual cleavage site tuple
 results = {}
 error_count = 0
 
@@ -64,38 +65,48 @@ for count, test in enumerate(tests):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (clevage_site1, clevage_site2) = searcher.process(ref, cass, test)
-    if clevage_site1 == None:
+    (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
+    
+    if cleavage_site_t == None:
         error_count = error_count + 1
         continue
-
-    k = (clevage_site1, clevage_site2)
-    if k not in results:
-        results[(clevage_site1, clevage_site2)] = 1
-    else:
-        results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
+    
+    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b)
 
     if verbose:
         print("        Result:")
-        ru.print_position(clevage_site1, clevage_site2, offset="        ")
-        ru.print_type(clevage_site1, clevage_site2, offset="        ")
-        ru.print_sequence(ref, clevage_site1, clevage_site2, offset="        ")
+        ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
+        ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
+        ru.print_sequence(ref, cleavage_site_t, cleavage_site_b, offset="        ")
 print("\r")
 
 print("RESULTS:")
-# Sorting results by frequency
-results = ru.sort_results(results)
+# Reporting full sequence frequency
+freq_full = ru.get_full_sequence_frequency(results)
+if verbose:
+    print("    Full sequence frequencies:\n")
+ru.print_full_sequence_frequency(ref, freq_full, offset="")
 
-# Displaying results
-for result in results.keys():
-    clevage_site1 = result[0]
-    clevage_site2 = result[1]
-    count = results.get(result)
+# Reporting local sequence frequency
+print("    Local dinucleotide frequencies:\n")
+freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH)
+ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
 
-    ru.print_position(clevage_site1, clevage_site2)
-    ru.print_count(count)
-    ru.print_type(clevage_site1, clevage_site2)
-    ru.print_sequence(ref, clevage_site1, clevage_site2)
+print("    Local 5' nucleotide frequencies:\n")
+freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
+ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
 
+print("    Local 3' nucleotide frequencies:\n")
+freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
+ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
+
+# Plotting sequence distributions
+pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
+
+# Reporting top and bottom sequence co-occurrence
+(labels, freq2D) = ru.get_sequence_cooccurrence(results)
+pu.plotFrequency2D(labels, freq2D)
+
+# Reporting number of errors
 ru.print_error_rate(error_count,len(tests), offset="    ")
 print("\r")
