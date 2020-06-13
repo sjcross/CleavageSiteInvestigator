@@ -16,12 +16,12 @@ class LocalMode(Enum):
 def get_full_sequence_frequency(results):
     freq = {}
 
-    for (clevage_site_t, clevage_site_b, local_site_t, local_site_b) in results.values():
-        k = (clevage_site_t, clevage_site_b)
+    for (cleavage_site_t, cleavage_site_b, local_site_t, local_site_b) in results.values():
+        k = (cleavage_site_t, cleavage_site_b)
         if k not in freq:
-            freq[(clevage_site_t, clevage_site_b)] = 1
+            freq[(cleavage_site_t, cleavage_site_b)] = 1
         else:
-            freq[(clevage_site_t, clevage_site_b)] = freq[(clevage_site_t, clevage_site_b)] + 1
+            freq[(cleavage_site_t, cleavage_site_b)] = freq[(cleavage_site_t, cleavage_site_b)] + 1
 
     # Sorting results by frequency
     freq = sort_results(freq)
@@ -41,7 +41,7 @@ def get_local_sequence_frequency(results, strand_mode, local_mode):
         
     freq = _init_frequency_dict(n_nt)
 
-    for (clevage_site_t, clevage_site_b, local_site_t, local_site_b) in results.values():
+    for (cleavage_site_t, cleavage_site_b, local_site_t, local_site_b) in results.values():
         if local_mode is LocalMode.FIVE_P:
             local_site_t = local_site_t[0:n_nt]
             local_site_b = local_site_b[0:n_nt]
@@ -74,7 +74,7 @@ def get_sequence_cooccurrence(results):
     freq = np.zeros((pow(4, n_nt), pow(4, n_nt)))
 
     # Iterating over each result, adding one to the matrix
-    for (clevage_site_t, clevage_site_b, local_site_t, local_site_b) in results.values():
+    for (cleavage_site_t, cleavage_site_b, local_site_t, local_site_b) in results.values():
         idx_top = labels.index(local_site_t)
         idx_bottom = labels.index(local_site_b)
 
@@ -84,15 +84,15 @@ def get_sequence_cooccurrence(results):
 
 def print_full_sequence_frequency(ref, freq, offset=""):
     # Displaying sequence frequency results
-    for clevage_sites in freq.keys():
-        clevage_site_t = clevage_sites[0]
-        clevage_site_b = clevage_sites[1]
-        count = freq.get(clevage_sites)
+    for cleavage_sites in freq.keys():
+        cleavage_site_t = cleavage_sites[0]
+        cleavage_site_b = cleavage_sites[1]
+        count = freq.get(cleavage_sites)
 
-        print_position(clevage_site_t, clevage_site_b,offset=offset)
+        print_position(cleavage_site_t, cleavage_site_b,offset=offset)
         print_count(count,offset=offset)
-        print_type(clevage_site_t, clevage_site_b,offset=offset)
-        print_sequence(ref, clevage_site_t, clevage_site_b, offset=offset)
+        print_type(cleavage_site_t, cleavage_site_b,offset=offset)
+        print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=offset)
         
     print("\n")
 
@@ -103,39 +103,39 @@ def print_local_sequence_frequency(freq, nonzero_only=False, offset=""):
 
     print("\n")
 
-def print_position(clevage_site_t, clevage_site_b, offset=""):
-    if clevage_site_b is None or clevage_site_t is None:
+def print_position(cleavage_site_t, cleavage_site_b, offset=""):
+    if cleavage_site_b is None or cleavage_site_t is None:
         return
 
-    print("%s    Position:    %i, %i" % (offset, clevage_site_b, clevage_site_t))
+    print("%s    Position:    %i, %i" % (offset, cleavage_site_b, cleavage_site_t))
 
 def print_count(count, offset=""):
     print("%s    Count:       %i" % (offset, count))
 
-def print_type(clevage_site_t, clevage_site_b, offset=""):
-    if clevage_site_b is None or clevage_site_t is None:
+def print_type(cleavage_site_t, cleavage_site_b, offset=""):
+    if cleavage_site_b is None or cleavage_site_t is None:
         return
 
     # Identifying break type
-    if clevage_site_b < clevage_site_t:
+    if cleavage_site_b < cleavage_site_t:
         print("%s    Type:        3' overhang" % offset)
         
-    elif (clevage_site_b == clevage_site_t):
+    elif (cleavage_site_b == cleavage_site_t):
         print("%s    Type:        Blunt end" % offset)
 
-    elif clevage_site_b > clevage_site_t:
+    elif cleavage_site_b > cleavage_site_t:
         print("%s    Type:        5' overhang" % offset)
 
-def print_sequence(ref, clevage_site_t, clevage_site_b, offset=""):
-    if clevage_site_b is None or clevage_site_t is None:
+def print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=""):
+    if cleavage_site_b is None or cleavage_site_t is None:
         return
 
     # Identifying break type
-    if clevage_site_b < clevage_site_t:
+    if cleavage_site_b < cleavage_site_t:
         # 3' overhang
-        left_seq1 = ref[clevage_site_b - 1 :clevage_site_b]
-        mid_seq1 = ref[clevage_site_b:clevage_site_t]
-        right_seq1 = ref[clevage_site_t: clevage_site_t + 1]
+        left_seq1 = ref[cleavage_site_b - 1 :cleavage_site_b]
+        mid_seq1 = ref[cleavage_site_b:cleavage_site_t]
+        right_seq1 = ref[cleavage_site_t: cleavage_site_t + 1]
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()
@@ -143,21 +143,21 @@ def print_sequence(ref, clevage_site_t, clevage_site_b, offset=""):
 
         print("%s    Sequence:    5'...%s %s↓%s...3'\r\n                 %s3'...%s↑%s %s...5'\r\n" % (offset, left_seq1, mid_seq1, right_seq1, offset, left_seq2, mid_seq2, right_seq2))
         
-    elif clevage_site_b == clevage_site_t:
+    elif cleavage_site_b == cleavage_site_t:
         # Blunt end
-        left_seq1 = ref[clevage_site_b - 3 :clevage_site_b]
-        right_seq1 = ref[clevage_site_t: clevage_site_t + 3]
+        left_seq1 = ref[cleavage_site_b - 3 :cleavage_site_b]
+        right_seq1 = ref[cleavage_site_t: cleavage_site_t + 3]
 
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
 
         print("%s    Sequence:    5'...%s↓%s...3'\r\n                 %s3'...%s↑%s...5'\r\n" % (offset, left_seq1, right_seq1, offset, left_seq2, right_seq2))
 
-    elif clevage_site_b > clevage_site_t:
+    elif cleavage_site_b > cleavage_site_t:
         # 5' overhang
-        left_seq1 = ref[clevage_site_t - 1 :clevage_site_t]
-        mid_seq1 = ref[clevage_site_t:clevage_site_b]
-        right_seq1 = ref[clevage_site_b: clevage_site_b + 1]
+        left_seq1 = ref[cleavage_site_t - 1 :cleavage_site_t]
+        mid_seq1 = ref[cleavage_site_t:cleavage_site_b]
+        right_seq1 = ref[cleavage_site_b: cleavage_site_b + 1]
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()

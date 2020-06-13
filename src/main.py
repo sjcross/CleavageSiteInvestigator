@@ -55,7 +55,7 @@ aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
 searcher = su.SequenceSearcher(aligner, local_r=local_r,max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
-# Dict to store results as dual clevage site tuple
+# Dict to store results as dual cleavage site tuple
 results = {}
 error_count = 0
 
@@ -65,19 +65,19 @@ for count, test in enumerate(tests):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (clevage_site_t, clevage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
+    (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
     
-    if clevage_site_t == None:
+    if cleavage_site_t == None:
         error_count = error_count + 1
         continue
     
-    results[count] = (clevage_site_t, clevage_site_b, local_seq_t, local_seq_b)
+    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b)
 
     if verbose:
         print("        Result:")
-        ru.print_position(clevage_site_t, clevage_site_b, offset="        ")
-        ru.print_type(clevage_site_t, clevage_site_b, offset="        ")
-        ru.print_sequence(ref, clevage_site_t, clevage_site_b, offset="        ")
+        ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
+        ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
+        ru.print_sequence(ref, cleavage_site_t, cleavage_site_b, offset="        ")
 print("\r")
 
 print("RESULTS:")

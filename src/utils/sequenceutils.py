@@ -47,10 +47,10 @@ class SequenceSearcher():
         self._verbose = verbose
 
     # Returns:
-    #     clevage_site_b = index of nucleotide immediately 5' of clevage site on top strand
-    #     clevage_site_t = index of nucleotide immediately 3' of clevage site on bottom strand
-    #     local_seq_1 = local sequence at top strand clevage site (local_r nucleotides either side of clevage site)
-    #     local_seq_2 = local sequence at bottom strand clevage site (local_r nucleotides either side of clevage site)
+    #     cleavage_site_b = index of nucleotide immediately 5' of cleavage site on top strand
+    #     cleavage_site_t = index of nucleotide immediately 3' of cleavage site on bottom strand
+    #     local_seq_1 = local sequence at top strand cleavage site (local_r nucleotides either side of cleavage site)
+    #     local_seq_2 = local sequence at bottom strand cleavage site (local_r nucleotides either side of cleavage site)
     def process(self, ref, cass, test):
         if self._verbose:
             print("        Finding first cassette end in test sequence")
@@ -94,20 +94,20 @@ class SequenceSearcher():
             return (None, None, "", "")
 
         if isRC1:
-            clevage_site_t = alignment1.path[0][0]
-            clevage_site_b = alignment2.path[-1][0]
+            cleavage_site_t = alignment1.path[0][0]
+            cleavage_site_b = alignment2.path[-1][0]
         else:
-            clevage_site_t = alignment2.path[0][0]
-            clevage_site_b = alignment1.path[-1][0]
+            cleavage_site_t = alignment2.path[0][0]
+            cleavage_site_b = alignment1.path[-1][0]
 
-        if abs(clevage_site_t - clevage_site_b) > self._max_gap:
+        if abs(cleavage_site_t - cleavage_site_b) > self._max_gap:
             if self._verbose:
-                print("ERROR: Clevage site gap (%i) exceeds maximum permitted\n" % abs(clevage_site_b - clevage_site_t))
+                print("ERROR: cleavage site gap (%i) exceeds maximum permitted\n" % abs(cleavage_site_b - cleavage_site_t))
             return (None, None, "", "")
 
         # (5' overhangs only) both sequences should match
-        if clevage_site_t < clevage_site_b:
-            diff = clevage_site_b - clevage_site_t
+        if cleavage_site_t < cleavage_site_b:
+            diff = cleavage_site_b - cleavage_site_t
             overhang_1 = test[test_cut_1 - diff :test_cut_1]
             overhang_2 = test[test_cut_2: test_cut_2 + diff]
             
@@ -116,9 +116,9 @@ class SequenceSearcher():
                     print("ERROR: Missmatch in 5' overhang (%s, %s)\n" % (overhang_1, overhang_2))
                 return (None, None, "", "")
 
-        (local_seq_1, local_seq_2) = self._get_local_sequences(ref,clevage_site_t,clevage_site_b)
+        (local_seq_1, local_seq_2) = self._get_local_sequences(ref,cleavage_site_t,cleavage_site_b)
             
-        return (clevage_site_t, clevage_site_b, local_seq_1, local_seq_2)
+        return (cleavage_site_t, cleavage_site_b, local_seq_1, local_seq_2)
     
     def _find_best_cassette_end(self, cass, test, end):
         cass_pos = self._find_cassette_end(cass, test, end)     
@@ -240,12 +240,12 @@ class SequenceSearcher():
 
         return max_alignment
 
-    def _get_local_sequences(self,ref, clevage_site_t, clevage_site_b):
-        if clevage_site_t is None or clevage_site_b is None:
+    def _get_local_sequences(self,ref, cleavage_site_t, cleavage_site_b):
+        if cleavage_site_t is None or cleavage_site_b is None:
             return ("", "")
 
-        local_seq_t = ref[clevage_site_t - self._local_r :clevage_site_t + self._local_r]
-        local_seq_b = ref[clevage_site_b - self._local_r : clevage_site_b + self._local_r].reverse_complement()
+        local_seq_t = ref[cleavage_site_t - self._local_r :cleavage_site_t + self._local_r]
+        local_seq_b = ref[cleavage_site_b - self._local_r : cleavage_site_b + self._local_r].reverse_complement()
             
         return (local_seq_t, local_seq_b)
 
