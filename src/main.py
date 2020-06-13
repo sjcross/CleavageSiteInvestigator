@@ -6,14 +6,13 @@ from enums.ends import Ends
 from enums.seqtype import Seqtype
 from utils.fileutils import FileReader
 
+from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
 
 
 ### Parameters ###
-### ROLLING CIRCLE EXAMPLES ###
 # Root folder containing all files
-# root_folder = "D:\\Stephen\\Users\\Mark Szczelkun\\"
 root_folder = "F:\\People\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
@@ -26,7 +25,7 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
 test_seq_path = root_folder + "2020-06-04 Mix files\\"
-test_seq_name = "XbaI_R2C2_Consensus_fix.fasta"
+test_seq_name = "Merge_test.fasta"
 
 
 local_r = 1 # Half width of the local sequences to be extracted at restriction sites
@@ -71,12 +70,8 @@ for count, test in enumerate(tests):
     if clevage_site_t == None:
         error_count = error_count + 1
         continue
-
-    k = (clevage_site_t, clevage_site_b)
-    if k not in results:
-        results[(clevage_site_t, clevage_site_b)] = 1
-    else:
-        results[(clevage_site_t, clevage_site_b)] = results[(clevage_site_t, clevage_site_b)] + 1
+    
+    results[count] = (clevage_site_t, clevage_site_b, local_seq_t, local_seq_b)
 
     if verbose:
         print("        Result:")
@@ -86,19 +81,19 @@ for count, test in enumerate(tests):
 print("\r")
 
 print("RESULTS:")
-# Sorting results by frequency
-results = ru.sort_results(results)
+# Reporting full sequence frequency
+freq_full = ru.get_full_sequence_frequency(results)
+ru.print_full_sequence_frequency(ref, freq_full, offset="")
 
-# Displaying results
-for result in results.keys():
-    clevage_site_t = result[0]
-    clevage_site_b = result[1]
-    count = results.get(result)
+# Reporting local sequence frequency
+freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH)
+freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
+freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
+ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
+ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
+ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
+pu.plotFrequency1D(freq_local,freq_5p,freq_3p)
 
-    ru.print_position(clevage_site_t, clevage_site_b)
-    ru.print_count(count)
-    ru.print_type(clevage_site_t, clevage_site_b)
-    ru.print_sequence(ref, clevage_site_t, clevage_site_b)
-
+# Reporting number of errors
 ru.print_error_rate(error_count,len(tests), offset="    ")
 print("\r")
