@@ -1,12 +1,13 @@
 ### Imports ###
-from Bio import Align, Seq
-from ends import Ends
-from seqtype import Seqtype
-from filehandling import FileReader
-
 import os
-import reportutils as ru
-import sequenceutils as su
+
+from Bio import Align, Seq
+from enums.ends import Ends
+from enums.seqtype import Seqtype
+from utils.fileutils import FileReader
+
+from utils import reportutils as ru
+from utils import sequenceutils as su
 
 
 ### Parameters ###
@@ -28,10 +29,11 @@ test_seq_path = root_folder + "2020-06-04 Mix files\\"
 test_seq_name = "XbaI_R2C2_Consensus_fix.fasta"
 
 
+local_r = 1 # Half width of the local sequences to be extracted at restriction sites
 max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
 min_quality = 0.75  # Minimum match quality ("1" is perfect)
 num_bases = 20  # Number of bases to match
-verbose = True # Display messages during execution
+verbose = False # Display messages during execution
 
 ### Processing ###
 # Creating FileHandler object
@@ -52,7 +54,7 @@ aligner.mode = 'local'
 aligner.match_score = 1.0
 aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
-searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
+searcher = su.SequenceSearcher(aligner, local_r=local_r,max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
 # Dict to store results as dual clevage site tuple
 results = {}
@@ -64,22 +66,23 @@ for count, test in enumerate(tests):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (clevage_site1, clevage_site2) = searcher.process(ref, cass, test)
-    if clevage_site1 == None:
+    (clevage_site_t, clevage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
+    
+    if clevage_site_t == None:
         error_count = error_count + 1
         continue
 
-    k = (clevage_site1, clevage_site2)
+    k = (clevage_site_t, clevage_site_b)
     if k not in results:
-        results[(clevage_site1, clevage_site2)] = 1
+        results[(clevage_site_t, clevage_site_b)] = 1
     else:
-        results[(clevage_site1, clevage_site2)] = results[(clevage_site1, clevage_site2)] + 1
+        results[(clevage_site_t, clevage_site_b)] = results[(clevage_site_t, clevage_site_b)] + 1
 
     if verbose:
         print("        Result:")
-        ru.print_position(clevage_site1, clevage_site2, offset="        ")
-        ru.print_type(clevage_site1, clevage_site2, offset="        ")
-        ru.print_sequence(ref, clevage_site1, clevage_site2, offset="        ")
+        ru.print_position(clevage_site_t, clevage_site_b, offset="        ")
+        ru.print_type(clevage_site_t, clevage_site_b, offset="        ")
+        ru.print_sequence(ref, clevage_site_t, clevage_site_b, offset="        ")
 print("\r")
 
 print("RESULTS:")
@@ -88,14 +91,14 @@ results = ru.sort_results(results)
 
 # Displaying results
 for result in results.keys():
-    clevage_site1 = result[0]
-    clevage_site2 = result[1]
+    clevage_site_t = result[0]
+    clevage_site_b = result[1]
     count = results.get(result)
 
-    ru.print_position(clevage_site1, clevage_site2)
+    ru.print_position(clevage_site_t, clevage_site_b)
     ru.print_count(count)
-    ru.print_type(clevage_site1, clevage_site2)
-    ru.print_sequence(ref, clevage_site1, clevage_site2)
+    ru.print_type(clevage_site_t, clevage_site_b)
+    ru.print_sequence(ref, clevage_site_t, clevage_site_b)
 
 ru.print_error_rate(error_count,len(tests), offset="    ")
 print("\r")

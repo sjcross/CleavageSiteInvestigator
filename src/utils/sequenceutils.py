@@ -1,10 +1,10 @@
 from Bio import Align
-from ends import Ends
-
+from enums.ends import Ends
 
 class SequenceSearcher():
-    def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
+    def __init__(self, aligner, local_r=1, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
         self._aligner = aligner
+        self._local_r = local_r
         self._max_gap = max_gap
         self._min_quality = min_quality
         self._num_bases = num_bases
@@ -15,6 +15,12 @@ class SequenceSearcher():
 
     def set_aligner(self, aligner):
         self._aligner = aligner
+
+    def get_local_r(self):
+        return self._local_r
+
+    def set_local_r(self, local_r):
+        self._local_r = local_r
 
     def get_max_gap(self):
         return self._max_gap
@@ -40,6 +46,11 @@ class SequenceSearcher():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
+    # Returns:
+    #     clevage_site_b = index of nucleotide immediately 5' of clevage site on top strand
+    #     clevage_site_t = index of nucleotide immediately 3' of clevage site on bottom strand
+    #     local_seq_1 = local sequence at top strand clevage site (local_r nucleotides either side of clevage site)
+    #     local_seq_2 = local sequence at bottom strand clevage site (local_r nucleotides either side of clevage site)
     def process(self, ref, cass, test):
         if self._verbose:
             print("        Finding first cassette end in test sequence")
@@ -53,13 +64,13 @@ class SequenceSearcher():
         if cass1_isRC != cass2_isRC:
             if self._verbose:
                 print("ERROR: Cassette RC mismatch\n")
-            return (None, None)
+            return (None, None, "", "")
 
         # Checking results are OK
         if cass_pos_1 is None or cass_pos_2 is None:
             if self._verbose:
                 print("ERROR: Cassette ends not found\n")
-            return (None, None)
+            return (None, None, "", "")
 
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
@@ -74,42 +85,40 @@ class SequenceSearcher():
         if alignment1 is None or alignment2 is None:
             if self._verbose:
                 print("ERROR: Test sequence not found in reference\n")
-            return (None, None)
+            return (None, None, "", "")
 
         # Both should be RC or normal
         if isRC1 != isRC2:
             if self._verbose:
                 print("ERROR: RC mismatch\n")
-            return (None, None)
+            return (None, None, "", "")
 
         if isRC1:
-            clevage_site_1 = alignment2.path[-1][0]
-            clevage_site_2 = alignment1.path[0][0]
-            # (test_cut_1,test_cut_2) = (test_cut_2,test_cut_1)
+            clevage_site_t = alignment1.path[0][0]
+            clevage_site_b = alignment2.path[-1][0]
         else:
-            clevage_site_1 = alignment1.path[-1][0]
-            clevage_site_2 = alignment2.path[0][0]
+            clevage_site_t = alignment2.path[0][0]
+            clevage_site_b = alignment1.path[-1][0]
 
-        # primer_truncation_length(cass, ref, clevage_site_1, clevage_site_2)
-
-        if abs(clevage_site_1 - clevage_site_2) > self._max_gap:
+        if abs(clevage_site_t - clevage_site_b) > self._max_gap:
             if self._verbose:
-                print("ERROR: Clevage site gap (%i) exceeds maximum permitted\n" % abs(clevage_site_1 - clevage_site_2))
-            return (None, None)
+                print("ERROR: Clevage site gap (%i) exceeds maximum permitted\n" % abs(clevage_site_b - clevage_site_t))
+            return (None, None, "", "")
 
         # (5' overhangs only) both sequences should match
-        if clevage_site_1 > clevage_site_2:
-            diff = clevage_site_1 - clevage_site_2
+        if clevage_site_t < clevage_site_b:
+            diff = clevage_site_b - clevage_site_t
             overhang_1 = test[test_cut_1 - diff :test_cut_1]
             overhang_2 = test[test_cut_2: test_cut_2 + diff]
             
             if overhang_1 != overhang_2:
                 if self._verbose:
                     print("ERROR: Missmatch in 5' overhang (%s, %s)\n" % (overhang_1, overhang_2))
-                return (None, None)
+                return (None, None, "", "")
 
+        (local_seq_1, local_seq_2) = self._get_local_sequences(ref,clevage_site_t,clevage_site_b)
             
-        return (clevage_site_1, clevage_site_2)
+        return (clevage_site_t, clevage_site_b, local_seq_1, local_seq_2)
     
     def _find_best_cassette_end(self, cass, test, end):
         cass_pos = self._find_cassette_end(cass, test, end)     
@@ -230,6 +239,15 @@ class SequenceSearcher():
             return None
 
         return max_alignment
+
+    def _get_local_sequences(self,ref, clevage_site_t, clevage_site_b):
+        if clevage_site_t is None or clevage_site_b is None:
+            return ("", "")
+
+        local_seq_t = ref[clevage_site_t - self._local_r :clevage_site_t + self._local_r]
+        local_seq_b = ref[clevage_site_b - self._local_r : clevage_site_b + self._local_r].reverse_complement()
+            
+        return (local_seq_t, local_seq_b)
 
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
