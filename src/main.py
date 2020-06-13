@@ -83,16 +83,29 @@ print("\r")
 print("RESULTS:")
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
+if verbose:
+    print("    Full sequence frequencies:\n")
 ru.print_full_sequence_frequency(ref, freq_full, offset="")
 
 # Reporting local sequence frequency
+print("    Local dinucleotide frequencies:\n")
 freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH)
-freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
-freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
 ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
+
+print("    Local 5' nucleotide frequencies:\n")
+freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
 ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
+
+print("    Local 3' nucleotide frequencies:\n")
+freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
 ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
-pu.plotFrequency1D(freq_local,freq_5p,freq_3p)
+
+# Plotting sequence distributions
+pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
+
+# Reporting top and bottom sequence co-occurrence
+(labels, freq2D) = ru.get_sequence_cooccurrence(results)
+pu.plotFrequency2D(labels, freq2D)
 
 # Reporting number of errors
 ru.print_error_rate(error_count,len(tests), offset="    ")

@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from enum import Enum
 
@@ -58,8 +59,30 @@ def get_local_sequence_frequency(results, strand_mode, local_mode):
 
     return freq
 
+def get_sequence_cooccurrence(results):
+    # Initialise frequency store based on number of nucleotides in first sequence
+    if len(results) == 0:
+        # If the results table doesn't include any data, assume a 2nt local sequence
+        n_nt = 2
+    else:
+        n_nt = len(results[0][2])
+
+    # Create list of sequences (this is in the order we will use)
+    labels = list(_init_frequency_dict(n_nt).keys())
+        
+    # Creating a 2D Numpy array
+    freq = np.zeros((pow(4, n_nt), pow(4, n_nt)))
+
+    # Iterating over each result, adding one to the matrix
+    for (clevage_site_t, clevage_site_b, local_site_t, local_site_b) in results.values():
+        idx_top = labels.index(local_site_t)
+        idx_bottom = labels.index(local_site_b)
+
+        freq[idx_top, idx_bottom] = freq[idx_top, idx_bottom] + 1
+        
+    return (labels,freq)    
+
 def print_full_sequence_frequency(ref, freq, offset=""):
-    print("    Full sequence frequencies:\n")
     # Displaying sequence frequency results
     for clevage_sites in freq.keys():
         clevage_site_t = clevage_sites[0]
@@ -73,9 +96,7 @@ def print_full_sequence_frequency(ref, freq, offset=""):
         
     print("\n")
 
-def print_local_sequence_frequency(freq, nonzero_only=False, offset=""):
-    print("    Local sequence frequencies:\n")
-    
+def print_local_sequence_frequency(freq, nonzero_only=False, offset=""):   
     for local_seq in freq.keys():
         if not nonzero_only or freq.get(local_seq) > 0:
             print("    %s: %i" % (local_seq, freq.get(local_seq)))

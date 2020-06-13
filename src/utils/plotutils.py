@@ -25,11 +25,7 @@ def plotFrequency1D(freq, freq_5p, freq_3p):
     sns.barplot(x="Events", y="Sequence", data=df, color="slategrey", ax=axbig)
 
     # Getting colourmap for pie charts
-    cmap = LinearSegmentedColormap.from_list('ne', ['slategrey', 'white'], N=6)
-    print(cmap(0))
-    print(cmap(1))
-    print(cmap(2))
-    print(cmap(3))
+    # cmap = LinearSegmentedColormap.from_list('ne', ['slategrey', 'white'], N=6)
       
     colours = [(0.4392156862745098, 0.5019607843137255, 0.5647058823529412, 1.0),
     (0.5513725490196079, 0.6015686274509804, 0.6517647058823529, 1.0),
@@ -47,6 +43,13 @@ def plotFrequency1D(freq, freq_5p, freq_3p):
 
     plt.show()
 
-def plotFrequency2D():
-    print("Needs implementing!")
+def plotFrequency2D(labels, freq):
+    cmap = LinearSegmentedColormap.from_list('ne', ['#C6CCD2', 'slategrey'], N=256)
+    ax = sns.heatmap(freq, cmap=cmap, linewidths=1)
+    ax.set_xlabel("Bottom strand dinucleotide")
+    ax.set_ylabel("Top strand dinucleotide")
+    ax.set_xticklabels(labels)
+    ax.set_yticklabels(labels,rotation=0) 
+
+    plt.show()
     
