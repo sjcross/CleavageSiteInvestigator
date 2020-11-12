@@ -13,7 +13,7 @@ from utils import sequenceutils as su
 
 ### Parameters ###
 # Root folder containing all files
-root_folder = "F:\\People\\Mark Szczelkun\\"
+root_folder = "D:\\People\\Mark Szczelkun\\"
 
 # The sequence for the plasmid into which the cassette has been inserted
 ref_seq_path = root_folder + "2020-04-28 New files\\"
@@ -24,8 +24,8 @@ cass_seq_path = root_folder + "2020-04-28 New files\\"
 cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 
 # The sequencing result
-test_seq_path = root_folder + "2020-06-04 Mix files\\"
-test_seq_name = "Merge_test.fasta"
+test_seq_path = root_folder + "2020-10-28 Problem files\\Stop Error\\"
+test_seq_name = "XbaINEBH.fasta"
 
 
 local_r = 1 # Half width of the local sequences to be extracted at restriction sites

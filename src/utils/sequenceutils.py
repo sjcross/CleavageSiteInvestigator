@@ -70,7 +70,7 @@ class SequenceSearcher():
         if cass_pos_1 is None or cass_pos_2 is None:
             if self._verbose:
                 print("ERROR: Cassette ends not found\n")
-            return (None, None, "", "")
+            return (None, None, "", "")  
 
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
@@ -195,7 +195,11 @@ class SequenceSearcher():
         return (max_alignment, max_isRC, path[max_en][0]-search_offset)
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
-        test_target = test[pos: pos + search_length]
+        test_target = get_seq(test, pos, pos+search_length)
+        if test_target is None:
+            if self._verbose:
+                print("            No test sequence found")
+            return (None, False)
 
         # Finding test target in reference sequence
         alignments = self._aligner.align(ref, test_target)
@@ -248,6 +252,36 @@ class SequenceSearcher():
         local_seq_b = ref[cleavage_site_b - self._local_r : cleavage_site_b + self._local_r].reverse_complement()
             
         return (local_seq_t, local_seq_b)
+
+def get_seq(seq, pos1, pos2):
+    seq_len = len(seq)
+
+    # Returning None if the output would require cycling over the sequence more than once
+    if abs(pos1) > seq_len or abs(pos2) > 2*seq_len:
+        return None
+
+    # Getting sequence
+    if pos1 >= 0 and pos2 < seq_len:
+        # pos1 and pos2 are within the limits of seq
+        return seq[pos1:pos2]
+
+    elif pos1 < 0 and pos2 < seq_len:
+        # Taking the first part of the sequence from the end
+        seq1 = seq[pos1:]
+        seq2 = seq[0:pos2]
+        return seq1+seq2
+
+    elif pos1 >= 0 and pos2 >= seq_len:
+        # Taking the last part of the sequence from the start
+        seq1 = seq[pos1::]
+        seq2 = seq[0:pos2-seq_len]
+        return seq1+seq2
+
+    elif pos1 < 0 and pos2 >= seq_len:
+        # Taking the last part of the sequence from the start
+        seq1 = seq[pos1:]
+        seq2 = seq[0:pos2-seq_len]
+        return seq1+seq+seq2
 
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
