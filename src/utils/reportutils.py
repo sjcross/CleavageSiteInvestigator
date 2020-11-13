@@ -28,14 +28,10 @@ def get_full_sequence_frequency(results):
 
     return freq
 
-def get_local_sequence_frequency(results, strand_mode, local_mode):
-    # Initialise frequency store based on number of nucleotides in first sequence
-    if len(results) == 0:
-        # If the results table doesn't include any data, assume a 2nt local sequence
-        n_nt = 2
-    else:
-        n_nt = len(results[0][2])
+def get_local_sequence_frequency(results, strand_mode, local_mode, local_r):
+    n_nt = 2*local_r
 
+    # Initialise frequency store
     if local_mode is not LocalMode.BOTH:
         n_nt = math.floor(n_nt / 2)
         
@@ -59,13 +55,8 @@ def get_local_sequence_frequency(results, strand_mode, local_mode):
 
     return freq
 
-def get_sequence_cooccurrence(results):
-    # Initialise frequency store based on number of nucleotides in first sequence
-    if len(results) == 0:
-        # If the results table doesn't include any data, assume a 2nt local sequence
-        n_nt = 2
-    else:
-        n_nt = len(results[0][2])
+def get_sequence_cooccurrence(results, local_r):
+    n_nt = 2*local_r
 
     # Create list of sequences (this is in the order we will use)
     labels = list(_init_frequency_dict(n_nt).keys())
@@ -83,6 +74,8 @@ def get_sequence_cooccurrence(results):
     return (labels,freq)    
 
 def print_full_sequence_frequency(ref, freq, offset=""):
+    total = sum(list(freq.values()))
+    
     # Displaying sequence frequency results
     for cleavage_sites in freq.keys():
         cleavage_site_t = cleavage_sites[0]
@@ -90,7 +83,7 @@ def print_full_sequence_frequency(ref, freq, offset=""):
         count = freq.get(cleavage_sites)
 
         print_position(cleavage_site_t, cleavage_site_b,offset=offset)
-        print_count(count,offset=offset)
+        print_count(count,total,offset=offset)
         print_type(cleavage_site_t, cleavage_site_b,offset=offset)
         print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=offset)
         
@@ -107,10 +100,10 @@ def print_position(cleavage_site_t, cleavage_site_b, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:
         return
 
-    print("%s    Position:    %i, %i" % (offset, cleavage_site_b, cleavage_site_t))
+    print("%s    Position:    %i, %i" % (offset, cleavage_site_t, cleavage_site_b))
 
-def print_count(count, offset=""):
-    print("%s    Count:       %i" % (offset, count))
+def print_count(count, total, offset=""):
+    print("%s    Count:       %i/%i (%.1f%% of events)" % (offset, count, total, 100*(count/total)))
 
 def print_type(cleavage_site_t, cleavage_site_b, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:

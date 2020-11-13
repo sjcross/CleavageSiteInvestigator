@@ -4,6 +4,7 @@ import os
 from Bio import Align, Seq
 from enums.ends import Ends
 from enums.seqtype import Seqtype
+from tqdm import tqdm
 from utils.fileutils import FileReader
 
 from utils import plotutils as pu
@@ -26,7 +27,6 @@ cass_seq_name = "Chloramphenicol Cassette overhang.fa"
 # The sequencing result
 test_seq_path = root_folder + "2020-10-28 Problem files\\Stop Error\\"
 test_seq_name = "XbaINEBH.fasta"
-
 
 local_r = 1 # Half width of the local sequences to be extracted at restriction sites
 max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
@@ -61,7 +61,7 @@ error_count = 0
 
 print("PROCESSING: Sequence(s)")
 
-for count, test in enumerate(tests):
+for count, test in enumerate(tqdm(tests, leave=False, disable=verbose, smoothing=0.1)):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
@@ -83,28 +83,26 @@ print("\r")
 print("RESULTS:")
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
-if verbose:
-    print("    Full sequence frequencies:\n")
 ru.print_full_sequence_frequency(ref, freq_full, offset="")
 
 # Reporting local sequence frequency
 print("    Local dinucleotide frequencies:\n")
-freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH)
+freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH, local_r)
 ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
 
 print("    Local 5' nucleotide frequencies:\n")
-freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
+freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P, local_r)
 ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
 
 print("    Local 3' nucleotide frequencies:\n")
-freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
+freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P, local_r)
 ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
 
 # Plotting sequence distributions
 pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
 
 # Reporting top and bottom sequence co-occurrence
-(labels, freq2D) = ru.get_sequence_cooccurrence(results)
+(labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
 pu.plotFrequency2D(labels, freq2D)
 
 # Reporting number of errors
