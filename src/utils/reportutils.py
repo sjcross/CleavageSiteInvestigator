@@ -73,7 +73,7 @@ def get_sequence_cooccurrence(results, local_r):
         
     return (labels,freq)    
 
-def print_full_sequence_frequency(ref, freq, offset=""):
+def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
     total = sum(list(freq.values()))
     
     # Displaying sequence frequency results
@@ -82,10 +82,10 @@ def print_full_sequence_frequency(ref, freq, offset=""):
         cleavage_site_b = cleavage_sites[1]
         count = freq.get(cleavage_sites)
 
-        print_position(cleavage_site_t, cleavage_site_b,offset=offset)
-        print_count(count,total,offset=offset)
-        print_type(cleavage_site_t, cleavage_site_b,offset=offset)
-        print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=offset)
+        print_position(cleavage_site_t, cleavage_site_b, offset=offset)
+        print_count(count, total, offset=offset)
+        print_type(cleavage_site_t, cleavage_site_b, offset=offset)
+        print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=extra_nt, offset=offset)
         
     print("\n")
 
@@ -119,16 +119,16 @@ def print_type(cleavage_site_t, cleavage_site_b, offset=""):
     elif cleavage_site_b > cleavage_site_t:
         print("%s    Type:        5' overhang" % offset)
 
-def print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=""):
+def print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=0, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:
         return
 
     # Identifying break type
     if cleavage_site_b < cleavage_site_t:
         # 3' overhang
-        left_seq1 = ref[cleavage_site_b - 1 :cleavage_site_b]
-        mid_seq1 = ref[cleavage_site_b:cleavage_site_t]
-        right_seq1 = ref[cleavage_site_t: cleavage_site_t + 1]
+        left_seq1 = ref[cleavage_site_b - 1 - extra_nt : cleavage_site_b]
+        mid_seq1 = ref[cleavage_site_b : cleavage_site_t]
+        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 1 + extra_nt]
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()
@@ -138,8 +138,8 @@ def print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=""):
         
     elif cleavage_site_b == cleavage_site_t:
         # Blunt end
-        left_seq1 = ref[cleavage_site_b - 3 :cleavage_site_b]
-        right_seq1 = ref[cleavage_site_t: cleavage_site_t + 3]
+        left_seq1 = ref[cleavage_site_b - 3 - extra_nt : cleavage_site_b]
+        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 3 + extra_nt]
 
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
@@ -148,9 +148,9 @@ def print_sequence(ref, cleavage_site_t, cleavage_site_b, offset=""):
 
     elif cleavage_site_b > cleavage_site_t:
         # 5' overhang
-        left_seq1 = ref[cleavage_site_t - 1 :cleavage_site_t]
-        mid_seq1 = ref[cleavage_site_t:cleavage_site_b]
-        right_seq1 = ref[cleavage_site_b: cleavage_site_b + 1]
+        left_seq1 = ref[cleavage_site_t - 1 - extra_nt : cleavage_site_t]
+        mid_seq1 = ref[cleavage_site_t : cleavage_site_b]
+        right_seq1 = ref[cleavage_site_b : cleavage_site_b + 1 + extra_nt]
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()

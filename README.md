@@ -101,3 +101,5 @@ RESULTS:
 
 ## Required libraries
 - [BioPython](https://biopython.org/)
+- [Seaborn](https://seaborn.pydata.org/)
+- [TQDM](https://github.com/tqdm/tqdm)

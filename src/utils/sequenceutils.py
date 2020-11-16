@@ -53,14 +53,14 @@ class SequenceSearcher():
     #     local_seq_2 = local sequence at bottom strand cleavage site (local_r nucleotides either side of cleavage site)
     def process(self, ref, cass, test):
         if self._verbose:
-            print("        Finding first cassette end in test sequence")
+            print("        Finding first cassette end in test sequence:")
         (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START)
         
         if self._verbose:
-            print("        Finding second cassette end in test sequence")
+            print("        Finding second cassette end in test sequence:")
         (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
 
-        # Both should be RC or normal
+        # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
             if self._verbose:
                 print("ERROR: Cassette RC mismatch\n")
@@ -74,12 +74,12 @@ class SequenceSearcher():
 
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
-            print("        Finding first cassette-adjacent test sequence in reference sequence")
+            print("        Finding first cassette-adjacent test sequence in reference sequence:")
         (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
         test_cut_1 = test_cut_1 + self._num_bases
 
         if self._verbose:
-            print("        Finding second cassette-adjacent test sequence in reference sequence")
+            print("        Finding second cassette-adjacent test sequence in reference sequence:")
         (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
 
         if alignment1 is None or alignment2 is None:
@@ -121,17 +121,20 @@ class SequenceSearcher():
         return (cleavage_site_t, cleavage_site_b, local_seq_1, local_seq_2)
     
     def _find_best_cassette_end(self, cass, test, end):
+        # Testing both orientations and taking best result
         cass_pos = self._find_cassette_end(cass, test, end)     
         cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
 
         if cass_pos is None and cass_pos_rc is not None:
             if self._verbose:
-                print("                Best score = %f" % cass_pos_rc.score)
+                print("            Best score = %.2f (reverse complement)" % cass_pos_rc.score)
+                print(cass_pos_rc.path)
             return (cass_pos_rc, True)
 
         elif cass_pos is not None and cass_pos_rc is None:
             if self._verbose:
-                print("                Best score = %f" % cass_pos.score)
+                print("            Best score = %.2f (normal)" % cass_pos.score)
+                print(cass_pos.path)
             return (cass_pos, False)
 
         elif cass_pos is None and cass_pos_rc is None:
@@ -139,16 +142,12 @@ class SequenceSearcher():
 
         if cass_pos_rc.score > cass_pos.score:
             if self._verbose:
-                print("                Best score = %f" % cass_pos_rc.score)
+                print("            Best score = %.2f (reverse complement)" % cass_pos_rc.score)
             return (cass_pos_rc, True)
         else:
             if self._verbose:
-                print("                Best score = %f" % cass_pos.score)
+                print("            Best score = %.2f (normal)" % cass_pos.score)
             return (cass_pos, False)
-
-        cass1_isRC = cass_pos_rc.score > cass_pos.score
-        if cass1_isRC:
-            cass_pos = cass_pos_rc
         
     def _find_cassette_end(self, cass, test, end):
         max_alignment = Align.PairwiseAlignment(
@@ -166,9 +165,6 @@ class SequenceSearcher():
 
         if max_alignment is None:
             return None
-
-        if self._verbose:
-            print("            Best score = %f" % max_alignment.score)
                   
         return max_alignment
 
@@ -179,7 +175,7 @@ class SequenceSearcher():
         max_isRC = False
         max_en = 0
         for en in range(len(path)):
-            (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, self._num_bases)
+            (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length)
 
             if alignment is None:
                 continue
@@ -211,12 +207,12 @@ class SequenceSearcher():
 
         if max_alignment is None and max_alignment_rc is not None:
             if self._verbose:
-                print("                Best score = %f" % max_alignment_rc.score)
+                print("            Best score = %.2f (reverse complement)" % max_alignment_rc.score)
             return (max_alignment_rc, True)
 
         elif max_alignment is not None and max_alignment_rc is None:
             if self._verbose:
-                print("                Best score = %f" % max_alignment.score)
+                print("            Best score = %.2f (normal)" % max_alignment.score)
             return (max_alignment, False)
 
         elif max_alignment is None and max_alignment_rc is None:
@@ -224,11 +220,11 @@ class SequenceSearcher():
 
         if max_alignment_rc.score > max_alignment.score:
             if self._verbose:
-                print("                Best score = %f" % max_alignment_rc.score)
+                print("            Best score = %.2f (reverse complement)" % max_alignment_rc.score)
             return (max_alignment_rc, True)
         else:
             if self._verbose:
-                print("                Best score = %f" % max_alignment.score)
+                print("            Best score = %.2f (normal)" % max_alignment.score)
             return (max_alignment, False)
 
     def _get_max_alignment(self, alignments):

@@ -8,23 +8,25 @@ class FileReader():
     def __init__(self, verbose=True):
         self._verbose = verbose
 
-    def read_sequence(self, path, name):
+    def read_sequence(self, path):
+        name = os.path.basename(path)
+
         if self._verbose:
             print("    Loading file \"%s\"" % name)
 
         # Get extension and run appropriate reader
-        rootname, ext = os.path.splitext(name)
+        rootname, ext = os.path.splitext(path)
 
         if ext == ".ab1":
-            return self._read_ab1(path, name)
+            return self._read_ab1(path)
         elif ext == ".dna":
-            return self._read_dna(path, name)
+            return self._read_dna(path)
         elif ext == ".fa" or ext == ".fasta":
-            return self._read_fasta(path, name)
+            return self._read_fasta(path)
         elif ext == ".txt":
-            return self._read_txt(path, name)
+            return self._read_txt(path)
         elif ext == ".seq":
-            return self._read_seq(path, name)
+            return self._read_seq(path)
 
     def get_verbose(self):
         return self._verbose
@@ -32,11 +34,11 @@ class FileReader():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
-    def _read_ab1(self, path, name):
+    def _read_ab1(self, path):
         if self._verbose:
             print("        Reading as \".ab1\" format")
 
-        file = open(path + name, "rb")
+        file = open(path, "rb")
         full_text = file.read()
 
         pattern = re.compile("term{1}([ACGT]+)".encode())
@@ -46,11 +48,11 @@ class FileReader():
 
         return [Seq(sequence_string)]
 
-    def _read_dna(self, path, name):
+    def _read_dna(self, path):
         if self._verbose:
             print("        Reading as \".dna\" format")
 
-        file = open(path + name, "rb")
+        file = open(path, "rb")
         full_text = file.read()
 
         pattern = re.compile("([ACGTacgt]+)".encode())
@@ -60,11 +62,11 @@ class FileReader():
 
         return [Seq(sequence_string)]
 
-    def _read_fasta(self, path, name):
+    def _read_fasta(self, path):
         if self._verbose:
             print("        Reading as \".fasta\" format")
 
-        file = open(path + name, "r")
+        file = open(path, "r")
         full_text = file.read()
         
         pattern = re.compile(">.+\n([ACGTacgt\n]+)")
@@ -80,11 +82,11 @@ class FileReader():
 
         return instances
 
-    def _read_seq(self, path, name):
+    def _read_seq(self, path):
         if self._verbose:
             print("        Reading as \".seq\" format")
 
-        file = open(path + name, "r")
+        file = open(path, "r")
         sequence_string = file.read()
 
         # Removing linebreaks
@@ -92,11 +94,11 @@ class FileReader():
 
         return [Seq(sequence_string)]
 
-    def _read_txt(self, path, name):
+    def _read_txt(self, path):
         if self._verbose:
             print("        Reading as \".txt\" format")
 
-        file = open(path + name, "r")
+        file = open(path, "r")
         return [Seq(file.read())]
 
     def _get_longest_sequence(self, instances):
