@@ -115,7 +115,7 @@ for count, test in enumerate(tqdm(tests,disable=verbose, smoothing=0.1)):
         print("        Result:")
         ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
         ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_sequence(ref, cleavage_site_t, cleavage_site_b, offset="        ")
+        ru.print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=extra_nt, offset="        ")
 
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
