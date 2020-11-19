@@ -36,7 +36,7 @@ def get_local_sequence_frequency(results, strand_mode, local_mode, local_r):
         n_nt = math.floor(n_nt / 2)
         
     freq = _init_frequency_dict(n_nt)
-
+    
     for (cleavage_site_t, cleavage_site_b, local_site_t, local_site_b) in results.values():
         if local_mode is LocalMode.FIVE_P:
             local_site_t = local_site_t[0:n_nt]

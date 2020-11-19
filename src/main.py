@@ -41,7 +41,7 @@ optional.add_argument("-mg", "--max_gap", type=int, default=10, help="maximum nu
 
 optional.add_argument("-mq", "--min_quality", type=float, default=0.75, help="minimum match quality (\"1\" is perfect)")
 
-optional.add_argument("-nb", "--num_bases", type=int, default=10, help="number of bases to match")
+optional.add_argument("-nb", "--num_bases", type=int, default=20, help="number of bases to match")
 
 optional.add_argument("-sr", "--show_results", action='store_true', help="display results in terminal as they are generated")
 
@@ -90,7 +90,7 @@ aligner.mode = 'local'
 aligner.match_score = 1.0
 aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
-searcher = su.SequenceSearcher(aligner, local_r=local_r, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
+searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
 # Dict to store results as dual cleavage site tuple
 results = {}
@@ -103,8 +103,10 @@ for count, test in enumerate(tqdm(tests,disable=verbose, smoothing=0.1)):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
-    
+    (cleavage_site_t, cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
+    print(cleavage_site_t,"_",cleavage_site_b)
+    (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b, local_r=local_r)
+
     if cleavage_site_t == None:
         error_count = error_count + 1
         continue

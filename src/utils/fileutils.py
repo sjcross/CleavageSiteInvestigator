@@ -45,6 +45,7 @@ class FileReader():
         sequence_string = pattern.findall(full_text)[0].decode()
 
         sequence_string = self._remove_repeats(sequence_string)
+        sequence_string = convertToUpperCase(sequence_string)
 
         return [Seq(sequence_string)]
 
@@ -59,6 +60,7 @@ class FileReader():
         instances = pattern.findall(full_text)
 
         sequence_string = self._get_longest_sequence(instances).decode()
+        sequence_string = convertToUpperCase(sequence_string)
 
         return [Seq(sequence_string)]
 
@@ -75,6 +77,7 @@ class FileReader():
         for i, instance in enumerate(instances):
             # Removing linebreaks
             instance = instance.replace("\n", "")
+            instance = convertToUpperCase(instance)
             instances[i] = Seq(instance)
 
         if self._verbose:
@@ -91,6 +94,7 @@ class FileReader():
 
         # Removing linebreaks
         sequence_string = sequence_string.replace("\n", "")
+        sequence_string = convertToUpperCase(sequence_string)
 
         return [Seq(sequence_string)]
 
@@ -99,7 +103,7 @@ class FileReader():
             print("        Reading as \".txt\" format")
 
         file = open(path, "r")
-        return [Seq(file.read())]
+        return [Seq(convertToUpperCase(file.read()))]
 
     def _get_longest_sequence(self, instances):
         max_len = 0
@@ -124,3 +128,11 @@ class FileReader():
                 len(instances)-1))
 
         return instances[1]
+
+def convertToUpperCase(seq_string):
+    seq_string = seq_string.replace("g", "G")
+    seq_string = seq_string.replace("c", "C")
+    seq_string = seq_string.replace("a", "A")
+    seq_string = seq_string.replace("t", "T")
+
+    return seq_string
