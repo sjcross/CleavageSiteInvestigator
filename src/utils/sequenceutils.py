@@ -48,12 +48,11 @@ class SequenceSearcher():
         if self._verbose:
             print("        Finding first cassette end in test sequence:")
         (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START)
-        print(cass_pos_1.path)
-        
+                
         if self._verbose:
             print("        Finding second cassette end in test sequence:")
         (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
-        print(cass_pos_2.path)
+        
         # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
             if self._verbose:
@@ -71,13 +70,11 @@ class SequenceSearcher():
             print("        Finding first cassette-adjacent test sequence in reference sequence:")
         (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
         test_cut_1 = test_cut_1 + self._num_bases
-        print(test_cut_1)
-
+        
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence:")
         (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
-        print(test_cut_2)
-
+        
         if alignment1 is None or alignment2 is None:
             if self._verbose:
                 print("ERROR: Test sequence not found in reference\n")
@@ -106,8 +103,6 @@ class SequenceSearcher():
             diff = cleavage_site_b - cleavage_site_t
             overhang_1 = test[test_cut_1 - diff :test_cut_1]
             overhang_2 = test[test_cut_2: test_cut_2 + diff]
-
-            print(overhang_1,"_",overhang_2)
             
             if overhang_1 != overhang_2:
                 if self._verbose:

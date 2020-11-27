@@ -104,7 +104,6 @@ for count, test in enumerate(tqdm(tests,disable=verbose, smoothing=0.1)):
         print("    Processing test sequence %i" % (count + 1))
 
     (cleavage_site_t, cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
-    print(cleavage_site_t,"_",cleavage_site_b)
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b, local_r=local_r)
 
     if cleavage_site_t == None:
