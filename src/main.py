@@ -1,51 +1,160 @@
 ### Imports ###
+import argparse
 import os
 
+from argparse import RawTextHelpFormatter
 from Bio import Align, Seq
 from enums.ends import Ends
 from enums.seqtype import Seqtype
+from tqdm import tqdm
 from utils.fileutils import FileReader
 
 from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
 
-
 ### Parameters ###
-# Root folder containing all files
-root_folder = "F:\\People\\Mark Szczelkun\\"
+# Creating ArgumentParser
+parser = argparse.ArgumentParser(
+    description=
+    "Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier",
+    add_help=True,
+    formatter_class=RawTextHelpFormatter)
 
-# The sequence for the plasmid into which the cassette has been inserted
-ref_seq_path = root_folder + "2020-04-28 New files\\"
-ref_seq_name = "pUC19.fa"
+# We want required arguments above optional ones in the help documentation, so removing optional argument descriptions for now
+optional = parser._action_groups.pop()
 
-# The cassette sequence
-cass_seq_path = root_folder + "2020-04-28 New files\\"
-cass_seq_name = "Chloramphenicol Cassette overhang.fa"
+# Defining required arguments
+required = parser.add_argument_group('required arguments')
 
-# The sequencing result
-test_seq_path = root_folder + "2020-06-04 Mix files\\"
-test_seq_name = "Merge_test.fasta"
+required.add_argument(
+    "-c",
+    "--cass_path",
+    type=str,
+    required=True,
+    help=
+    "path to cassette sequence file.  This is the sequence of the cassette inserted at the cleavage site."
+)
 
+required.add_argument(
+    "-r",
+    "--ref_path",
+    type=str,
+    required=True,
+    help=
+    "path to reference sequence file.  This is the sequence which has been digested."
+)
 
-local_r = 1 # Half width of the local sequences to be extracted at restriction sites
-max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
-min_quality = 0.75  # Minimum match quality ("1" is perfect)
-num_bases = 20  # Number of bases to match
-verbose = False # Display messages during execution
+required.add_argument(
+    "-t",
+    "--test_path",
+    type=str,
+    required=True,
+    help=
+    "path to test sequence file.  This is the sequence of the cleaved sample with cassette inserted."
+)
+
+# Reinserting optional arguments and defining new values
+parser._action_groups.append(optional)
+
+optional.add_argument(
+    "-rf",
+    "--repeat_filter",
+    type=str,
+    default="",
+    help=
+    "expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats)"
+)
+
+optional.add_argument(
+    "-en",
+    "--extra_nt",
+    type=int,
+    default=0,
+    help=
+    "number of additional nucleotides to be displayed either side of the cleavage site"
+)
+
+optional.add_argument(
+    "-lr",
+    "--local_r",
+    type=int,
+    default=1,
+    help=
+    "half width of the local sequences to be extracted at restriction sites")
+
+optional.add_argument(
+    "-mg",
+    "--max_gap",
+    type=int,
+    default=10,
+    help="maximum number of bp between 3' and 5' restriction sites")
+
+optional.add_argument("-mq",
+                      "--min_quality",
+                      type=float,
+                      default=1.0,
+                      help="minimum match quality (\"1\" is perfect)")
+
+optional.add_argument("-nb",
+                      "--num_bases",
+                      type=int,
+                      default=20,
+                      help="number of bases to match")
+
+optional.add_argument("-sr",
+                      "--show_results",
+                      action='store_true',
+                      help="display results in terminal as they are generated")
+
+optional.add_argument(
+    "-sp",
+    "--show_plots",
+    action='store_true',
+    help="display plots in pyplot windows as they are generated")
+
+optional.add_argument("-v",
+                      "--verbose",
+                      action='store_true',
+                      help="display detailed messages during execution")
+
+args = parser.parse_args()
+
+# Required arguments
+cass_path = args.cass_path  # The cassette sequence
+ref_path = args.ref_path  # The sequence for the plasmid into which the cassette has been inserted
+test_path = args.test_path  # The sequencing result
+
+# Optional arguments
+repeat_filter = args.repeat_filter # Expression for filtering sequences by number of repeats
+extra_nt = args.extra_nt  # Number of additional nucleotides to be displayed either side of the cleavage site
+local_r = args.local_r  # Half width of the local sequences to be extracted at restriction sites
+max_gap = args.max_gap  # Maximum number of bp between 3' and 5' restriction sites
+min_quality = args.min_quality  # Minimum match quality ("1" is perfect)
+num_bases = args.num_bases  # Number of bases to match
+show_results = args.show_results  # Display results in terminal as they are generated
+show_plots = args.show_plots  # Display plots in pyplot windows as they are generated
+verbose = args.verbose  # Display messages during execution
+
+# If not showing full messages, just display the current file name
+if not verbose:
+    print("Processing: %s" % test_path)
 
 ### Processing ###
 # Creating FileHandler object
-filereader = FileReader()
+filereader = FileReader(verbose=verbose)
 
 # Loading reference, cassette and test sequences
-print("INPUT: Loading sequences from file")
+if verbose:
+    print("INPUT: Loading sequences from file")
+ref = filereader.read_sequence(ref_path)[0][0]
+cass = filereader.read_sequence(cass_path)[0][0]
+(tests,(n_acc,n_rej)) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
+if verbose:
+    print("        Accepted = %i (%.2f%%), rejected = %i (%.2f%%)" % (n_acc, (100*n_acc/(n_acc+n_rej)), n_rej, (100*n_rej/(n_acc+n_rej))))
 
-ref = filereader.read_sequence(ref_seq_path, ref_seq_name)[0]
-cass = filereader.read_sequence(cass_seq_path, cass_seq_name)[0]
-tests = filereader.read_sequence(test_seq_path, test_seq_name)
-
-print("\r")
+if verbose:
+    print("\r")
 
 # Creating the PairwiseAligner and SequenceSearcher objects
 aligner = Align.PairwiseAligner()
@@ -53,60 +162,83 @@ aligner.mode = 'local'
 aligner.match_score = 1.0
 aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
-searcher = su.SequenceSearcher(aligner, local_r=local_r,max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
+searcher = su.SequenceSearcher(aligner,
+                               max_gap=max_gap,
+                               min_quality=min_quality,
+                               num_bases=num_bases,
+                               verbose=verbose)
 
 # Dict to store results as dual cleavage site tuple
 results = {}
 error_count = 0
 
-print("PROCESSING: Sequence(s)")
+if verbose:
+    print("PROCESSING: %i sequence(s)" % len(tests))
 
-for count, test in enumerate(tests):
+for count, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
         print("    Processing test sequence %i" % (count + 1))
 
-    (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = searcher.process(ref, cass, test)
-    
+    (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
+    (local_seq_t, local_seq_b) = su.get_local_sequences(ref,
+                                                        cleavage_site_t,
+                                                        cleavage_site_b,
+                                                        local_r=local_r)
+
     if cleavage_site_t == None:
         error_count = error_count + 1
         continue
-    
-    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b)
+
+    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t,
+                      local_seq_b)
 
     if verbose:
         print("        Result:")
         ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
         ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_sequence(ref, cleavage_site_t, cleavage_site_b, offset="        ")
-print("\r")
+        ru.print_sequence(ref,
+                          cleavage_site_t,
+                          cleavage_site_b,
+                          extra_nt=extra_nt,
+                          offset="        ")
 
-print("RESULTS:")
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
-if verbose:
-    print("    Full sequence frequencies:\n")
-ru.print_full_sequence_frequency(ref, freq_full, offset="")
+freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH,
+                                             ru.LocalMode.BOTH, local_r)
+freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH,
+                                          ru.LocalMode.FIVE_P, local_r)
+freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH,
+                                          ru.LocalMode.THREE_P, local_r)
 
-# Reporting local sequence frequency
-print("    Local dinucleotide frequencies:\n")
-freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.BOTH)
-ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
+if show_results:
+    print("\rRESULTS:")
+    print("    Full sequence frequency:\n")
+    ru.print_full_sequence_frequency(ref,
+                                     freq_full,
+                                     extra_nt=extra_nt,
+                                     offset="")
 
-print("    Local 5' nucleotide frequencies:\n")
-freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P)
-ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
+    print("    Local dinucleotide frequencies:\n")
+    ru.print_local_sequence_frequency(freq_local,
+                                      nonzero_only=False,
+                                      offset="")
 
-print("    Local 3' nucleotide frequencies:\n")
-freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P)
-ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
+    print("    Local 5' nucleotide frequencies:\n")
+    ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
+
+    print("    Local 3' nucleotide frequencies:\n")
+    ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
+
+    # Reporting number of errors
+    ru.print_error_rate(error_count, len(tests), offset="    ")
 
 # Plotting sequence distributions
-pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
+if show_plots:
+    pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
 
-# Reporting top and bottom sequence co-occurrence
-(labels, freq2D) = ru.get_sequence_cooccurrence(results)
-pu.plotFrequency2D(labels, freq2D)
+    # Reporting top and bottom sequence co-occurrence
+    (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
+    pu.plotFrequency2D(labels, freq2D)
 
-# Reporting number of errors
-ru.print_error_rate(error_count,len(tests), offset="    ")
 print("\r")

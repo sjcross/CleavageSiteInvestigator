@@ -6,6 +6,7 @@
 ```
 pip install biopython
 pip install seaborn
+pip install tqdm
 ```
 3. Open "main.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
 4. From command line, navigate to "src" folder and run "main.[]()py"
@@ -100,3 +101,5 @@ RESULTS:
 
 ## Required libraries
 - [BioPython](https://biopython.org/)
+- [Seaborn](https://seaborn.pydata.org/)
+- [TQDM](https://github.com/tqdm/tqdm)
