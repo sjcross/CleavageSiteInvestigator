@@ -65,6 +65,8 @@ class SequenceSearcher():
                 print("ERROR: Cassette ends not found\n")
             return (None, None)  
 
+        # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
+
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence:")

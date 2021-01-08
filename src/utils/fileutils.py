@@ -8,7 +8,7 @@ class FileReader():
     def __init__(self, verbose=True):
         self._verbose = verbose
 
-    def read_sequence(self, path):
+    def read_sequence(self, path, repeat_filter=""):
         name = os.path.basename(path)
 
         if self._verbose:
@@ -22,7 +22,7 @@ class FileReader():
         elif ext == ".dna":
             return self._read_dna(path)
         elif ext == ".fa" or ext == ".fasta":
-            return self._read_fasta(path)
+            return self._read_fasta(path, repeat_filter=repeat_filter)
         elif ext == ".txt":
             return self._read_txt(path)
         elif ext == ".seq":
@@ -34,7 +34,10 @@ class FileReader():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
-    def _read_ab1(self, path):
+    def _read_ab1(self, path, repeat_filter=""):
+        if repeat_filter != "":
+            print("            Repeat filtering not possible for .ab1 files")
+
         if self._verbose:
             print("        Reading as \".ab1\" format")
 
@@ -47,9 +50,12 @@ class FileReader():
         sequence_string = self._remove_repeats(sequence_string)
         sequence_string = convertToUpperCase(sequence_string)
 
-        return [Seq(sequence_string)]
+        return [Seq(sequence_string), (1, 1)]
 
-    def _read_dna(self, path):
+    def _read_dna(self, path, repeat_filter=""):
+        if repeat_filter != "":
+            print("            Repeat filtering not possible for .dna files")
+
         if self._verbose:
             print("        Reading as \".dna\" format")
 
@@ -62,30 +68,61 @@ class FileReader():
         sequence_string = self._get_longest_sequence(instances).decode()
         sequence_string = convertToUpperCase(sequence_string)
 
-        return [Seq(sequence_string)]
+        return [Seq(sequence_string), (1, 1)]
 
-    def _read_fasta(self, path):
+    def _read_fasta(self, path, repeat_filter=""):
         if self._verbose:
             print("        Reading as \".fasta\" format")
 
+        # Initialising counters for accepted and rejected sequences based on the number of repeats
+        n_acc = 0
+        n_rej = 0
+
+        # Initialising the sequence list
+        seqs = []
+
         file = open(path, "r")
         full_text = file.read()
-        
-        pattern = re.compile(">.+\n([ACGTacgt\n]+)")
+
+        pattern = re.compile("(>.+\n)([ACGTacgt\n]+)")
         instances = pattern.findall(full_text)
 
-        for i, instance in enumerate(instances):
-            # Removing linebreaks
-            instance = instance.replace("\n", "")
-            instance = convertToUpperCase(instance)
-            instances[i] = Seq(instance)
+        # Creating header pattern
+        header_pattern = re.compile(">.+_[\d.]+_\d+_(\d+)_\d+\n")
+
+        for instance in instances:
+            header = instance[0]
+            seq = instance[1]
+
+            # Checking number of repeats
+            if repeat_filter != "":
+                # Matching C3P0a format in header
+                header_instances = header_pattern.findall(header)
+
+                if len(header_instances) == 1:
+                    repeat_filter_curr = repeat_filter.replace("x", header_instances[0])
+
+                    # If repeat filter fails for current number of repeats, skip this sequence and increase n_rej by 1
+                    if not eval(repeat_filter_curr):                        
+                        n_rej = n_rej + 1
+                        continue
+
+            # Removing linebreaks in sequence
+            seq = seq.replace("\n", "")
+            seq = convertToUpperCase(seq)
+            seqs.append(Seq(seq))
+
+            n_acc = n_acc + 1
 
         if self._verbose:
-            print("        Loaded %i sequence(s)" % len(instances))
+            print("        Loaded %i sequence(s)" % len(seqs))
 
-        return instances
+        return [seqs, (n_acc, n_rej)]
 
-    def _read_seq(self, path):
+    def _read_seq(self, path, repeat_filter=""):
+        if repeat_filter != "":
+            print("            Repeat filtering not possible for .seq files")
+
         if self._verbose:
             print("        Reading as \".seq\" format")
 
@@ -96,14 +133,17 @@ class FileReader():
         sequence_string = sequence_string.replace("\n", "")
         sequence_string = convertToUpperCase(sequence_string)
 
-        return [Seq(sequence_string)]
+        return [Seq(sequence_string), (1, 1)]
 
-    def _read_txt(self, path):
+    def _read_txt(self, path, repeat_filter=""):
+        if repeat_filter != "":
+            print("            Repeat filtering not possible for .txt files")
+
         if self._verbose:
             print("        Reading as \".txt\" format")
 
         file = open(path, "r")
-        return [Seq(convertToUpperCase(file.read()))]
+        return [Seq(convertToUpperCase(file.read())), (1, 1)]
 
     def _get_longest_sequence(self, instances):
         max_len = 0
@@ -124,10 +164,12 @@ class FileReader():
         instances = pattern.split(seq_string)
 
         if self._verbose:
-            print("        Found %i instances of repeated sequence (loading first)" % (
-                len(instances)-1))
+            print(
+                "        Found %i instances of repeated sequence (loading first)"
+                % (len(instances) - 1))
 
         return instances[1]
+
 
 def convertToUpperCase(seq_string):
     seq_string = seq_string.replace("g", "G")
