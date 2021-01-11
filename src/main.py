@@ -1,9 +1,11 @@
 ### Imports ###
 import argparse
 import os
+import sys
 
 from argparse import RawTextHelpFormatter
 from Bio import Align
+from matplotlib.pyplot import show
 from tqdm import tqdm
 from utils.fileutils import FileReader
 
@@ -47,7 +49,9 @@ optional.add_argument("-sr", "--show_results", action='store_true',  help="displ
 
 optional.add_argument("-sp", "--show_plots", action='store_true', help="display plots in pyplot windows as they are generated")
 
-optional.add_argument("-sc", "--save_csv", action='store_true', help="save cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file.")
+optional.add_argument("-wi", "--write_individual", action='store_true', help="write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.")
+
+optional.add_argument("-wo", "--write_output", action='store_true', help="write all content displayed in console to a text file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_output'.")
 
 optional.add_argument("-v", "--verbose", action='store_true', help="display detailed messages during execution")
 
@@ -67,8 +71,16 @@ min_quality = args.min_quality  # Minimum match quality ("1" is perfect)
 num_bases = args.num_bases  # Number of bases to match
 show_results = args.show_results  # Display results in terminal as they are generated
 show_plots = args.show_plots  # Display plots in pyplot windows as they are generated
-save_csv = args.save_csv # Save cleavage results to CSV file
+write_individual = args.write_individual # Write cleavage results to CSV file
+write_output = args.write_output # Write console output to text file
 verbose = args.verbose  # Display messages during execution
+
+# If necessary, redirecting the output stream to file
+new_out = None
+if write_output:
+    root_name = os.path.splitext(test_path)[0]
+    new_out = ru.StdOut(root_name)
+    sys.stdout = new_out
 
 # If not showing full messages, just display the current file name
 if not verbose:
@@ -157,14 +169,18 @@ if show_results:
 
 # Plotting sequence distributions
 if show_plots:
-    pu.plotFrequency1D(freq_local, freq_5p, freq_3p)
+    pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
     # Reporting top and bottom sequence co-occurrence
     (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
-    pu.plotFrequency2D(labels, freq2D)
+    pu.plotFrequency2D(labels, freq2D, show_percentages=True)
 
-if save_csv:
+if write_individual:
     root_name = os.path.splitext(test_path)[0]
-    cu.write_csv(root_name, results, ref, extra_nt)
+    cu.write_individual(root_name, results, ref, extra_nt, double_line_mode=True)
 
 print("\r")
+
+# If writing output, shut down file and print redirection
+if write_output:
+    new_out.shutdown()

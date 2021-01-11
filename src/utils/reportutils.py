@@ -1,5 +1,8 @@
+import datetime as dt
+import io
 import math
 import numpy as np
+import sys
 
 from enum import Enum
 from utils import sequenceutils as su
@@ -13,6 +16,24 @@ class LocalMode(Enum):
     BOTH = 1
     FIVE_P = 2
     THREE_P = 3
+
+class StdOut(object):
+    def __init__(self,root_out_name):
+        datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        outname = root_out_name+"_output_" + datetime_str + ".txt"
+        self._out_file = io.open(outname, "w", encoding="utf-8")
+        self._sys_out = sys.stdout
+
+    def shutdown(self):
+       self._out_file.close()
+       sys.stdout = self._sys_out
+
+    def flush(self):
+        self._sys_out.flush()
+
+    def write(self,string):
+        self._out_file.write(string)
+        self._sys_out.write(string)
 
 def get_full_sequence_frequency(results):
     freq = {}

@@ -286,8 +286,8 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         mid_seq2 = mid_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        seq1 = "5'...%s %s↓%s...3'" % (left_seq1, mid_seq1, right_seq1)
-        seq2 = "3'...%s↑%s %s...5'" % (left_seq2, mid_seq2, right_seq2)
+        seq1 = str("5'...%s %s|%s...3'" % (left_seq1, mid_seq1, right_seq1))
+        seq2 = str("3'...%s|%s %s...5'" % (left_seq2, mid_seq2, right_seq2))
 
         return (seq1,seq2)
         
@@ -299,8 +299,8 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        seq1 = "5'...%s↓%s...3'" % (left_seq1, right_seq1)
-        seq2 = "3'...%s↑%s...5'" % (left_seq2, right_seq2)
+        seq1 = str("5'...%s|%s...3'" % (left_seq1, right_seq1))
+        seq2 = str("3'...%s|%s...5'" % (left_seq2, right_seq2))
         
         return (seq1, seq2)
 
@@ -314,8 +314,8 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         mid_seq2 = mid_seq1.complement()
         right_seq2 = right_seq1.complement()
 
-        seq1 = "5'...%s↓%s %s...3'" % (left_seq1, mid_seq1, right_seq1)
-        seq2 = "3'...%s %s↑%s...5'" % (left_seq2, mid_seq2, right_seq2)
+        seq1 = str("5'...%s|%s %s...3'" % (left_seq1, mid_seq1, right_seq1))
+        seq2 = str("3'...%s %s|%s...5'" % (left_seq2, mid_seq2, right_seq2))
 
         return (seq1, seq2)
 
