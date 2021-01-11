@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 from enum import Enum
+from utils import sequenceutils as su
 
 class StrandMode(Enum):
     TOP = 1
@@ -106,58 +107,20 @@ def print_count(count, total, offset=""):
     print("%s    Count:       %i/%i (%.1f%% of events)" % (offset, count, total, 100*(count/total)))
 
 def print_type(cleavage_site_t, cleavage_site_b, offset=""):
-    if cleavage_site_b is None or cleavage_site_t is None:
+    type_str = su.get_type_str(cleavage_site_t, cleavage_site_b)
+    if type_str is None:
         return
 
-    # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
-        print("%s    Type:        3' overhang" % offset)
-        
-    elif (cleavage_site_b == cleavage_site_t):
-        print("%s    Type:        Blunt end" % offset)
-
-    elif cleavage_site_b > cleavage_site_t:
-        print("%s    Type:        5' overhang" % offset)
+    print("%s    Type:        %s" % (offset, type_str))
 
 def print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=0, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:
         return
 
-    # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
-        # 3' overhang
-        left_seq1 = ref[cleavage_site_b - 1 - extra_nt : cleavage_site_b]
-        mid_seq1 = ref[cleavage_site_b : cleavage_site_t]
-        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 1 + extra_nt]
+    (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=extra_nt)
 
-        left_seq2 = left_seq1.complement()
-        mid_seq2 = mid_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("%s    Sequence:    5'...%s %s↓%s...3'\r\n                 %s3'...%s↑%s %s...5'\r\n" % (offset, left_seq1, mid_seq1, right_seq1, offset, left_seq2, mid_seq2, right_seq2))
+    print("%s    Sequence:    %s\r\n                 %s%s\r\n" % (offset, seq1, offset, seq2))
         
-    elif cleavage_site_b == cleavage_site_t:
-        # Blunt end
-        left_seq1 = ref[cleavage_site_b - 3 - extra_nt : cleavage_site_b]
-        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 3 + extra_nt]
-
-        left_seq2 = left_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("%s    Sequence:    5'...%s↓%s...3'\r\n                 %s3'...%s↑%s...5'\r\n" % (offset, left_seq1, right_seq1, offset, left_seq2, right_seq2))
-
-    elif cleavage_site_b > cleavage_site_t:
-        # 5' overhang
-        left_seq1 = ref[cleavage_site_t - 1 - extra_nt : cleavage_site_t]
-        mid_seq1 = ref[cleavage_site_t : cleavage_site_b]
-        right_seq1 = ref[cleavage_site_b : cleavage_site_b + 1 + extra_nt]
-
-        left_seq2 = left_seq1.complement()
-        mid_seq2 = mid_seq1.complement()
-        right_seq2 = right_seq1.complement()
-
-        print("%s    Sequence:    5'...%s↓%s %s...3'\r\n                 %s3'...%s %s↑%s...5'\r\n" % (offset, left_seq1, mid_seq1, right_seq1, offset, left_seq2, mid_seq2, right_seq2))
-
 def print_error_rate(error_count, sample_count, offset=""):
     error_rate = 100*error_count/sample_count
     print("%sCompleted with %i errors (%f%%)" % (offset, error_count, error_rate))

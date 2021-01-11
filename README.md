@@ -2,18 +2,19 @@
 
 ## Instructions
 1. Install Python (tested with Python 3.7 via [Anaconda](https://www.anaconda.com/))
-2. Install required libraries from command line
+2. Install Microsoft Visual C++ 14.0 (Get it with [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/))
+3. Install required libraries from command line
 ```
 pip install biopython
 pip install seaborn
 pip install tqdm
 ```
-3. Open "main.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
-4. From command line, navigate to "src" folder and run "main.[]()py"
+4. Open "main.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
+5. From command line, navigate to "src" folder and run "main.[]()py"
 ```
 python main.py
 ```
-5. Results should be shown almost instantly (example output below)
+6. Results should be shown almost instantly (example output below)
 ```
 INPUT: Loading sequences from file
     Loading file "pUC19.fa"
