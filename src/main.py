@@ -169,11 +169,14 @@ if show_results:
 
 # Plotting sequence distributions
 if show_plots:
-    pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
+    # pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
-    # Reporting top and bottom sequence co-occurrence
-    (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
-    pu.plotFrequency2D(labels, freq2D, show_percentages=True)
+    # # Reporting top and bottom sequence co-occurrence
+    # (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
+    # pu.plotFrequency2D(labels, freq2D, show_percentages=True)
+
+    # Showing cleavage event distribution
+    pu.plotEventDistribution(freq_full)
 
 if write_individual:
     root_name = os.path.splitext(test_path)[0]

@@ -1,7 +1,7 @@
 from matplotlib.colors import LinearSegmentedColormap
 from pandas import DataFrame
 
-import math
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -71,14 +71,71 @@ def plotFrequency2D(labels, freq, show_percentages=True):
     
     plt.show()
     
-# def plotEventDistribution():
-#     # Create document
-#     svg_doc = svg.Drawing(filename = "test.svg", size = ("800px", "600px"))
+def plotEventDistribution(freq):
+    # Constants:
+    doc_w = 800
+    doc_h = 200    
+    dna_rel_left = 0.1
+    dna_rel_right = 0.9
+    dna_rel_top = 0.2
+    dna_rel_bottom = 0.8
 
-#     svg_doc.add(svg_doc.rect(insert = (0, 0), size = ("200px", "100px"), stroke_width = "1", stroke = "black", fill = "rgb(255,255,0)"))
+    pos_min = 1
+    pos_max = 2686 # For pUC19, but should be read automatically later
 
-#     svg_doc.add(svg_doc.text("Hello World", insert = (210, 110)))
+    dna_stroke_colour = "black"
+    dna_stroke_width = 2
 
-#     print(svg_doc.tostring())
+    end_label_gap = 0.01
 
-#     svg_doc.save()
+    font_size = 20
+
+    max_event_width = 2
+    event_c1 = np.array(mpl.colors.to_rgb("Purple"))
+    event_c2 = np.array(mpl.colors.to_rgb("Yellow"))
+
+    # Create document
+    dwg = svg.Drawing(filename = "test.svg", size = ("%spx" % doc_w, "%spx" % doc_h))
+
+    # Calculating key DNA coordinates
+    dna_x1 = doc_w*dna_rel_left
+    dna_x2 = doc_w*dna_rel_right
+    dna_y1 = doc_h*dna_rel_top-dna_stroke_width/2
+    dna_y2 = doc_h*dna_rel_bottom-dna_stroke_width/2
+
+    # Adding cleavage event lines
+    total = sum(freq.values())
+    max_events = max(freq.values())
+    min_events = min(freq.values())
+    for (cleavage_site_t, cleavage_site_b) in freq.keys():        
+        norm_count = (freq.get((cleavage_site_t, cleavage_site_b))-min_events)/(max_events - min_events)
+        # norm_count = freq.get((cleavage_site_t, cleavage_site_b)/total
+        
+        # Adding line (adding width 1 to ensure everything is visible)
+        event_width = max_event_width*norm_count+1
+
+        event_t_xc = dna_x1 + (dna_x2-dna_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+        event_t_x1 = event_t_xc-event_width
+        event_t_x2 = event_t_xc+event_width
+
+        event_b_xc = dna_x1 + (dna_x2-dna_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+        event_b_x1 = event_b_xc-event_width
+        event_b_x2 = event_b_xc+event_width
+
+        col = mpl.colors.to_hex((1-norm_count)*event_c1 + norm_count*event_c2)
+
+        dwg.add(svg.shapes.Polygon(points=[(event_t_x1,dna_y1), (event_t_x2,dna_y1), (event_b_x2,dna_y2), (event_b_x1,dna_y2)], fill=col))
+
+        # Add transparency?
+
+    # Draw DNA
+    dwg.add(svg.shapes.Line((dna_x1, dna_y1), (dna_x2, dna_y1), stroke=dna_stroke_colour, stroke_width=dna_stroke_width))
+    dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width))
+
+    # Add DNA end labels
+    dwg.add(svg.text.Text("5'", insert=(dna_x1-doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=font_size))
+    dwg.add(svg.text.Text("3'", insert=(dna_x2+doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=font_size))
+    dwg.add(svg.text.Text("3'", insert=(dna_x1-doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=font_size))
+    dwg.add(svg.text.Text("5'", insert=(dna_x2+doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=font_size))
+
+    dwg.save()
