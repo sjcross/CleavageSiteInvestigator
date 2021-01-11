@@ -10,7 +10,7 @@ class FileReader():
 
     def read_sequence(self, path, repeat_filter=""):
         name = os.path.basename(path)
-
+        
         if self._verbose:
             print("    Loading file \"%s\"" % name)
 

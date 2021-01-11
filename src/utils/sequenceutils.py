@@ -270,3 +270,65 @@ def get_local_sequences(ref, cleavage_site_t, cleavage_site_b, local_r=1):
 
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
+
+def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
+    if cleavage_site_b is None or cleavage_site_t is None:
+        return (None, None)
+
+    # Identifying break type
+    if cleavage_site_b < cleavage_site_t:
+        # 3' overhang
+        left_seq1 = ref[cleavage_site_b - 1 - extra_nt : cleavage_site_b]
+        mid_seq1 = ref[cleavage_site_b : cleavage_site_t]
+        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 1 + extra_nt]
+
+        left_seq2 = left_seq1.complement()
+        mid_seq2 = mid_seq1.complement()
+        right_seq2 = right_seq1.complement()
+
+        seq1 = str("5'...%s %s|%s...3'" % (left_seq1, mid_seq1, right_seq1))
+        seq2 = str("3'...%s|%s %s...5'" % (left_seq2, mid_seq2, right_seq2))
+
+        return (seq1,seq2)
+        
+    elif cleavage_site_b == cleavage_site_t:
+        # Blunt end
+        left_seq1 = ref[cleavage_site_b - 3 - extra_nt : cleavage_site_b]
+        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 3 + extra_nt]
+
+        left_seq2 = left_seq1.complement()
+        right_seq2 = right_seq1.complement()
+
+        seq1 = str("5'...%s|%s...3'" % (left_seq1, right_seq1))
+        seq2 = str("3'...%s|%s...5'" % (left_seq2, right_seq2))
+        
+        return (seq1, seq2)
+
+    elif cleavage_site_b > cleavage_site_t:
+        # 5' overhang
+        left_seq1 = ref[cleavage_site_t - 1 - extra_nt : cleavage_site_t]
+        mid_seq1 = ref[cleavage_site_t : cleavage_site_b]
+        right_seq1 = ref[cleavage_site_b : cleavage_site_b + 1 + extra_nt]
+
+        left_seq2 = left_seq1.complement()
+        mid_seq2 = mid_seq1.complement()
+        right_seq2 = right_seq1.complement()
+
+        seq1 = str("5'...%s|%s %s...3'" % (left_seq1, mid_seq1, right_seq1))
+        seq2 = str("3'...%s %s|%s...5'" % (left_seq2, mid_seq2, right_seq2))
+
+        return (seq1, seq2)
+
+def get_type_str(cleavage_site_t, cleavage_site_b):
+    if cleavage_site_b is None or cleavage_site_t is None:
+        return None
+
+    # Identifying break type
+    if cleavage_site_b < cleavage_site_t:
+        return "3' overhang"
+        
+    elif (cleavage_site_b == cleavage_site_t):
+        return "Blunt end"
+
+    elif cleavage_site_b > cleavage_site_t:
+        return "5' overhang"
