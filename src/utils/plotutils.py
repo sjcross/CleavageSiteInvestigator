@@ -1,6 +1,8 @@
 from matplotlib.colors import LinearSegmentedColormap
 from pandas import DataFrame
 
+import datetime as dt
+import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,37 +73,65 @@ def plotFrequency2D(labels, freq, show_percentages=True):
     
     plt.show()
     
-def plotEventDistribution(freq):
-    # Constants:
+def plotEventDistribution(root_name, freq, pos_min, pos_max):
+    # Parameters
     doc_w = 800
     doc_h = 200    
     dna_rel_left = 0.1
     dna_rel_right = 0.9
-    dna_rel_top = 0.2
-    dna_rel_bottom = 0.8
-
-    pos_min = 1
-    pos_max = 2686 # For pUC19, but should be read automatically later
+    dna_rel_top = 0.3
+    dna_rel_bottom = 0.9
 
     dna_stroke_colour = "black"
     dna_stroke_width = 2
 
     end_label_gap = 0.01
+    end_label_font_size = 20
 
-    font_size = 20
+    grid_inc = 100
+    grid_stroke_colour = "lightgray"
+    grid_stroke_width = 1
+    
+    grid_label_inc = 500
+    grid_label_colour = "lightgray"
+    grid_label_font_size = 16
 
-    max_event_width = 2
     event_c1 = np.array(mpl.colors.to_rgb("Purple"))
     event_c2 = np.array(mpl.colors.to_rgb("Yellow"))
+    event_max_stroke_width = 2
 
     # Create document
-    dwg = svg.Drawing(filename = "test.svg", size = ("%spx" % doc_w, "%spx" % doc_h))
+    datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    outname = root_name+"_individual_" + datetime_str + ".svg"
+    dwg = svg.Drawing(outname, size = ("%spx" % doc_w, "%spx" % doc_h))
 
     # Calculating key DNA coordinates
     dna_x1 = doc_w*dna_rel_left
     dna_x2 = doc_w*dna_rel_right
     dna_y1 = doc_h*dna_rel_top-dna_stroke_width/2
     dna_y2 = doc_h*dna_rel_bottom-dna_stroke_width/2
+
+    # Adding grid lines
+    grid_yc = (dna_y1+dna_y2)/2
+    dwg.add(svg.shapes.Line((dna_x1, grid_yc), (dna_x2, grid_yc), stroke=grid_stroke_colour, stroke_width=grid_stroke_width))
+    grid_min = grid_inc*math.ceil(pos_min/grid_inc)
+    grid_max = grid_inc*math.floor(pos_max/grid_inc)
+    if grid_max%grid_inc == 0:
+        grid_max += 1
+    for grid_pos in range(grid_min, grid_max, grid_inc):
+        grid_x = dna_x1 + (dna_x2-dna_x1)*((grid_pos-pos_min)/(pos_max-pos_min))
+        dwg.add(svg.shapes.Line((grid_x, dna_y1), (grid_x, dna_y2), stroke=grid_stroke_colour, stroke_width=grid_stroke_width))
+
+    # Adding grid labels
+    grid_label_min = grid_label_inc*math.ceil(pos_min/grid_label_inc)
+    grid_label_max = grid_label_inc*math.floor(pos_max/grid_label_inc)
+    if grid_label_max%grid_label_inc == 0:
+        grid_label_max += 1
+    for grid_label_pos in range(grid_label_min, grid_label_max, grid_label_inc):
+        grid_label_x = dna_x1 + (dna_x2-dna_x1)*((grid_label_pos-pos_min)/(pos_max-pos_min))
+        grid_label_y = dna_y1-doc_w*end_label_gap
+        rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
+        dwg.add(svg.text.Text(str(grid_label_pos), insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start; baseline-shift:-50%", font_size=grid_label_font_size, fill=grid_label_colour))
 
     # Adding cleavage event lines
     total = sum(freq.values())
@@ -112,7 +142,7 @@ def plotEventDistribution(freq):
         # norm_count = freq.get((cleavage_site_t, cleavage_site_b)/total
         
         # Adding line (adding width 1 to ensure everything is visible)
-        event_width = max_event_width*norm_count+1
+        event_width = event_max_stroke_width*norm_count+1
 
         event_t_xc = dna_x1 + (dna_x2-dna_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
         event_t_x1 = event_t_xc-event_width
@@ -133,9 +163,9 @@ def plotEventDistribution(freq):
     dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width))
 
     # Add DNA end labels
-    dwg.add(svg.text.Text("5'", insert=(dna_x1-doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=font_size))
-    dwg.add(svg.text.Text("3'", insert=(dna_x2+doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=font_size))
-    dwg.add(svg.text.Text("3'", insert=(dna_x1-doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=font_size))
-    dwg.add(svg.text.Text("5'", insert=(dna_x2+doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=font_size))
+    dwg.add(svg.text.Text("5'", insert=(dna_x1-doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("3'", insert=(dna_x2+doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("3'", insert=(dna_x1-doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("5'", insert=(dna_x2+doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=end_label_font_size))
 
     dwg.save()

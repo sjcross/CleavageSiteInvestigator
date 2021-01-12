@@ -3,12 +3,12 @@ import io
 
 from utils import sequenceutils as su
 
-def write_individual(filename, results, ref, extra_nt, double_line_mode=False):
+def write_individual(root_name, results, ref, extra_nt, double_line_mode=False):
     # Checking if the file is available for writing
-    outname = filename+"_individual.csv"
+    outname = root_name+"_individual.csv"
     
     datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    outname = filename+"_individual_" + datetime_str + ".csv"
+    outname = root_name+"_individual_" + datetime_str + ".csv"
     file = io.open(outname, "w", encoding="utf-8")
 
     # Initialising string

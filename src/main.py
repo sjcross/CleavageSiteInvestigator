@@ -75,10 +75,12 @@ write_individual = args.write_individual # Write cleavage results to CSV file
 write_output = args.write_output # Write console output to text file
 verbose = args.verbose  # Display messages during execution
 
+# Getting the root filename
+root_name = os.path.splitext(test_path)[0]
+
 # If necessary, redirecting the output stream to file
 new_out = None
 if write_output:
-    root_name = os.path.splitext(test_path)[0]
     new_out = ru.StdOut(root_name)
     sys.stdout = new_out
 
@@ -176,10 +178,11 @@ if show_plots:
     # pu.plotFrequency2D(labels, freq2D, show_percentages=True)
 
     # Showing cleavage event distribution
-    pu.plotEventDistribution(freq_full)
+    pos_min = 0
+    pos_max = len(ref)
+    pu.plotEventDistribution(root_name, freq_full, pos_min, pos_max)
 
 if write_individual:
-    root_name = os.path.splitext(test_path)[0]
     cu.write_individual(root_name, results, ref, extra_nt, double_line_mode=True)
 
 print("\r")
