@@ -177,10 +177,12 @@ if show_plots:
     # (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
     # pu.plotFrequency2D(labels, freq2D, show_percentages=True)
 
-    # Showing cleavage event distribution
-    pos_min = 0
-    pos_max = len(ref)
-    pu.plotEventDistribution(root_name, freq_full, pos_min, pos_max)
+    # Showing cleavage event distribution (positions are specified as zero-based indices)
+    pos_min_zb = 0
+    pos_max_zb = len(ref)
+    pos_min_zb = 400
+    pos_max_zb = 500
+    pu.plotEventDistribution(root_name, ref, freq_full, pos_min_zb, pos_max_zb)
 
 if write_individual:
     cu.write_individual(root_name, results, ref, extra_nt, double_line_mode=True)

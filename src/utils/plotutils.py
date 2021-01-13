@@ -73,7 +73,7 @@ def plotFrequency2D(labels, freq, show_percentages=True):
     
     plt.show()
     
-def plotEventDistribution(root_name, freq, pos_min, pos_max):
+def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
     # Parameters
     doc_w = 800
     doc_h = 200    
@@ -84,15 +84,17 @@ def plotEventDistribution(root_name, freq, pos_min, pos_max):
 
     dna_stroke_colour = "black"
     dna_stroke_width = 2
+    
+    dna_seq_font_size = 10
 
     end_label_gap = 0.01
     end_label_font_size = 20
 
-    grid_inc = 100
+    grid_inc = 10
     grid_stroke_colour = "lightgray"
     grid_stroke_width = 1
     
-    grid_label_inc = 500
+    grid_label_inc = 10
     grid_label_colour = "lightgray"
     grid_label_font_size = 16
 
@@ -108,8 +110,8 @@ def plotEventDistribution(root_name, freq, pos_min, pos_max):
     # Calculating key DNA coordinates
     dna_x1 = doc_w*dna_rel_left
     dna_x2 = doc_w*dna_rel_right
-    dna_y1 = doc_h*dna_rel_top-dna_stroke_width/2
-    dna_y2 = doc_h*dna_rel_bottom-dna_stroke_width/2
+    dna_y1 = doc_h*dna_rel_top
+    dna_y2 = doc_h*dna_rel_bottom
 
     # Adding grid lines
     grid_yc = (dna_y1+dna_y2)/2
@@ -120,7 +122,9 @@ def plotEventDistribution(root_name, freq, pos_min, pos_max):
         grid_max += 1
     for grid_pos in range(grid_min, grid_max, grid_inc):
         grid_x = dna_x1 + (dna_x2-dna_x1)*((grid_pos-pos_min)/(pos_max-pos_min))
-        dwg.add(svg.shapes.Line((grid_x, dna_y1), (grid_x, dna_y2), stroke=grid_stroke_colour, stroke_width=grid_stroke_width))
+        grid_t_y = dna_y1+dna_stroke_width/2
+        grid_b_y = dna_y2-dna_stroke_width/2
+        dwg.add(svg.shapes.Line((grid_x, grid_t_y), (grid_x, grid_b_y), stroke=grid_stroke_colour, stroke_width=grid_stroke_width))
 
     # Adding grid labels
     grid_label_min = grid_label_inc*math.ceil(pos_min/grid_label_inc)
@@ -129,7 +133,7 @@ def plotEventDistribution(root_name, freq, pos_min, pos_max):
         grid_label_max += 1
     for grid_label_pos in range(grid_label_min, grid_label_max, grid_label_inc):
         grid_label_x = dna_x1 + (dna_x2-dna_x1)*((grid_label_pos-pos_min)/(pos_max-pos_min))
-        grid_label_y = dna_y1-doc_w*end_label_gap
+        grid_label_y = dna_y1-dna_stroke_width/2-doc_w*end_label_gap
         rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
         dwg.add(svg.text.Text(str(grid_label_pos), insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start; baseline-shift:-50%", font_size=grid_label_font_size, fill=grid_label_colour))
 
@@ -147,25 +151,41 @@ def plotEventDistribution(root_name, freq, pos_min, pos_max):
         event_t_xc = dna_x1 + (dna_x2-dna_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
         event_t_x1 = event_t_xc-event_width
         event_t_x2 = event_t_xc+event_width
+        event_t_y = dna_y1+dna_stroke_width/2
 
         event_b_xc = dna_x1 + (dna_x2-dna_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
         event_b_x1 = event_b_xc-event_width
         event_b_x2 = event_b_xc+event_width
+        event_b_y = dna_y2-dna_stroke_width/2
 
         col = mpl.colors.to_hex((1-norm_count)*event_c1 + norm_count*event_c2)
 
-        dwg.add(svg.shapes.Polygon(points=[(event_t_x1,dna_y1), (event_t_x2,dna_y1), (event_b_x2,dna_y2), (event_b_x1,dna_y2)], fill=col))
+        dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))
 
         # Add transparency?
 
-    # Draw DNA
-    dwg.add(svg.shapes.Line((dna_x1, dna_y1), (dna_x2, dna_y1), stroke=dna_stroke_colour, stroke_width=dna_stroke_width))
-    dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width))
+    # Draw DNA as lines
+    dwg.add(svg.shapes.Line((dna_x1, dna_y1), (dna_x2, dna_y1), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
+    dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
+
+    # Draw DNA as text sequence
+    # dna_pos_increment = (dna_x2-dna_x1)/(pos_max-pos_min)
+    # ref_rc = ref.reverse_complement()
+    # for dna_pos in range(pos_min,pos_max+1):
+    #     dna_seq_x = dna_x1+dna_pos_increment*(dna_pos-pos_min)
+    #     dna_seq_y1 = dna_y1+dna_seq_font_size*0.375
+    #     dna_seq_y2 = dna_y2+dna_seq_font_size*0.375
+    #     dwg.add(svg.text.Text(str(ref[dna_pos]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=dna_seq_font_size))
+    #     dwg.add(svg.text.Text(str(ref_rc[dna_pos]), insert=(dna_seq_x, dna_seq_y2), style="text-anchor:middle", font_size=dna_seq_font_size))
 
     # Add DNA end labels
-    dwg.add(svg.text.Text("5'", insert=(dna_x1-doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=end_label_font_size))
-    dwg.add(svg.text.Text("3'", insert=(dna_x2+doc_w*end_label_gap, dna_y1+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=end_label_font_size))
-    dwg.add(svg.text.Text("3'", insert=(dna_x1-doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:end; baseline-shift:-50%", font_size=end_label_font_size))
-    dwg.add(svg.text.Text("5'", insert=(dna_x2+doc_w*end_label_gap, dna_y2+(dna_stroke_width/2)), style="text-anchor:start; baseline-shift:-50%", font_size=end_label_font_size))
+    end_label_x1 = dna_x1-doc_w*end_label_gap
+    end_label_x2 = dna_x2+doc_w*end_label_gap
+    end_label_y1 = dna_y1+end_label_font_size*0.375
+    end_label_y2 = dna_y2+end_label_font_size*0.375
+    dwg.add(svg.text.Text("5'", insert=(end_label_x1, end_label_y1), style="text-anchor:end", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("3'", insert=(end_label_x2, end_label_y1), style="text-anchor:start", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("3'", insert=(end_label_x1, end_label_y2), style="text-anchor:end", font_size=end_label_font_size))
+    dwg.add(svg.text.Text("5'", insert=(end_label_x2, end_label_y2), style="text-anchor:start", font_size=end_label_font_size))
 
     dwg.save()
