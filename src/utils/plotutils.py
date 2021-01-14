@@ -77,15 +77,15 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
     # Parameters
     doc_w = 800
     doc_h = 200    
-    dna_rel_left = 0.1
-    dna_rel_right = 0.9
+    dna_rel_left = 0.05
+    dna_rel_right = 0.95
     dna_rel_top = 0.3
     dna_rel_bottom = 0.9
-
+    
+    dna_seq_show = False
+    dna_seq_font_size = 8
     dna_stroke_colour = "black"
     dna_stroke_width = 2
-    
-    dna_seq_font_size = 10
 
     end_label_gap = 0.01
     end_label_font_size = 20
@@ -96,11 +96,19 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
     
     grid_label_inc = 10
     grid_label_colour = "lightgray"
-    grid_label_font_size = 16
+    grid_label_font_size = 12
 
-    event_c1 = np.array(mpl.colors.to_rgb("Purple"))
-    event_c2 = np.array(mpl.colors.to_rgb("Yellow"))
+    event_c1 = np.array(mpl.colors.to_rgb("Blue"))
+    event_c2 = np.array(mpl.colors.to_rgb("Red"))
     event_max_stroke_width = 2
+
+    if dna_seq_show:
+        dna_stroke_width = dna_seq_font_size
+
+    # Checking pos_min and pos_max are different (to prevent divide by zero errors)
+    if pos_min == pos_max:
+        print("WARNING: Min and max sequence positions must be different")
+        return
 
     # Create document
     datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -141,8 +149,14 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
     total = sum(freq.values())
     max_events = max(freq.values())
     min_events = min(freq.values())
+    diff_events = max_events-min_events
+
+    # Preventing divide by zero errors
+    if diff_events == 0:
+        diff_events = 1
+
     for (cleavage_site_t, cleavage_site_b) in freq.keys():        
-        norm_count = (freq.get((cleavage_site_t, cleavage_site_b))-min_events)/(max_events - min_events)
+        norm_count = (freq.get((cleavage_site_t, cleavage_site_b))-min_events)/diff_events
         # norm_count = freq.get((cleavage_site_t, cleavage_site_b)/total
         
         # Adding line (adding width 1 to ensure everything is visible)
@@ -164,19 +178,21 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
 
         # Add transparency?
 
-    # Draw DNA as lines
-    dwg.add(svg.shapes.Line((dna_x1, dna_y1), (dna_x2, dna_y1), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
-    dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
+    if dna_seq_show:
+        # Draw DNA as text sequence
+        dna_pos_increment = (dna_x2-dna_x1)/(pos_max-pos_min)
+        ref_rc = ref.reverse_complement()
+        for dna_pos in range(pos_min,pos_max+1):
+            dna_seq_x = dna_x1+dna_pos_increment*(dna_pos-pos_min)
+            dna_seq_y1 = dna_y1+dna_seq_font_size*0.375
+            dna_seq_y2 = dna_y2+dna_seq_font_size*0.375
+            dwg.add(svg.text.Text(str(ref[dna_pos]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=dna_seq_font_size))
+            dwg.add(svg.text.Text(str(ref_rc[dna_pos]), insert=(dna_seq_x, dna_seq_y2), style="text-anchor:middle", font_size=dna_seq_font_size))
 
-    # Draw DNA as text sequence
-    # dna_pos_increment = (dna_x2-dna_x1)/(pos_max-pos_min)
-    # ref_rc = ref.reverse_complement()
-    # for dna_pos in range(pos_min,pos_max+1):
-    #     dna_seq_x = dna_x1+dna_pos_increment*(dna_pos-pos_min)
-    #     dna_seq_y1 = dna_y1+dna_seq_font_size*0.375
-    #     dna_seq_y2 = dna_y2+dna_seq_font_size*0.375
-    #     dwg.add(svg.text.Text(str(ref[dna_pos]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=dna_seq_font_size))
-    #     dwg.add(svg.text.Text(str(ref_rc[dna_pos]), insert=(dna_seq_x, dna_seq_y2), style="text-anchor:middle", font_size=dna_seq_font_size))
+    else:
+        # Draw DNA as lines
+        dwg.add(svg.shapes.Line((dna_x1, dna_y1), (dna_x2, dna_y1), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
+        dwg.add(svg.shapes.Line((dna_x1, dna_y2), (dna_x2, dna_y2), stroke=dna_stroke_colour, stroke_width=dna_stroke_width, style="stroke-linecap:square"))
 
     # Add DNA end labels
     end_label_x1 = dna_x1-doc_w*end_label_gap
