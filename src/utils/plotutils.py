@@ -5,9 +5,8 @@ import datetime as dt
 import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
-import svgwrite as svg
+
 
 def plotFrequency1D(freq, freq_5p, freq_3p, show_percentages=True):
     # Creating a Pandas DataFrames for the input dictionaries
