@@ -15,6 +15,10 @@ from utils import reportutils as ru
 from utils import sequenceutils as su
 
 ### Parameters ###
+# Hardcoded parameters
+csv_double_line_mode = False # Output CSV files should use double line format
+
+# Command line parameters
 # Creating ArgumentParser
 parser = argparse.ArgumentParser(description= "Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier", add_help=True, formatter_class=RawTextHelpFormatter)
 
@@ -45,13 +49,19 @@ optional.add_argument("-mq", "--min_quality", type=float, default=1.0, help="min
 
 optional.add_argument("-nb", "--num_bases", type=int, default=20, help="number of bases to match")
 
-optional.add_argument("-sr", "--show_results", action='store_true',  help="display results in terminal as they are generated")
+optional.add_argument("-pr", "--print_results", action='store_true',  help="prints results in terminal as they are generated")
 
 optional.add_argument("-sp", "--show_plots", action='store_true', help="display plots in pyplot windows as they are generated")
 
+optional.add_argument("-we", "--write_eventmap", action='store_true', help="write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.")
+
 optional.add_argument("-wi", "--write_individual", action='store_true', help="write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.")
 
+optional.add_argument("-ws", "--write_summary", action='store_true', help="write summary of results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_summary'.")
+
 optional.add_argument("-wo", "--write_output", action='store_true', help="write all content displayed in console to a text file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_output'.")
+
+optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)")
 
 optional.add_argument("-v", "--verbose", action='store_true', help="display detailed messages during execution")
 
@@ -69,9 +79,12 @@ local_r = args.local_r  # Half width of the local sequences to be extracted at r
 max_gap = args.max_gap  # Maximum number of bp between 3' and 5' restriction sites
 min_quality = args.min_quality  # Minimum match quality ("1" is perfect)
 num_bases = args.num_bases  # Number of bases to match
-show_results = args.show_results  # Display results in terminal as they are generated
+print_results = args.print_results  # Display results in terminal as they are generated
 show_plots = args.show_plots  # Display plots in pyplot windows as they are generated
+append_dt = args.append_datetime # Append time and date to all output filenames
+write_eventmap = args.write_eventmap # Write event map image to SVG file
 write_individual = args.write_individual # Write cleavage results to CSV file
+write_summary = args.write_summary # Write summary of results to CSV file
 write_output = args.write_output # Write console output to text file
 verbose = args.verbose  # Display messages during execution
 
@@ -124,27 +137,19 @@ for count, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
         print("    Processing test sequence %i" % (count + 1))
 
     (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
-    (local_seq_t, local_seq_b) = su.get_local_sequences(ref,
-                                                        cleavage_site_t,
-                                                        cleavage_site_b,
-                                                        local_r=local_r)
+    (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
 
     if cleavage_site_t == None:
         error_count = error_count + 1
         continue
 
-    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t,
-                      local_seq_b)
+    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t,local_seq_b)
 
     if verbose:
         print("        Result:")
         ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
         ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_sequence(ref,
-                          cleavage_site_t,
-                          cleavage_site_b,
-                          extra_nt=extra_nt,
-                          offset="        ")
+        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b,extra_nt=extra_nt,offset="        ")
 
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
@@ -152,7 +157,7 @@ freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.Loc
 freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P, local_r)
 freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P, local_r)
 
-if show_results:
+if print_results:
     print("\rRESULTS:")
     print("    Full sequence frequency:\n")
     ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, offset="")
@@ -171,21 +176,23 @@ if show_results:
 
 # Plotting sequence distributions
 if show_plots:
-    # pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
+    pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
-    # # Reporting top and bottom sequence co-occurrence
-    # (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
-    # pu.plotFrequency2D(labels, freq2D, show_percentages=True)
+    # Reporting top and bottom sequence co-occurrence
+    (labels, freq2D) = ru.get_sequence_cooccurrence(results, local_r)
+    pu.plotFrequency2D(labels, freq2D, show_percentages=True)
 
+if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
-    pos_min_zb = 0
-    pos_max_zb = len(ref)
-    pos_min_zb = 400
-    pos_max_zb = 500
-    pu.plotEventDistribution(root_name, ref, freq_full, pos_min_zb, pos_max_zb)
+    pu.plotEventDistribution(root_name, ref, freq_full, 0, len(ref), append_dt=append_dt)
 
+# Creating the CSVWriter object
+csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
 if write_individual:
-    cu.write_individual(root_name, results, ref, extra_nt, double_line_mode=True)
+    csv_writer.write_individual(root_name, results, ref)
+
+if write_summary:
+    csv_writer.write_summary(root_name, freq_full, ref, error_count)
 
 print("\r")
 

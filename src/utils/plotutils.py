@@ -5,7 +5,9 @@ import datetime as dt
 import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+import svgwrite as svg
 
 
 def plotFrequency1D(freq, freq_5p, freq_3p, show_percentages=True):
@@ -72,7 +74,7 @@ def plotFrequency2D(labels, freq, show_percentages=True):
     
     plt.show()
     
-def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
+def plotEventDistribution(root_name, ref, freq, pos_min, pos_max, append_dt=False):
     # Parameters
     doc_w = 800
     doc_h = 200    
@@ -89,11 +91,11 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
     end_label_gap = 0.01
     end_label_font_size = 20
 
-    grid_inc = 10
+    grid_inc = 100
     grid_stroke_colour = "lightgray"
     grid_stroke_width = 1
     
-    grid_label_inc = 10
+    grid_label_inc = 500
     grid_label_colour = "lightgray"
     grid_label_font_size = 12
 
@@ -110,10 +112,10 @@ def plotEventDistribution(root_name, ref, freq, pos_min, pos_max):
         return
 
     # Create document
-    datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    outname = root_name+"_individual_" + datetime_str + ".svg"
+    datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S") if append_dt else ""
+    outname = root_name+ '_eventmap' + datetime_str + '.' + 'svg'
     dwg = svg.Drawing(outname, size = ("%spx" % doc_w, "%spx" % doc_h))
-
+    
     # Calculating key DNA coordinates
     dna_x1 = doc_w*dna_rel_left
     dna_x2 = doc_w*dna_rel_right
