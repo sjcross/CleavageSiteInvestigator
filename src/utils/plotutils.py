@@ -1,11 +1,9 @@
 from matplotlib.colors import LinearSegmentedColormap
 from pandas import DataFrame
 
-import math
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
-import svgwrite as svg
+
 
 def plotFrequency1D(freq, freq_5p, freq_3p, show_percentages=True):
     # Creating a Pandas DataFrames for the input dictionaries
@@ -70,15 +68,3 @@ def plotFrequency2D(labels, freq, show_percentages=True):
     ax.set_yticklabels(labels,rotation=0) 
     
     plt.show()
-    
-# def plotEventDistribution():
-#     # Create document
-#     svg_doc = svg.Drawing(filename = "test.svg", size = ("800px", "600px"))
-
-#     svg_doc.add(svg_doc.rect(insert = (0, 0), size = ("200px", "100px"), stroke_width = "1", stroke = "black", fill = "rgb(255,255,0)"))
-
-#     svg_doc.add(svg_doc.text("Hello World", insert = (210, 110)))
-
-#     print(svg_doc.tostring())
-
-#     svg_doc.save()
