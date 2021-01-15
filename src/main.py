@@ -16,7 +16,7 @@ from utils import sequenceutils as su
 
 ### Parameters ###
 # Hardcoded parameters
-csv_double_line_mode = False # Output CSV files should use double line format
+csv_double_line_mode = True # Output CSV files should use double line format
 
 # Command line parameters
 # Creating ArgumentParser
