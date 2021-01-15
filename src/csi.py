@@ -5,7 +5,6 @@ import sys
 
 from argparse import RawTextHelpFormatter
 from Bio import Align
-from matplotlib.pyplot import show
 from tqdm import tqdm
 from utils.fileutils import FileReader
 
@@ -13,10 +12,12 @@ from utils import csvutils as cu
 from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
+from utils import svgutils as svu
+
 
 ### Parameters ###
 # Hardcoded parameters
-csv_double_line_mode = False # Output CSV files should use double line format
+csv_double_line_mode = True # Output CSV files should use double line format
 
 # Command line parameters
 # Creating ArgumentParser
@@ -132,9 +133,9 @@ error_count = 0
 if verbose:
     print("PROCESSING: %i sequence(s)" % len(tests))
 
-for count, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
+for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
-        print("    Processing test sequence %i" % (count + 1))
+        print("    Processing test sequence %i" % (iteration + 1))
 
     (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
@@ -143,7 +144,7 @@ for count, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
         error_count = error_count + 1
         continue
 
-    results[count] = (cleavage_site_t, cleavage_site_b, local_seq_t,local_seq_b)
+    results[iteration] = (cleavage_site_t, cleavage_site_b, local_seq_t,local_seq_b)
 
     if verbose:
         print("        Result:")
@@ -184,7 +185,8 @@ if show_plots:
 
 if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
-    pu.plotEventDistribution(root_name, ref, freq_full, 0, len(ref), append_dt=append_dt)
+    eventmap_writer = svu.EventMapWriter()
+    eventmap_writer.write_event_map(test_path, freq_full, ref=ref, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)

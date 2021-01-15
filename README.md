@@ -10,10 +10,10 @@ pip install seaborn
 pip install svgwrite
 pip install tqdm
 ```
-4. Open "main.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
-5. From command line, navigate to "src" folder and run "main.[]()py"
+4. Open "csi.[]()py" file in "src" folder and edit filepaths on lines 13-39 to point to local files.  There needs to be a reference sequence, a cassete sequence and one ("OTHER") or two ("SANGER") test sequence files.  The mode is set on line 41 and must be either "Seqtype.OTHER" or "Seqtype.SANGER".
+5. From command line, navigate to "src" folder and run "csi.[]()py"
 ```
-python main.py
+python csi.py
 ```
 6. Results should be shown almost instantly (example output below)
 ```
