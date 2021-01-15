@@ -1,3 +1,5 @@
+import datetime as dt
+import io
 import os
 import re
 
@@ -48,7 +50,7 @@ class FileReader():
         sequence_string = pattern.findall(full_text)[0].decode()
 
         sequence_string = self._remove_repeats(sequence_string)
-        sequence_string = convertToUpperCase(sequence_string)
+        sequence_string = convert_to_upper_case(sequence_string)
 
         return [Seq(sequence_string), (1, 1)]
 
@@ -66,7 +68,7 @@ class FileReader():
         instances = pattern.findall(full_text)
 
         sequence_string = self._get_longest_sequence(instances).decode()
-        sequence_string = convertToUpperCase(sequence_string)
+        sequence_string = convert_to_upper_case(sequence_string)
 
         return [Seq(sequence_string), (1, 1)]
 
@@ -109,7 +111,7 @@ class FileReader():
 
             # Removing linebreaks in sequence
             seq = seq.replace("\n", "")
-            seq = convertToUpperCase(seq)
+            seq = convert_to_upper_case(seq)
             seqs.append(Seq(seq))
 
             n_acc = n_acc + 1
@@ -131,7 +133,7 @@ class FileReader():
 
         # Removing linebreaks
         sequence_string = sequence_string.replace("\n", "")
-        sequence_string = convertToUpperCase(sequence_string)
+        sequence_string = convert_to_upper_case(sequence_string)
 
         return [Seq(sequence_string), (1, 1)]
 
@@ -143,7 +145,7 @@ class FileReader():
             print("        Reading as \".txt\" format")
 
         file = open(path, "r")
-        return [Seq(convertToUpperCase(file.read())), (1, 1)]
+        return [Seq(convert_to_upper_case(file.read())), (1, 1)]
 
     def _get_longest_sequence(self, instances):
         max_len = 0
@@ -171,10 +173,27 @@ class FileReader():
         return instances[1]
 
 
-def convertToUpperCase(seq_string):
+def convert_to_upper_case(seq_string):
     seq_string = seq_string.replace("g", "G")
     seq_string = seq_string.replace("c", "C")
     seq_string = seq_string.replace("a", "A")
     seq_string = seq_string.replace("t", "T")
 
     return seq_string
+
+def open_file(root_name, suffix, extension, append_dt):
+    datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S") if append_dt else ""
+    outname = root_name+ suffix + datetime_str + '.' + extension
+
+    try:
+        return io.open(outname, "w", encoding="utf-8")
+    except:
+        outname_orig = outname
+        datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
+        outname = root_name+ suffix + datetime_str + '.' + extension
+
+        print('WARNING: File "%s" unavailable for writing, storing to "%s" instead' % (outname_orig,outname))
+
+        return io.open(outname, "w", encoding="utf-8")
+
+        

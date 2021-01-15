@@ -3,7 +3,7 @@ $cass_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New 
 $ref_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New files\pUC19.fa"
 
 # Running a single file
-python .\src\main.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New files\mix.fasta" -sp -sr -en 3 -rf "x>=3" -wo -wi -v
+python .\src\main.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-10-28 Problem files\Stop Error\XbaINEBH.fasta" -en 3 -rf "x>=3" -pr -we -wo -wi -ws
 
 # # Running a folder full of files (will only process .fa or .fasta files)
 # $test_path = "D:\People\CSI\2020-06-04 Mix files"
@@ -11,3 +11,9 @@ python .\src\main.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-
 # Foreach-Object {
 #     python .\src\main.py -c $cass_path -r $ref_path -t $_.FullName -sr -en 3
 # }
+
+# $cass_path = "C:\Users\steph\Desktop\Oscar\Chloramphenicol Cassette overhang.fa"
+# $ref_path = "C:\Users\steph\Desktop\Oscar\pUC19.fa"
+
+# # Running a single file
+# python .\src\main.py -c $cass_path -r $ref_path -t "C:\Users\steph\Desktop\Oscar\mix.fasta" -sp -en 3 -rf "x>=3"

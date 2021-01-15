@@ -5,6 +5,7 @@ import numpy as np
 import sys
 
 from enum import Enum
+from utils import fileutils as fu
 from utils import sequenceutils as su
 
 class StrandMode(Enum):
@@ -18,10 +19,8 @@ class LocalMode(Enum):
     THREE_P = 3
 
 class StdOut(object):
-    def __init__(self,root_out_name):
-        datetime_str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        outname = root_out_name+"_output_" + datetime_str + ".txt"
-        self._out_file = io.open(outname, "w", encoding="utf-8")
+    def __init__(self,root_name,append_dt=False):
+        self._out_file = fu.open_file(root_name, '_output', 'txt', append_dt=append_dt)
         self._sys_out = sys.stdout
 
     def shutdown(self):
