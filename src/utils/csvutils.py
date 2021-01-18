@@ -99,7 +99,7 @@ class CSVWriter():
             file.close()
             return
 
-        total = sum(list(freq.values())) + error_count
+        total = sum(list(freq.values())) 
 
         # Initialising string
         str = self._get_summary_header_line()
@@ -116,8 +116,7 @@ class CSVWriter():
             file.write(str)
 
         # Adding a line for the number of errors
-        error_pc = 100*error_count/total
-        str = self._get_summary_error_line(error_count, error_pc)
+        str = self._get_summary_error_line(error_count)
         file.write(str)
 
         file.close()
@@ -157,5 +156,5 @@ class CSVWriter():
 
         return new_str + '\n'
 
-    def _get_summary_error_line(self, count, event_pc):
-        return 'Error,' + str(count) + ',' + str(event_pc) + '\n'
+    def _get_summary_error_line(self, count):
+        return 'Error,' + str(count) + '\n'
