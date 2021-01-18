@@ -1,4 +1,4 @@
-### Imports ###
+### IMPORTS ###
 import argparse
 import os
 import sys
@@ -6,20 +6,34 @@ import sys
 from argparse import RawTextHelpFormatter
 from Bio import Align
 from tqdm import tqdm
-from utils.fileutils import FileReader
 
 from utils import csvutils as cu
+from utils import fileutils as fu
 from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
 from utils import svgutils as svu
 
 
-### Parameters ###
-# Hardcoded parameters
+### DEFAULT PARAMETERS ###
+def_repeat_filter = "" # Expression for filtering sequences by number of repeats
+
+def_extra_nt = 0 # Number of additional nucleotides to be displayed either side of the cleavage site
+
+def_local_r = 1 # Half width of the local sequences to be extracted at restriction sites
+
+def_max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
+
+def_min_quality = 1.0 # Minimum match quality ("1" is perfect)
+
+def_num_bases = 20 # Number of bases to match
+
+
+# HARDCODED PARAMETERS
 csv_double_line_mode = True # Output CSV files should use double line format
 
-# Command line parameters
+
+### ARGUMENT PARSING ###
 # Creating ArgumentParser
 parser = argparse.ArgumentParser(description= "Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier", add_help=True, formatter_class=RawTextHelpFormatter)
 
@@ -38,17 +52,17 @@ required.add_argument("-t", "--test_path", type=str, required=True, help= "path 
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
 
-optional.add_argument("-rf", "--repeat_filter", type=str, default="", help="expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats)")
+optional.add_argument("-rf", "--repeat_filter", type=str, default=def_repeat_filter, help="expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats)")
 
-optional.add_argument("-en", "--extra_nt", type=int, default=0, help="number of additional nucleotides to be displayed either side of the cleavage site")
+optional.add_argument("-en", "--extra_nt", type=int, default=def_extra_nt, help="number of additional nucleotides to be displayed either side of the cleavage site")
 
-optional.add_argument("-lr", "--local_r", type=int, default=1, help="half width of the local sequences to be extracted at restriction sites")
+optional.add_argument("-lr", "--local_r", type=int, default=def_local_r, help="half width of the local sequences to be extracted at restriction sites")
 
-optional.add_argument("-mg", "--max_gap", type=int, default=10, help="maximum number of bp between 3' and 5' restriction sites")
+optional.add_argument("-mg", "--max_gap", type=int, default=def_max_gap, help="maximum number of bp between 3' and 5' restriction sites")
 
-optional.add_argument("-mq", "--min_quality", type=float, default=1.0, help="minimum match quality (\"1\" is perfect)")
+optional.add_argument("-mq", "--min_quality", type=float, default=def_min_quality, help="minimum match quality (\"1\" is perfect)")
 
-optional.add_argument("-nb", "--num_bases", type=int, default=20, help="number of bases to match")
+optional.add_argument("-nb", "--num_bases", type=int, default=def_num_bases, help="number of bases to match")
 
 optional.add_argument("-pr", "--print_results", action='store_true',  help="prints results in terminal as they are generated")
 
@@ -62,7 +76,7 @@ optional.add_argument("-ws", "--write_summary", action='store_true', help="write
 
 optional.add_argument("-wo", "--write_output", action='store_true', help="write all content displayed in console to a text file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_output'.")
 
-optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)")
+optional.add_argument("-ad", "--append_datetime", action='store_true', help="append time and date to all output filenames (prevents accidental file overwriting)")
 
 optional.add_argument("-v", "--verbose", action='store_true', help="display detailed messages during execution")
 
@@ -104,7 +118,7 @@ if not verbose:
 
 ### Processing ###
 # Creating FileHandler object
-filereader = FileReader(verbose=verbose)
+filereader = fu.FileReader(verbose=verbose)
 
 # Loading reference, cassette and test sequences
 if verbose:
@@ -186,7 +200,7 @@ if show_plots:
 if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
     eventmap_writer = svu.EventMapWriter()
-    eventmap_writer.write_event_map(test_path, freq_full, ref=ref, append_dt=append_dt)
+    eventmap_writer.write_event_map(root_name+'_eventmap', freq_full, ref=ref, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
