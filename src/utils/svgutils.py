@@ -228,6 +228,36 @@ class EventMapWriter():
 
             dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))
 
+class HeatMapWriter():
+    ## CONSTRUCTOR
+
+    def __init__(self, im_dims=(800,800), rel_pos=(0.3,0.95,0.3,0.95), grid_opts=(True,1,"lightgray",100), grid_label_opts=(True,12,"lightgray",500), event_opts=("blue","red"), event_label_opts=(True,20,"black")):
+        self._im_w = im_dims[0]
+        self._im_h = im_dims[1]
+
+        self._map_rel_top = rel_pos[0]
+        self._map_rel_bottom = rel_pos[1]
+        self._map_rel_left = rel_pos[2]
+        self._map_rel_right = rel_pos[3]
+        
+        self._grid_show = grid_opts[0]
+        self._grid_size = grid_opts[1]
+        self._grid_colour = grid_opts[2]
+        self._grid_interval = grid_opts[3]
+
+        self._grid_label_show = grid_label_opts[0]
+        self._grid_label_size = grid_label_opts[1]
+        self._grid_label_colour = grid_label_opts[2]
+        self._grid_label_interval = grid_label_opts[3]
+
+        self._event_colour_1 = event_opts[1]
+        self._event_colour_2 = event_opts[2]
+
+        self._event_label_show = event_label_opts[0]
+        self._event_label_size = event_label_opts[1]
+        self._event_label_colour = event_label_opts[2]
+               
+
 def get_max_event_pos(freq):
     max_pos = 0
     for (cleavage_site_t, cleavage_site_b) in freq.keys():
