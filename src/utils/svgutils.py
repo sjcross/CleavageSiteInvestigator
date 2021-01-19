@@ -52,12 +52,12 @@ class EventMapWriter():
         self._grid_show = grid_opts[0]
         self._grid_size = grid_opts[1]
         self._grid_colour = grid_opts[2]
-        self._grid_increment = grid_opts[3]
+        self._grid_interval = grid_opts[3]
 
         self._grid_label_show = grid_label_opts[0]
         self._grid_label_size = grid_label_opts[1]
         self._grid_label_colour = grid_label_opts[2]
-        self._grid_label_increment = grid_label_opts[3]
+        self._grid_label_interval = grid_label_opts[3]
 
         self._event_max_size = event_opts[0]
         self._event_colour_1 = event_opts[1]
@@ -71,15 +71,11 @@ class EventMapWriter():
 
     ## PUBLIC METHODS
 
-    def write_event_map_from_file(self, csv_path, out_path="", ref_path="", pos_range=None, append_dt=False):
+    def write_event_map_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False):
         # Loading results from CSV
         cr = cu.CSVReader()
         results = cr.read_individual(csv_path)
         freq = ru.get_full_sequence_frequency(results)
-
-        # If no output path is specified, use the same as the input csv file
-        if out_path == "":
-            out_path = csv_path+"_eventmap"
 
         # Loading reference sequence if path provided
         if ref_path == "":
@@ -135,13 +131,13 @@ class EventMapWriter():
         dwg.add(svg.shapes.Line((self._dna_x1, grid_yc), (self._dna_x2, grid_yc), stroke=self._grid_colour, stroke_width=self._grid_size))
 
         # Getting range of vertical grid lines
-        grid_min = self._grid_increment*math.ceil(pos_min/self._grid_increment)
-        grid_max = self._grid_increment*math.floor(pos_max/self._grid_increment)
-        if grid_max%self._grid_increment == 0:
+        grid_min = self._grid_interval*math.ceil(pos_min/self._grid_interval)
+        grid_max = self._grid_interval*math.floor(pos_max/self._grid_interval)
+        if grid_max%self._grid_interval == 0:
             grid_max += 1
 
         # Adding vertical grid lines
-        for grid_pos in range(grid_min, grid_max, self._grid_increment):
+        for grid_pos in range(grid_min, grid_max, self._grid_interval):
             grid_x = self._dna_x1 + (self._dna_x2-self._dna_x1)*((grid_pos-pos_min)/(pos_max-pos_min))
             grid_t_y = self._dna_y1+self._dna_size/2
             grid_b_y = self._dna_y2-self._dna_size/2
@@ -149,13 +145,13 @@ class EventMapWriter():
 
     def _add_grid_labels(self, dwg, pos_min, pos_max):
         # Getting range of grid label positions
-        grid_label_min = self._grid_label_increment*math.ceil(pos_min/self._grid_label_increment)
-        grid_label_max = self._grid_label_increment*math.floor(pos_max/self._grid_label_increment)
-        if grid_label_max%self._grid_label_increment == 0:
+        grid_label_min = self._grid_label_interval*math.ceil(pos_min/self._grid_label_interval)
+        grid_label_max = self._grid_label_interval*math.floor(pos_max/self._grid_label_interval)
+        if grid_label_max%self._grid_label_interval == 0:
             grid_label_max += 1
 
         # Adding grid labels
-        for grid_label_pos in range(grid_label_min, grid_label_max, self._grid_label_increment):
+        for grid_label_pos in range(grid_label_min, grid_label_max, self._grid_label_interval):
             grid_label_x = self._dna_x1 + (self._dna_x2-self._dna_x1)*((grid_label_pos-pos_min)/(pos_max-pos_min))
             grid_label_y = self._dna_y1-self._dna_size/2-self._end_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
@@ -168,10 +164,10 @@ class EventMapWriter():
 
         if self._dna_mode is DNA_MODE.SEQUENCE:
             # Draw DNA as text sequence
-            dna_pos_increment = (self._dna_x2-self._dna_x1)/(pos_max-pos_min)
+            dna_pos_interval = (self._dna_x2-self._dna_x1)/(pos_max-pos_min)
             ref_rc = ref.reverse_complement()
             for dna_pos in range(pos_min,pos_max+1):
-                dna_seq_x = self._dna_x1+dna_pos_increment*(dna_pos-pos_min)
+                dna_seq_x = self._dna_x1+dna_pos_interval*(dna_pos-pos_min)
                 dna_seq_y1 = self._dna_y1+self._dna_size*0.375
                 dna_seq_y2 = self._dna_y2+self._dna_size*0.375
                 dwg.add(svg.text.Text(str(ref[dna_pos]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=self._dna_size, fill=self._dna_colour))
@@ -208,6 +204,10 @@ class EventMapWriter():
             diff_events = 1
 
         for (cleavage_site_t, cleavage_site_b) in freq.keys():        
+            # Checking this event is within the rendered range
+            if cleavage_site_t < pos_min or cleavage_site_t > pos_max or cleavage_site_b < pos_min or cleavage_site_b > pos_max:
+                continue;
+                
             norm_count = (freq.get((cleavage_site_t, cleavage_site_b))-min_events)/diff_events
             # norm_count = freq.get((cleavage_site_t, cleavage_site_b)/total
             

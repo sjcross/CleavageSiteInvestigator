@@ -43,42 +43,42 @@ optional = parser._action_groups.pop()
 # Defining required arguments
 required = parser.add_argument_group('required arguments')
 
-required.add_argument("-c", "--cass_path", type=str, required=True, help="path to cassette sequence file.  This is the sequence of the cassette inserted at the cleavage site.")
+required.add_argument("-c", "--cass_path", type=str, required=True, help="Path to cassette sequence file.  This is the sequence of the cassette inserted at the cleavage site.")
 
-required.add_argument("-r", "--ref_path", type=str, required=True, help="path to reference sequence file.  This is the sequence which has been digested.")
+required.add_argument("-r", "--ref_path", type=str, required=True, help="Path to reference sequence file.  This is the sequence which has been digested.")
 
-required.add_argument("-t", "--test_path", type=str, required=True, help= "path to test sequence file.  This is the sequence of the cleaved sample with cassette inserted.")
+required.add_argument("-t", "--test_path", type=str, required=True, help= "Path to test sequence file.  This is the sequence of the cleaved sample with cassette inserted.")
 
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
 
-optional.add_argument("-rf", "--repeat_filter", type=str, default=def_repeat_filter, help="expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats)")
+optional.add_argument("-rf", "--repeat_filter", type=str, default=def_repeat_filter, help="Expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats)")
 
-optional.add_argument("-en", "--extra_nt", type=int, default=def_extra_nt, help="number of additional nucleotides to be displayed either side of the cleavage site")
+optional.add_argument("-en", "--extra_nt", type=int, default=def_extra_nt, help="Number of additional nucleotides to be displayed either side of the cleavage site")
 
-optional.add_argument("-lr", "--local_r", type=int, default=def_local_r, help="half width of the local sequences to be extracted at restriction sites")
+optional.add_argument("-lr", "--local_r", type=int, default=def_local_r, help="Half width of the local sequences to be extracted at restriction sites")
 
-optional.add_argument("-mg", "--max_gap", type=int, default=def_max_gap, help="maximum number of bp between 3' and 5' restriction sites")
+optional.add_argument("-mg", "--max_gap", type=int, default=def_max_gap, help="Maximum number of bp between 3' and 5' restriction sites")
 
-optional.add_argument("-mq", "--min_quality", type=float, default=def_min_quality, help="minimum match quality (\"1\" is perfect)")
+optional.add_argument("-mq", "--min_quality", type=float, default=def_min_quality, help="Minimum match quality (\"1\" is perfect)")
 
-optional.add_argument("-nb", "--num_bases", type=int, default=def_num_bases, help="number of bases to match")
+optional.add_argument("-nb", "--num_bases", type=int, default=def_num_bases, help="Number of bases to match")
 
-optional.add_argument("-pr", "--print_results", action='store_true',  help="prints results in terminal as they are generated")
+optional.add_argument("-pr", "--print_results", action='store_true',  help="Prints results in terminal as they are generated")
 
-optional.add_argument("-sp", "--show_plots", action='store_true', help="display plots in pyplot windows as they are generated")
+optional.add_argument("-sp", "--show_plots", action='store_true', help="Display plots in pyplot windows as they are generated")
 
-optional.add_argument("-we", "--write_eventmap", action='store_true', help="write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.")
+optional.add_argument("-we", "--write_eventmap", action='store_true', help="Write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.")
 
-optional.add_argument("-wi", "--write_individual", action='store_true', help="write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.")
+optional.add_argument("-wi", "--write_individual", action='store_true', help="Write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.")
 
-optional.add_argument("-ws", "--write_summary", action='store_true', help="write summary of results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_summary'.")
+optional.add_argument("-ws", "--write_summary", action='store_true', help="Write summary of results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_summary'.")
 
-optional.add_argument("-wo", "--write_output", action='store_true', help="write all content displayed in console to a text file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_output'.")
+optional.add_argument("-wo", "--write_output", action='store_true', help="Write all content displayed in console to a text file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_output'.")
 
-optional.add_argument("-ad", "--append_datetime", action='store_true', help="append time and date to all output filenames (prevents accidental file overwriting)")
+optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)")
 
-optional.add_argument("-v", "--verbose", action='store_true', help="display detailed messages during execution")
+optional.add_argument("-v", "--verbose", action='store_true', help="Display detailed messages during execution")
 
 args = parser.parse_args()
 
@@ -200,7 +200,7 @@ if show_plots:
 if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
     eventmap_writer = svu.EventMapWriter()
-    eventmap_writer.write_event_map(root_name+'_eventmap', freq_full, ref=ref, append_dt=append_dt)
+    eventmap_writer.write_event_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
