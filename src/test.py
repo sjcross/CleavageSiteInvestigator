@@ -1,6 +1,6 @@
 import os
 
-from utils.fileutils import FileReader
+from utils import fileutils as fu
 from utils import plotutils as pu
 from utils import reportutils as ru
 
@@ -10,7 +10,7 @@ test_path = "C:\\Users\\steph\\Desktop\\Oscar\\test.fasta"
 
 root_name = os.path.splitext(test_path)[0]
 
-filereader = FileReader(verbose=verbose)
+filereader = fu.FileReader(verbose=verbose)
 ref = filereader.read_sequence(ref_path)[0][0]
 
 freq_full = {}

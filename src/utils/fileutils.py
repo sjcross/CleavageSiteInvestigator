@@ -1,5 +1,4 @@
 import datetime as dt
-import io
 import os
 import re
 
@@ -186,7 +185,7 @@ def open_file(root_name, suffix, extension, append_dt):
     outname = root_name+ suffix + datetime_str + '.' + extension
 
     try:
-        return io.open(outname, "w", encoding="utf-8")
+        return open(outname, "w", encoding="utf-8")
     except:
         outname_orig = outname
         datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S")
@@ -194,6 +193,6 @@ def open_file(root_name, suffix, extension, append_dt):
 
         print('WARNING: File "%s" unavailable for writing, storing to "%s" instead' % (outname_orig,outname))
 
-        return io.open(outname, "w", encoding="utf-8")
+        return open(outname, "w", encoding="utf-8")
 
         

@@ -1,5 +1,37 @@
+import csv
+
 from utils import fileutils as fu
 from utils import sequenceutils as su
+
+class CSVReader():
+    def read_individual(self, filename):
+        results = {}
+        double_line_mode = self._get_double_line_mode(filename)
+
+        with open(filename, newline='\n') as file:
+            # Dumping the headings row
+            next(file)
+
+            # Iterating over each row, reading the content
+            for iteration, row in enumerate(file):
+                results[iteration] = self._read_individual_result_line(row)
+
+                # If in double_line_mode, skipping the next row
+                if double_line_mode:
+                    next(file)
+
+        return results
+                
+
+    def _get_double_line_mode(self, filename):
+        with open(filename, newline='\n') as csvfile:
+            headings = next(csvfile).split(',')
+            return "TOP" not in headings[6]
+
+    def _read_individual_result_line(self, row):
+        contents = row.split(',')
+        return (int(contents[2]), int(contents[3]), contents[4], contents[5])
+
 
 class CSVWriter():
     def __init__(self, extra_nt, local_r=1, append_dt=False, double_line_mode=False):
@@ -23,12 +55,12 @@ class CSVWriter():
         file.close()
 
     def _get_individual_header_line(self):
-        str = "INDEX, TYPE, TOP_POS, BOTTOM_POS, TOP_LOCAL_SEQ, BOTTOM_LOCAL_SEQ, "
+        str = "INDEX,TYPE,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
-            return str + " SEQUENCE\n"
+            return str + "SEQUENCE\n"
         else:
-            return str + "TOP_SEQUENCE, BOTTOM_SEQUENCE\n"
+            return str + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
 
     def _get_individual_result_line(self, result, index, ref):
         # Initialising string for this line with the result index
@@ -67,7 +99,7 @@ class CSVWriter():
             file.close()
             return
 
-        total = sum(list(freq.values())) + error_count
+        total = sum(list(freq.values())) 
 
         # Initialising string
         str = self._get_summary_header_line()
@@ -84,19 +116,18 @@ class CSVWriter():
             file.write(str)
 
         # Adding a line for the number of errors
-        error_pc = 100*error_count/total
-        str = self._get_summary_error_line(error_count, error_pc)
+        str = self._get_summary_error_line(error_count)
         file.write(str)
 
         file.close()
 
     def _get_summary_header_line(self):
-        str = "TYPE, COUNT, EVENT_%, TOP_POS, BOTTOM_POS, TOP_LOCAL_SEQ, BOTTOM_LOCAL_SEQ, "
+        str = "TYPE,COUNT,EVENT_%,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
-            return str + " SEQUENCE\n"
+            return str + "SEQUENCE\n"
         else:
-            return str + "TOP_SEQUENCE, BOTTOM_SEQUENCE\n"
+            return str + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
 
     def _get_summary_result_line(self, cleavage_site_t, cleavage_site_b, count, event_pc, ref):
         if cleavage_site_b is None or cleavage_site_t is None:
@@ -125,5 +156,5 @@ class CSVWriter():
 
         return new_str + '\n'
 
-    def _get_summary_error_line(self, count, event_pc):
-        return 'Error,' + str(count) + ',' + str(event_pc) + '\n'
+    def _get_summary_error_line(self, count):
+        return 'Error,' + str(count) + '\n'
