@@ -1,14 +1,14 @@
+# TODO: Have colour normalisation to visible position range only
+
 import datetime as dt
 import math
-import matplotlib as mpl
-import numpy as np
 import os
 import svgwrite as svg
 
 from enum import Enum
+from matplotlib import cm
 from utils import csvutils as cu  
 from utils import fileutils as fu
-from utils import plotutils as pu
 from utils import reportutils as ru
 
 
@@ -24,8 +24,8 @@ class DNA_MODE(Enum):
 class EventMapWriter():
     ## CONSTRUCTOR
 
-    def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.9), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",0.01), grid_opts=(True,1,"lightgray",100), 
-    grid_label_opts=(True,12,"lightgray",500), event_opts=(2,"blue","red")):
+    def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.9), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
+    grid_label_opts=(True,12,"gray",500,10), event_opts=(2,"cool")):
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
 
@@ -41,9 +41,8 @@ class EventMapWriter():
         self._end_label_show = end_label_opts[0]
         self._end_label_size = end_label_opts[1]
         self._end_label_colour = end_label_opts[2]
-        self._end_label_rel_gap = end_label_opts[3]
-        self._end_label_gap = self._im_w*self._end_label_rel_gap
-
+        self._end_label_gap = end_label_opts[3]
+        
         self._grid_show = grid_opts[0]
         self._grid_size = grid_opts[1]
         self._grid_colour = grid_opts[2]
@@ -53,10 +52,11 @@ class EventMapWriter():
         self._grid_label_size = grid_label_opts[1]
         self._grid_label_colour = grid_label_opts[2]
         self._grid_label_interval = grid_label_opts[3]
-
+        self._grid_label_gap = grid_label_opts[4]
+        
         self._event_max_size = event_opts[0]
-        self._event_colour_1 = event_opts[1]
-        self._event_colour_2 = event_opts[2]
+        self._event_colourmap = event_opts[1]
+
 
     ## GETTERS AND SETTERS
 
@@ -158,10 +158,10 @@ class EventMapWriter():
 
         # Adding grid labels
         for grid_label_pos in range(grid_label_min, grid_label_max, self._grid_label_interval):
-            grid_label_x = map_x1 + (map_x2-map_x1)*((grid_label_pos-pos_min)/(pos_max-pos_min))
-            grid_label_y = map_y1-self._dna_size/2-self._end_label_gap
+            grid_label_x = map_x1 + (map_x2-map_x1)*((grid_label_pos-pos_min)/(pos_max-pos_min)) + self._grid_label_size*0.375
+            grid_label_y = map_y1-self._dna_size/2-self._grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
-            dwg.add(svg.text.Text(str(grid_label_pos), insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start; baseline-shift:-50%", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            dwg.add(svg.text.Text(str(grid_label_pos), insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
     def _add_dna(self, dwg, pos_min, pos_max, map_xy, ref=None):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
@@ -202,8 +202,7 @@ class EventMapWriter():
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
 
-        event_colour_1 = np.array(mpl.colors.to_rgb(self._event_colour_1))
-        event_colour_2 = np.array(mpl.colors.to_rgb(self._event_colour_2))
+        cmap = cm.get_cmap(self._event_colourmap)
 
         # Adding cleavage event lines
         total = sum(freq.values())
@@ -236,7 +235,8 @@ class EventMapWriter():
             event_b_x2 = event_b_xc+event_width
             event_b_y = map_y2-self._dna_size/2
 
-            col = mpl.colors.to_hex((1-norm_count)*event_colour_1 + norm_count*event_colour_2)
+            rgba = cmap(norm_count)
+            col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
 
             dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))              
 

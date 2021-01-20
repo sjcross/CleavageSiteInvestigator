@@ -12,7 +12,7 @@ from utils import fileutils as fu
 from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
-from utils import svgutils as svu
+from utils import eventmapwriter as emw
 
 
 ### DEFAULT PARAMETERS ###
@@ -199,7 +199,7 @@ if show_plots:
 
 if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
-    eventmap_writer = svu.EventMapWriter()
+    eventmap_writer = emw.EventMapWriter()
     eventmap_writer.write_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
 # Creating the CSVWriter object

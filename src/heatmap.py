@@ -1,4 +1,5 @@
 import argparse
+from matplotlib import pyplot as plt
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
@@ -17,9 +18,9 @@ class SHOWHIDE(Enum):
 ### DEFAULT PARAMETER VALUES ###
 def_im_dim = 800
 
-def_map_rel_top = 0.3
-def_map_rel_left = 0.3
-def_map_rel_size = 0.6
+def_map_rel_top = 0.1
+def_map_rel_left = 0.1
+def_map_rel_size = 0.85
 
 def_border_vis = SHOWHIDE.SHOW
 def_border_size = 2.5
@@ -28,16 +29,15 @@ def_border_colour = "black"
 def_grid_vis = SHOWHIDE.SHOW
 def_grid_size = 1
 def_grid_colour = "lightgray"
-def_grid_interval = 100
+def_grid_interval = 1
 
 def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
 def_grid_label_colour = "lightgray"
-def_grid_label_interval = 500
+def_grid_label_interval = 100
+def_grid_label_gap = 10
 
-def_event_max_size = 2
-def_event_colour_1 = "blue"
-def_event_colour_2 = "red"
+def_event_colourmap = "cool"
 
 
 ### ARGUMENT PARSING ###
@@ -89,12 +89,9 @@ optional.add_argument("-glc", "--grid_label_colour", type=str, default=def_grid_
 
 optional.add_argument("-gli", "--grid_label_interval", type=int, default=def_grid_label_interval, help="Interval between adjacent grid labels.  Default: \"%i\"." % def_grid_label_interval)
 
+optional.add_argument("-glg", "--grid_label_gap", type=float, default=def_grid_label_gap, help="Gap between grid labels and the rendered DNA strands.  Specified in integer pixel units.  Default: \"%i\"." % def_grid_label_gap)
 
-optional.add_argument("-ems", "--event_max_size", type=int, default=def_event_max_size, help="Width of line corresponding to the most frequent cleavage event.  Default: \"%.1f\"." % def_event_max_size)
-
-optional.add_argument("-ec1", "--event_colour_1", type=str, default=def_event_colour_1, help="Colour corresponding to least frequent cleavage event.  Event line colours will be interpolated between this colour and --event_colour_2.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\"." % def_event_colour_1)
-
-optional.add_argument("-ec2", "--event_colour_2", type=str, default=def_event_colour_2, help="Colour corresponding to most frequent cleavage event.  Event line colours will be interpolated between --event_colour_1 and this colour.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\"." % def_event_colour_2)
+optional.add_argument("-ec", "--event_colourmap", type=str, default=def_event_colourmap, help="Matplotlib colourmap to use for event plotting.  Must be a Matplotlib colourmap.  Default: \"%s\"." % def_event_colourmap)
 
 args = parser.parse_args()
 
@@ -110,8 +107,8 @@ im_dim = args.im_dim
 rel_pos = tuple(args.map_rel_pos)
 border_opts = (border_show,args.border_size,args.border_colour)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
-grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval)
-event_opts = (args.event_max_size,args.event_colour_1,args.event_colour_2)
+grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
+event_colourmap = args.event_colourmap
 
-writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_opts=event_opts)
+writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colormap=event_colourmap)
 writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_ranges=pos_ranges, append_dt=args.append_datetime)

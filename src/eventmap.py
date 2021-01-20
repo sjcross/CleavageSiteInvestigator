@@ -30,21 +30,21 @@ def_dna_colour = "black"
 def_end_label_vis = SHOWHIDE.SHOW
 def_end_label_size = 20
 def_end_label_colour = "black"
-def_end_label_rel_gap = 0.01
+def_end_label_gap = 10
 
 def_grid_vis = SHOWHIDE.SHOW
 def_grid_size = 1
-def_grid_colour = "lightgray"
+def_grid_colour = "gray"
 def_grid_interval = 100
 
 def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
-def_grid_label_colour = "lightgray"
+def_grid_label_colour = "gray"
 def_grid_label_interval = 500
+def_grid_label_gap = 10
 
 def_event_max_size = 2
-def_event_colour_1 = "blue"
-def_event_colour_2 = "red"
+def_event_colourmap = "cool"
 
 
 ### ARGUMENT PARSING ###
@@ -86,7 +86,7 @@ optional.add_argument("-els", "--end_label_size", type=int, default=def_end_labe
 
 optional.add_argument("-elc", "--end_label_colour", type=str, default=def_end_label_colour, help="Colour of the rendered DNA end labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\"." % def_end_label_colour)
 
-optional.add_argument("-elg", "--end_label_gap", type=float, default=def_end_label_rel_gap, help="Relative gap between end labels and the rendered DNA strands.  Specified as a proportion of the total image width.  Default: \"%.2f\"." % def_end_label_rel_gap)
+optional.add_argument("-elg", "--end_label_gap", type=float, default=def_end_label_gap, help="Gap between end labels and the rendered DNA strands.  Specified in integer pixel units.  Default: \"%i\"." % def_end_label_gap)
 
 optional.add_argument("-gv", "--grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\"." % def_grid_vis)
 
@@ -104,12 +104,11 @@ optional.add_argument("-glc", "--grid_label_colour", type=str, default=def_grid_
 
 optional.add_argument("-gli", "--grid_label_interval", type=int, default=def_grid_label_interval, help="Interval between adjacent grid labels.  Default: \"%i\"." % def_grid_label_interval)
 
+optional.add_argument("-glg", "--grid_label_gap", type=float, default=def_grid_label_gap, help="Gap between grid labels and the rendered DNA strands.  Specified in integer pixel units.  Default: \"%i\"." % def_grid_label_gap)
 
 optional.add_argument("-ems", "--event_max_size", type=int, default=def_event_max_size, help="Width of line corresponding to the most frequent cleavage event.  Default: \"%.1f\"." % def_event_max_size)
 
-optional.add_argument("-ec1", "--event_colour_1", type=str, default=def_event_colour_1, help="Colour corresponding to least frequent cleavage event.  Event line colours will be interpolated between this colour and --event_colour_2.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\"." % def_event_colour_1)
-
-optional.add_argument("-ec2", "--event_colour_2", type=str, default=def_event_colour_2, help="Colour corresponding to most frequent cleavage event.  Event line colours will be interpolated between --event_colour_1 and this colour.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\"." % def_event_colour_2)
+optional.add_argument("-ec", "--event_colourmap", type=str, default=def_event_colourmap, help="Matplotlib colourmap to use for event plotting.  Must be a Matplotlib colourmap.  Default: \"%s\"." % def_event_colourmap)
 
 args = parser.parse_args()
 
@@ -126,8 +125,8 @@ rel_pos = tuple(args.map_rel_pos)
 dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
 end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_gap)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
-grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval)
-event_opts = (args.event_max_size,args.event_colour_1,args.event_colour_2)
+grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
+event_opts = (args.event_max_size,args.event_colourmap)
 
 
 
