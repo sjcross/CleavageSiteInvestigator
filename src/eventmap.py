@@ -2,7 +2,7 @@ import argparse
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
-from utils import svgutils as svu
+from utils import eventmapwriter as emw
 
 
 # Using an enum rather than bool, so default can be set for argparse
@@ -18,12 +18,12 @@ class SHOWHIDE(Enum):
 def_im_w = 800
 def_im_h = 200
 
-def_dna_rel_top = 0.3
-def_dna_rel_bottom = 0.9
-def_dna_rel_left = 0.05
-def_dna_rel_right = 0.95
+def_map_rel_top = 0.3
+def_map_rel_height = 0.6
+def_map_rel_left = 0.05
+def_map_rel_width = 0.9
 
-def_dna_mode = svu.DNA_MODE.LINE
+def_dna_mode = emw.DNA_MODE.LINE
 def_dna_size = 2.5
 def_dna_colour = "black"
 
@@ -72,9 +72,9 @@ optional.add_argument("-pr", "--pos_range", type=int, default=[0,0], nargs=2, he
 
 optional.add_argument("-id", "--im_dims", type=int, default=[def_im_w, def_im_h], nargs=2, help="Pixel dimensions of the output .svg image.  Specified as a pair of integer numbers in the order width height (e.g. -id 800 200).  Default: \"%i %i\"." % (def_im_w, def_im_h))
 
-optional.add_argument("-drp", "--dna_rel_pos", type=float, default=[def_dna_rel_top, def_dna_rel_bottom, def_dna_rel_left, def_dna_rel_right], nargs=4, help="Relative position of DNA strands in output image, relative to the top-left corner.  Positions correspond directly to strands, so allowances must be made for labels.  Specified as a list of 4 floating-point numbers in the order top bottom left right (e.g. -drp 0.3 0.9 0.05 0.95).  Default: \"%.2f %.2f %.2f %.2f\"." % (def_dna_rel_top, def_dna_rel_bottom, def_dna_rel_left, def_dna_rel_right))
+optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width], nargs=4, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 4 floating-point numbers in the order top height left width (e.g. -drp 0.3 0.6 0.05 0.9).  Default: \"%.2f %.2f %.2f %.2f\"." % (def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width))
 
-optional.add_argument("-dm", "--dna_mode", type=svu.DNA_MODE, default=def_dna_mode, choices=list(svu.DNA_MODE), help="Rendering mode for DNA strands.  \"line\" displays DNA as a pair of solid lines with width controlled by --dna_size.  \"seq\" displays DNA as a pair of letter sequences with font size controlled by --dna_size (Note: position range must be sufficiently narrow in sequence mode to prevent text overlap).  \"none\" displays nothing.  Default: \"%s\"." % def_dna_mode)
+optional.add_argument("-dm", "--dna_mode", type=emw.DNA_MODE, default=def_dna_mode, choices=list(emw.DNA_MODE), help="Rendering mode for DNA strands.  \"line\" displays DNA as a pair of solid lines with width controlled by --dna_size.  \"seq\" displays DNA as a pair of letter sequences with font size controlled by --dna_size (Note: position range must be sufficiently narrow in sequence mode to prevent text overlap).  \"none\" displays nothing.  Default: \"%s\"." % def_dna_mode)
 
 optional.add_argument("-ds", "--dna_size", type=int, default=def_dna_size, help="Width of rendered DNA lines (when in --dna_mode \"line\") or font size of DNA sequence letters (when in --dna_mode \"seq\").  Default: \"%.1f\"." % def_dna_size)
 
@@ -122,7 +122,7 @@ grid_label_show = True if args.grid_label_vis is SHOWHIDE.SHOW else False
 # Required arguments
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
 im_dims = tuple(args.im_dims)
-rel_pos = tuple(args.dna_rel_pos)
+rel_pos = tuple(args.map_rel_pos)
 dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
 end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_gap)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
@@ -131,5 +131,5 @@ event_opts = (args.event_max_size,args.event_colour_1,args.event_colour_2)
 
 
 
-writer = svu.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_opts=event_opts)
-writer.write_event_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_opts=event_opts)
+writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)

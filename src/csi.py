@@ -200,7 +200,7 @@ if show_plots:
 if write_eventmap:
     # Showing cleavage event distribution (positions are specified as zero-based indices)
     eventmap_writer = svu.EventMapWriter()
-    eventmap_writer.write_event_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
+    eventmap_writer.write_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
