@@ -20,7 +20,7 @@ def_im_dim = 800
 
 def_map_rel_top = 0.1
 def_map_rel_left = 0.1
-def_map_rel_size = 0.85
+def_map_rel_size = 0.8
 
 def_border_vis = SHOWHIDE.SHOW
 def_border_size = 2.5
@@ -110,5 +110,5 @@ grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 event_colourmap = args.event_colourmap
 
-writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colormap=event_colourmap)
+writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap)
 writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_ranges=pos_ranges, append_dt=args.append_datetime)

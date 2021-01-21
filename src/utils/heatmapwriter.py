@@ -27,7 +27,7 @@ class DNA_MODE(Enum):
 class HeatMapWriter():
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.85), border_opts=(True,1,"black"), grid_opts=(True,1,"lightgray",1), grid_label_opts=(True,12,"lightgray",10,10), event_colourmap="cool", event_label_opts=(False,10,"white")):
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), grid_opts=(True,1,"lightgray",1), grid_label_opts=(True,12,"lightgray",10,10), event_colourmap="cool", event_label_opts=(False,10,"invert"), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -50,11 +50,14 @@ class HeatMapWriter():
         self._grid_label_gap = grid_label_opts[4]
 
         self._event_colourmap = event_colourmap
+        self._cmap = cm.get_cmap(event_colourmap)
         
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
-               
+
+        self._sum_show = sum_show
+                       
 
     ## PUBLIC METHODS
 
@@ -126,22 +129,34 @@ class HeatMapWriter():
             self._add_grid_labels(dwg, pos_ranges, map_xy)
                 
         if self._border_show:
-            self._add_border(dwg, map_xy)
+            self._add_border(dwg, pos_ranges, map_xy)
 
         # Writing SVG to file
         dwg.save()
 
-    def _add_border(self, dwg, map_xy):
+    def _add_border(self, dwg, pos_ranges, map_xy):
+        (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
         (map_x1, map_y1, map_x2, map_y2) = map_xy
         map_w = map_x2-map_x1
         map_h = map_y2-map_y1
 
         # Adding border rectangle
         dwg.add(svg.shapes.Rect(insert=(map_x1,map_y1), size=(map_w,map_h), fill='none', stroke=self._border_colour, stroke_width=self._border_size))
+
+        # Adding extra border if sum column and row are to be shown
+        if self._sum_show:
+            # Determine event size
+            event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1)
+
+            dwg.add(svg.shapes.Rect(insert=(map_x1+map_w,map_y1), size=(event_dim,map_h), fill='none', stroke=self._border_colour, stroke_width=self._border_size))
+            dwg.add(svg.shapes.Rect(insert=(map_x1,map_y1+map_h), size=(map_w,event_dim), fill='none', stroke=self._border_colour, stroke_width=self._border_size))
         
     def _add_grid_lines(self, dwg, pos_ranges, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
         (map_x1, map_y1, map_x2, map_y2) = map_xy
+
+        # Determining extra grid length if sum column and row are to be shown
+        sum_l = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
 
         # Getting range of vertical grid lines
         grid_pos_t_min = self._grid_interval*math.ceil(pos_t_min/self._grid_interval)
@@ -152,7 +167,7 @@ class HeatMapWriter():
         # Adding vertical grid lines
         for grid_pos_t in range(grid_pos_t_min, grid_pos_t_max, self._grid_interval):
             grid_x = map_x1 + (map_x2-map_x1)*((grid_pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
-            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2+sum_l), stroke=self._grid_colour, stroke_width=self._grid_size))
 
         # Getting range of horizontal grid lines
         grid_pos_b_min = self._grid_interval*math.ceil(pos_b_min/self._grid_interval)
@@ -163,7 +178,7 @@ class HeatMapWriter():
         # Adding horizontal grid lines
         for grid_pos_b in range(grid_pos_b_min, grid_pos_b_max, self._grid_interval):
             grid_y = map_y1 + (map_y2-map_y1)*((grid_pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
-            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2+sum_l, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
 
     def _add_grid_labels(self, dwg, pos_ranges, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
@@ -189,55 +204,77 @@ class HeatMapWriter():
             grid_label_pos_b_max += 1
 
         # Adding horizontal line grid labels
-        for grid_label_pos_t in range(grid_label_pos_b_min, grid_label_pos_b_max, self._grid_label_interval):
+        for grid_label_pos_b in range(grid_label_pos_b_min, grid_label_pos_b_max, self._grid_label_interval):
             grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
-            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_t+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
-            dwg.add(svg.text.Text(str(grid_label_pos_t), insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
+            dwg.add(svg.text.Text(str(grid_label_pos_b), insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
+
+        # Adding sum labels if sum column and row are to be shown
+        if self._sum_show:
+            # Adding top strand sum label
+            grid_label_x = map_x1 + (map_x2-map_x1)*(((grid_label_pos_t_max+0.5)-pos_t_min)/(pos_t_max-pos_t_min+1)) + self._grid_label_size*0.375
+            grid_label_y = map_y1-self._border_size/2-self._grid_label_gap
+            rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
+            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
+
+            # Adding bottom strand sum label
+            grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
+            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b_max+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
+            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
     def _add_events(self, dwg, pos_ranges, map_xy, freq):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
         (map_x1, map_y1, map_x2, map_y2) = map_xy
-
-        cmap = cm.get_cmap(self._event_colourmap)
-
-        # Adding cleavage event lines
-        total = sum(freq.values())
-        max_events = max(freq.values())
-        min_events = min(freq.values())
-        diff_events = max_events-min_events
-
         event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1)
 
-        # Preventing divide by zero errors
-        if diff_events == 0:
-            diff_events = 1
+        # Determining total events and maximum number in a cell
+        max_events = get_max_events(pos_ranges, freq, self._sum_show)
+        sum_events = get_sum_events(pos_ranges, freq)
+    
+        for cleavage_site_t in range(pos_t_min,pos_t_max+1):
+            for cleavage_site_b in range(pos_b_min,pos_b_max+1):
+                event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
+                event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
+                (norm_count, event_pc) = get_event_stats((cleavage_site_t,cleavage_site_b), freq, max_events, sum_events)
+                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
-        for (cleavage_site_t, cleavage_site_b) in freq.keys():        
-            # Checking this event is within the rendered range
-            if cleavage_site_t < pos_t_min or cleavage_site_t > pos_t_max or cleavage_site_b < pos_b_min or cleavage_site_b > pos_b_max:
-                continue;
-                
-            norm_count = (freq.get((cleavage_site_t, cleavage_site_b))-min_events)/diff_events
-            # norm_count = freq.get((cleavage_site_t, cleavage_site_b)/total
-            
-            # Adding line (adding width 1 to ensure everything is visible)
-            event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
-            event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
-            rgba = cmap(norm_count)
-            col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+        # If enabled, showing sum row and column
+        if self._sum_show:
+            (freq_t, freq_b) = get_full_sequence_summed_frequency(freq, pos_ranges)
 
-            dwg.add(svg.shapes.Rect(insert=(event_x1,event_y1), size=(event_dim,event_dim), fill=col, stroke='none'))
+            for cleavage_site_t in range(pos_t_min,pos_t_max+1):
+                event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
+                event_y1 = map_y2
+                (norm_count, event_pc) = get_event_stats(cleavage_site_t, freq_t, max_events, sum_events)
+                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
-            # If selected, adding event percentage labels
-            if self._event_label_show:
-                # event_label_x = map_x1-self._border_size/2-self._grid_label_gap
-                
-                event_label_x = event_x1 + event_dim/2
-                event_label_y = event_y1 + event_dim/2 + self._event_label_size*0.375 
-                event_pc = 100*freq.get((cleavage_site_t, cleavage_site_b))/total
-                dwg.add(svg.text.Text("%.1f" % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=self._event_label_colour))
+            for cleavage_site_b in range(pos_b_min,pos_b_max+1):
+                event_x1 = map_x2
+                event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
+                (norm_count, event_pc) = get_event_stats(cleavage_site_b, freq_b, max_events, sum_events)
+                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+        
+    def _add_event(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
+        rgba = self._cmap(norm_count)
+        col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+        
+        dwg.add(svg.shapes.Rect(insert=(event_x1,event_y1), size=(event_dim,event_dim), fill=col, stroke='none'))
 
+        # If selected, adding event percentage labels
+        if self._event_label_show:              
+            self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
+    def _add_event_label(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
+        event_label_x = event_x1 + event_dim/2
+        event_label_y = event_y1 + event_dim/2 + self._event_label_size*0.375 
+        
+        if self._event_label_colour == "invert":
+            rgba = self._cmap(norm_count)
+            col = "rgb(%i,%i,%i)" % (255-(rgba[0]*255),255-(rgba[1]*255),255-(rgba[2]*255))
+        else:
+            col = self._event_label_colour
+        dwg.add(svg.text.Text("%.1f" % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        
 def get_event_pos_ranges(freq, round=1):
     pos_t_min = sys.maxint
     pos_t_max = 0
@@ -259,3 +296,61 @@ def get_event_pos_ranges(freq, round=1):
     print("%i_%i_%i_%i" % (pos_t_min,pos_t_max,pos_b_min,pos_b_max))
     
     return (pos_t_min,pos_t_max,pos_b_min,pos_b_max)
+
+def get_max_events(pos_ranges, freq, sum_show):
+    (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
+
+    max_events = 0
+    if sum_show:
+        (freq_t, freq_b) = get_full_sequence_summed_frequency(freq, pos_ranges)
+
+        for t in freq_t.keys():
+            if t >= pos_t_min and t <= pos_t_max:
+                max_events = max(max_events,freq_t.get(t))
+
+        for b in freq_b.keys():
+            if b >= pos_b_min and b <= pos_b_max:
+                max_events = max(max_events,freq_b.get(b))
+
+    else:
+        for (t,b) in freq.keys():
+            if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
+                max_events = max(max_events,freq.get((t,b)))
+
+    return max_events
+
+def get_sum_events(pos_ranges, freq):
+    (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
+
+    sum_events = 0
+    for (t,b) in freq.keys():
+            if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
+                sum_events = sum_events + freq.get((t,b))
+
+    return sum_events
+
+def get_full_sequence_summed_frequency(freq_full, pos_ranges):
+    (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
+
+    freq_t = {}
+    freq_b = {}
+
+    for (t, b) in freq_full.keys():
+        freq = freq_full.get((t, b))
+
+        # Adding this frequency to the relevant elements of freq_t and freq_b
+        if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
+            freq_t[t] = freq_t[t] + freq if t in freq_t else freq
+            freq_b[b] = freq_b[b] + freq if b in freq_b else freq
+
+    return (freq_t, freq_b)
+
+def get_event_stats(key, freq, max_events, sum_events):
+    if key in freq:
+        norm_count = freq.get(key)/max_events
+        event_pc = 100*freq.get(key)/sum_events  
+    else:
+        norm_count = 0
+        event_pc = 0
+
+    return (norm_count, event_pc)
