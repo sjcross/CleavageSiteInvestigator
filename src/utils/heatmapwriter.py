@@ -105,8 +105,13 @@ class HeatMapWriter():
         root_name = os.path.splitext(out_path)[0]
         datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S") if append_dt else ""
         outname = root_name+ datetime_str + '.' + 'svg'
-        dwg = svg.Drawing(outname, size = ("%spx" % self._im_dim, "%spx" % self._im_dim))
-
+        
+        # svg_attrs = {
+        #     'font-family': 'Inconsolata, monospace',
+        #     #    'shape-rendering':'optimizeQuality',
+        # }
+        dwg = svg.Drawing(outname, size = ("%spx" % self._im_dim, "%spx" % self._im_dim), **{'shape-rendering':'crispEdges'})
+        
         # Defining limits of heat map
         pos_t_range = pos_t_max-pos_t_min
         pos_b_range = pos_b_max-pos_b_min

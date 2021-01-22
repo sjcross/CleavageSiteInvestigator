@@ -1,5 +1,3 @@
-import os
-
 from utils import fileutils as fu
 from utils import heatmapwriter as hmw
 from utils import reportutils as ru
@@ -29,8 +27,8 @@ freq_full[(445,445)] = 43
 
 freq = ru.sort_results(freq_full)
 
-# writer = hmw.HeatMapWriter(grid_opts=(False,1,"lightgray",1), grid_label_opts=(True,12,"gray",1,10), event_colourmap="plasma")
-# writer.write_map(out_path, freq, ref=ref, pos_ranges=(440,460,440,460), append_dt=True)
+writer = hmw.HeatMapWriter(grid_opts=(False,1,"lightgray",1), grid_label_opts=(True,12,"gray",1,10), event_colourmap="plasma")
+writer.write_map(out_path, freq, ref=ref, pos_ranges=(440,460,440,460), append_dt=True)
 
-writer = hmw.HeatMapWriter(grid_opts=(False,1,"lightgray",1), event_colourmap="plasma")
-writer.write_map(out_path, freq, ref=ref, pos_ranges=(200,600,200,600), append_dt=True)
+# writer = hmw.HeatMapWriter(grid_opts=(False,1,"lightgray",1), event_colourmap="plasma")
+# writer.write_map(out_path, freq, ref=ref, pos_ranges=(200,600,200,600), append_dt=True)
