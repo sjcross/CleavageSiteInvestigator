@@ -64,7 +64,7 @@ required.add_argument("-o", "--out_path", type=str, help="Path to location where
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
 
-required.add_argument("-r", "--ref_path", type=str, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
+optional.add_argument("-r", "--ref_path", type=str, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
 
 optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)\n\n")
 

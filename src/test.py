@@ -4,21 +4,11 @@ from utils import heatmapwriter as hmw
 from utils import reportutils as ru
 
 verbose = False
-ref_path = "C:\\Users\\steph\\Desktop\\Oscar\\pUC19.fa"
-out_path = "C:\\Users\\steph\\Desktop\\Oscar\\"
+ref_path = "C:\\Users\\steph\\OneDrive\\Desktop\\Oscar\\pUC19.fa"
+out_path = "C:\\Users\\steph\\OneDrive\\Desktop\\Oscar\\"
 
 filereader = fu.FileReader(verbose=verbose)
 ref = filereader.read_sequence(ref_path)[0][0]
-
-freq_full = {}
-freq_full[(450,440)] = 21
-freq_full[(450,459)] = 68
-freq_full[(450,453)] = 9
-freq_full[(452,456)] = 43
-freq_full[(453,442)] = 29
-freq_full[(455,448)] = 31
-freq_full[(458,452)] = 4
-freq_full[(448,444)] = 72
 
 freq_full[(460,450)] = 59
 freq_full[(461,452)] = 10
