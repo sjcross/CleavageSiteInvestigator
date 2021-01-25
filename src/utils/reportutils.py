@@ -36,11 +36,8 @@ def get_full_sequence_frequency(results):
     freq = {}
 
     for (cleavage_site_t, cleavage_site_b, local_site_t, local_site_b) in results.values():
-        k = (cleavage_site_t, cleavage_site_b)
-        if k not in freq:
-            freq[(cleavage_site_t, cleavage_site_b)] = 1
-        else:
-            freq[(cleavage_site_t, cleavage_site_b)] = freq[(cleavage_site_t, cleavage_site_b)] + 1
+        key = (cleavage_site_t, cleavage_site_b)
+        freq[key] = freq[key] + 1 if key in freq else 1
 
     # Sorting results by frequency
     freq = sort_results(freq)
