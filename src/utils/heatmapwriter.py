@@ -27,7 +27,7 @@ class DNA_MODE(Enum):
 class HeatMapWriter():
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), grid_opts=(True,1,"lightgray",1), grid_label_opts=(True,12,"lightgray",10,10), event_colourmap="cool", event_label_opts=(False,10,"invert"), sum_show=True):
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="cool", event_label_opts=(True,10,"invert",True), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -37,6 +37,11 @@ class HeatMapWriter():
         self._border_show = border_opts[0]
         self._border_size = border_opts[1]
         self._border_colour = border_opts[2]
+
+        self._axis_label_show = axis_label_opts[0]
+        self._axis_label_size = axis_label_opts[1]
+        self._axis_label_colour = axis_label_opts[2]
+        self._axis_label_gap = axis_label_opts[3]
 
         self._grid_show = grid_opts[0]
         self._grid_size = grid_opts[1]
@@ -55,6 +60,7 @@ class HeatMapWriter():
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
+        self._event_label_zeros_show = event_label_opts[3]
 
         self._sum_show = sum_show
                        
@@ -82,7 +88,7 @@ class HeatMapWriter():
             pos_b_min = 0
             if ref is None:
                 # Rounding up to the nearest 10
-                (pos_t_min,pos_t_max,pos_b_min,pos_b_max) = get_event_pos_ranges(freq,round=10)
+                (pos_t_min,pos_t_max,pos_b_min,pos_b_max) = get_event_pos_ranges(freq)
                 
             else:
                 pos_t_max = len(ref)-1
@@ -106,10 +112,6 @@ class HeatMapWriter():
         datetime_str = dt.datetime.now().strftime("_%Y-%m-%d_%H-%M-%S") if append_dt else ""
         outname = root_name+ datetime_str + '.' + 'svg'
         
-        # svg_attrs = {
-        #     'font-family': 'Inconsolata, monospace',
-        #     #    'shape-rendering':'optimizeQuality',
-        # }
         dwg = svg.Drawing(outname, size = ("%spx" % self._im_dim, "%spx" % self._im_dim), **{'shape-rendering':'crispEdges'})
         
         # Defining limits of heat map
@@ -127,6 +129,9 @@ class HeatMapWriter():
 
         self._add_events(dwg, pos_ranges, map_xy, freq)
 
+        if self._axis_label_show:
+            self._add_axis_labels(dwg, map_xy)
+
         if self._grid_show:
             self._add_grid_lines(dwg, pos_ranges, map_xy)
 
@@ -138,6 +143,20 @@ class HeatMapWriter():
 
         # Writing SVG to file
         dwg.save()
+
+    def _add_axis_labels(self, dwg, map_xy):
+        (map_x1, map_y1, map_x2, map_y2) = map_xy
+
+        # Adding top-strand label
+        axis_label_x = (map_x2-map_x1)/2 + map_x1
+        axis_label_y = map_y1 - self._axis_label_gap
+        dwg.add(svg.text.Text("Top strand", insert=(axis_label_x,axis_label_y), style="text-anchor:middle", font_size=self._axis_label_size, fill=self._axis_label_colour))
+
+        # Adding bottom-strand label
+        axis_label_x = map_x1 - self._axis_label_gap
+        axis_label_y = (map_y2-map_y1)/2 + map_y1
+        rot = "rotate(%i,%i,%i)" % (-90,axis_label_x,axis_label_y)
+        dwg.add(svg.text.Text("Bottom strand", insert=(axis_label_x,axis_label_y), transform=rot, style="text-anchor:middle", font_size=self._axis_label_size, fill=self._axis_label_colour))
 
     def _add_border(self, dwg, pos_ranges, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
@@ -235,14 +254,20 @@ class HeatMapWriter():
         # Determining total events and maximum number in a cell
         max_events = get_max_events(pos_ranges, freq, self._sum_show)
         sum_events = get_sum_events(pos_ranges, freq)
-    
+
+        # Adding background
+        self._add_background(dwg, pos_ranges, map_xy)
+        
+        # Adding events
         for cleavage_site_t in range(pos_t_min,pos_t_max+1):
-            for cleavage_site_b in range(pos_b_min,pos_b_max+1):
+            for cleavage_site_b in range(pos_b_min,pos_b_max+1):   
                 event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
-                (norm_count, event_pc) = get_event_stats((cleavage_site_t,cleavage_site_b), freq, max_events, sum_events)
-                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
+                (norm_count, event_pc) = get_event_stats((cleavage_site_t,cleavage_site_b), freq, max_events, sum_events)
+                if (cleavage_site_t,cleavage_site_b) in freq.keys() or self._event_label_zeros_show:                    
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+        
         # If enabled, showing sum row and column
         if self._sum_show:
             (freq_t, freq_b) = get_full_sequence_summed_frequency(freq, pos_ranges)
@@ -250,15 +275,35 @@ class HeatMapWriter():
             for cleavage_site_t in range(pos_t_min,pos_t_max+1):
                 event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y2
+
                 (norm_count, event_pc) = get_event_stats(cleavage_site_t, freq_t, max_events, sum_events)
-                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+                if cleavage_site_t in freq_t or self._event_label_zeros_show:                    
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
             for cleavage_site_b in range(pos_b_min,pos_b_max+1):
                 event_x1 = map_x2
                 event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
+
                 (norm_count, event_pc) = get_event_stats(cleavage_site_b, freq_b, max_events, sum_events)
-                self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+                if cleavage_site_b in freq_b or self._event_label_zeros_show:
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
+    def _add_background(self, dwg, pos_ranges, map_xy):
+        (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
+        (map_x1, map_y1, map_x2, map_y2) = map_xy        
+
+        map_w = map_x2-map_x1
+        map_h = map_y2-map_y1
+
+        rgba = self._cmap(0)
+        col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+        dwg.add(svg.shapes.Rect(insert=(map_x1,map_y1), size=(map_w,map_h), fill=col, stroke='none'))
+
+        if self._sum_show:
+            event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1)
+            dwg.add(svg.shapes.Rect(insert=(map_x1+map_w,map_y1), size=(event_dim,map_h), fill=col, stroke='none'))
+            dwg.add(svg.shapes.Rect(insert=(map_x1,map_y1+map_h), size=(map_w,event_dim), fill=col, stroke='none'))            
+
     def _add_event(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
         rgba = self._cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
@@ -278,12 +323,13 @@ class HeatMapWriter():
             col = "rgb(%i,%i,%i)" % (255-(rgba[0]*255),255-(rgba[1]*255),255-(rgba[2]*255))
         else:
             col = self._event_label_colour
+
         dwg.add(svg.text.Text("%.1f" % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
         
 def get_event_pos_ranges(freq, round=1):
-    pos_t_min = sys.maxint
+    pos_t_min = sys.maxsize
     pos_t_max = 0
-    pos_b_min = sys.maxint
+    pos_b_min = sys.maxsize
     pos_b_max = 0
 
     for (cleavage_site_t, cleavage_site_b) in freq.keys():
@@ -297,8 +343,6 @@ def get_event_pos_ranges(freq, round=1):
         pos_t_max = math.ceil(pos_t_max/round)*round
         pos_b_min = math.floor(pos_b_min/round)*round
         pos_b_max = math.ceil(pos_b_max/round)*round
-
-    print("%i_%i_%i_%i" % (pos_t_min,pos_t_max,pos_b_min,pos_b_max))
     
     return (pos_t_min,pos_t_max,pos_b_min,pos_b_max)
 
