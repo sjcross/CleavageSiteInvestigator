@@ -27,7 +27,7 @@ class DNA_MODE(Enum):
 class HeatMapWriter():
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="cool", event_label_opts=(True,10,"invert",True), sum_show=True):
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",True), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -180,7 +180,7 @@ class HeatMapWriter():
         (map_x1, map_y1, map_x2, map_y2) = map_xy
 
         # Determining extra grid length if sum column and row are to be shown
-        sum_l = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
+        event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
 
         # Getting range of vertical grid lines
         grid_pos_t_min = self._grid_interval*math.ceil(pos_t_min/self._grid_interval)
@@ -191,7 +191,7 @@ class HeatMapWriter():
         # Adding vertical grid lines
         for grid_pos_t in range(grid_pos_t_min, grid_pos_t_max, self._grid_interval):
             grid_x = map_x1 + (map_x2-map_x1)*((grid_pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
-            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2+sum_l), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2+event_dim), stroke=self._grid_colour, stroke_width=self._grid_size))
 
         # Getting range of horizontal grid lines
         grid_pos_b_min = self._grid_interval*math.ceil(pos_b_min/self._grid_interval)
@@ -202,11 +202,14 @@ class HeatMapWriter():
         # Adding horizontal grid lines
         for grid_pos_b in range(grid_pos_b_min, grid_pos_b_max, self._grid_interval):
             grid_y = map_y1 + (map_y2-map_y1)*((grid_pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
-            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2+sum_l, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2+event_dim, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
 
     def _add_grid_labels(self, dwg, pos_ranges, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_ranges
         (map_x1, map_y1, map_x2, map_y2) = map_xy
+
+        # Determining extra grid length if sum column and row are to be shown
+        event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
 
         # Getting range of vertical grid label positions
         grid_label_pos_t_min = self._grid_label_interval*math.ceil(pos_t_min/self._grid_label_interval)
@@ -236,14 +239,14 @@ class HeatMapWriter():
         # Adding sum labels if sum column and row are to be shown
         if self._sum_show:
             # Adding top strand sum label
-            grid_label_x = map_x1 + (map_x2-map_x1)*(((grid_label_pos_t_max+0.5)-pos_t_min)/(pos_t_max-pos_t_min+1)) + self._grid_label_size*0.375
+            grid_label_x = map_x2 + event_dim/2 + self._grid_label_size*0.375
             grid_label_y = map_y1-self._border_size/2-self._grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
             dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
             # Adding bottom strand sum label
             grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
-            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b_max+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
+            grid_label_y = map_y2 + event_dim/2 + self._grid_label_size*0.375
             dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
     def _add_events(self, dwg, pos_ranges, map_xy, freq):
@@ -265,7 +268,7 @@ class HeatMapWriter():
                 event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
                 (norm_count, event_pc) = get_event_stats((cleavage_site_t,cleavage_site_b), freq, max_events, sum_events)
-                if (cleavage_site_t,cleavage_site_b) in freq.keys() or self._event_label_zeros_show:                    
+                if (cleavage_site_t,cleavage_site_b) in freq.keys() or (self._event_label_show and self._event_label_zeros_show):
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
         # If enabled, showing sum row and column
@@ -277,7 +280,7 @@ class HeatMapWriter():
                 event_y1 = map_y2
 
                 (norm_count, event_pc) = get_event_stats(cleavage_site_t, freq_t, max_events, sum_events)
-                if cleavage_site_t in freq_t or self._event_label_zeros_show:                    
+                if cleavage_site_t in freq_t or (self._event_label_show and self._event_label_zeros_show):
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
             for cleavage_site_b in range(pos_b_min,pos_b_max+1):
@@ -285,7 +288,7 @@ class HeatMapWriter():
                 event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
                 (norm_count, event_pc) = get_event_stats(cleavage_site_b, freq_b, max_events, sum_events)
-                if cleavage_site_b in freq_b or self._event_label_zeros_show:
+                if cleavage_site_b in freq_b or (self._event_label_show and self._event_label_zeros_show):
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
     def _add_background(self, dwg, pos_ranges, map_xy):
