@@ -1,12 +1,15 @@
-import csv
-
+from enum import Enum
 from utils import fileutils as fu
 from utils import sequenceutils as su
+
+class FileTypes(Enum):
+    INDIVIDUAL = 0
+    SUMMARY = 1
 
 class CSVReader():
     def read_individual(self, filename):
         results = {}
-        double_line_mode = self._get_double_line_mode(filename)
+        double_line_mode = _get_double_line_mode(filename)
 
         with open(filename, newline='\n') as file:
             # Dumping the headings row
@@ -21,17 +24,46 @@ class CSVReader():
                     next(file)
 
         return results
-                
 
-    def _get_double_line_mode(self, filename):
-        with open(filename, newline='\n') as csvfile:
-            headings = next(csvfile).split(',')
-            return "TOP" not in headings[6]
+    def read_summary(self, filename):
+        freq = {}
+        double_line_mode = _get_double_line_mode(filename)
+
+        with open(filename, newline='\n') as file:
+            # Dumping the headings row
+            next(file)
+
+            # Iterating over each row, reading the content
+            for row in file:
+                (key, value) = self._read_summary_result_line(row)
+
+                # If the key and value are None, we've reached the end of the file
+                if key is None and value is None:
+                    return freq
+                    
+                freq[key] = value
+
+                # If in double_line_mode, skipping the next row
+                if double_line_mode:
+                    next(file)
+
+        return freq
 
     def _read_individual_result_line(self, row):
         contents = row.split(',')
         return (int(contents[2]), int(contents[3]), contents[4], contents[5])
 
+    def _read_summary_result_line(self, row):
+        contents = row.split(',')
+
+        # The final line of the summary file is a record of the number of failed sequences
+        if contents[0] == "Error":
+            return (None, None)
+
+        key = (int(contents[3]), int(contents[4]))
+        value = int(contents[1])
+
+        return (key, value)
 
 class CSVWriter():
     def __init__(self, extra_nt, local_r=1, append_dt=False, double_line_mode=False):
@@ -158,3 +190,18 @@ class CSVWriter():
 
     def _get_summary_error_line(self, count):
         return 'Error,' + str(count) + '\n'
+
+def get_file_type(filename):
+    with open(filename, newline='\n') as file:
+        # Getting the headings row
+        headings = next(file).split(',')
+
+    if headings[0] == "TYPE":
+        return FileTypes.SUMMARY
+    elif headings[0] == "INDEX":
+        return FileTypes.INDIVIDUAL
+
+def _get_double_line_mode(filename):
+        with open(filename, newline='\n') as csvfile:
+            headings = next(csvfile).split(',')
+            return "TOP" not in headings[6]

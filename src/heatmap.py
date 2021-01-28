@@ -47,6 +47,7 @@ def_event_colourmap = "plasma"
 def_event_label_vis = SHOWHIDE.SHOW
 def_event_label_size = 12
 def_event_label_colour = "invert"
+def_event_label_decimal_places = 1
 def_event_label_zeros_vis = SHOWHIDE.SHOW
     
 def_sum_vis = SHOWHIDE.SHOW
@@ -119,6 +120,8 @@ optional.add_argument("-els", "--event_label_size", type=int, default=def_event_
 
 optional.add_argument("-elc", "--event_label_colour", type=str, default=def_event_label_colour, help="Colour of the rendered event labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Event labels have the special colour option \"invert\", which uses the opposite RGB colour to the corresponding event square to improve label contrast.  Default: \"%s\".\n\n" % def_event_label_colour)
 
+optional.add_argument("-eldp", "--event_label_decimal_places", type=int, default=def_event_label_decimal_places, help="Number of decimal places to use when displaying event frequencies.")
+
 optional.add_argument("-elzv", "--event_label_zeros_vis", type=SHOWHIDE, default=def_event_label_zeros_vis, choices=list(SHOWHIDE), help="Controls whether labels for positions with zero events are rendered.  Showing these labels can greatly increase file size - especially when rendering a large position range.  Must be either \"show\" or \"hide\" (e.g. -elzv \"show\").  Default: \"%s\".\n\n" % def_event_label_zeros_vis)
 
 optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, choices=list(SHOWHIDE), help="Controls whether the sum row and columns are rendered.  These event cells are rendered using the same settings as for standard events (e.g. font size, colour and zeros visibility).  Must be either \"show\" or \"hide\" (e.g. -elv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
@@ -128,17 +131,21 @@ args = parser.parse_args()
 data_path = args.data_path
 ref_path = args.ref_path
 border_show = True if args.border_vis is SHOWHIDE.SHOW else False
+axis_label_show = True if args.axis_label_vis is SHOWHIDE.SHOW else False
 grid_show = True if args.grid_vis is SHOWHIDE.SHOW else False
 grid_label_show = True if args.grid_label_vis is SHOWHIDE.SHOW else False
+event_label_show = True if args.event_label_vis is SHOWHIDE.SHOW else False
 
 # Required arguments
 pos_ranges = tuple(args.pos_ranges) if args.pos_ranges != [0,0,0,0] else None
 im_dim = args.im_dim
 rel_pos = tuple(args.map_rel_pos)
 border_opts = (border_show,args.border_size,args.border_colour)
+axis_label_opts = (axis_label_show,args.axis_label_size,args.axis_label_colour,args.axis_label_gap)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 event_colourmap = args.event_colourmap
+event_label_opts = (event_label_show,args.event_label_size,args.event_label_colour,args.event_label_decimal_places,args.event_label_zeros_vis)
 
-writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap)
+writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts)
 writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_ranges=pos_ranges, append_dt=args.append_datetime)

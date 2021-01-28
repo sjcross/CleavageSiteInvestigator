@@ -27,7 +27,7 @@ class DNA_MODE(Enum):
 class HeatMapWriter():
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",True), sum_show=True):
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",1,True), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -60,7 +60,8 @@ class HeatMapWriter():
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
-        self._event_label_zeros_show = event_label_opts[3]
+        self._event_label_decimal_places = event_label_opts[3]
+        self._event_label_zeros_show = event_label_opts[4]
 
         self._sum_show = sum_show
                        
@@ -68,10 +69,19 @@ class HeatMapWriter():
     ## PUBLIC METHODS
 
     def write_map_from_file(self, csv_path, out_path, ref_path="", pos_ranges=None, append_dt=False):
+        # Determining what sort of CSV file has been selected (individual or summary)
+        file_type = cu.get_file_type(csv_path)
+        
         # Loading results from CSV
         cr = cu.CSVReader()
-        results = cr.read_individual(csv_path)
-        freq = ru.get_full_sequence_frequency(results)
+        if file_type is cu.FileTypes.INDIVIDUAL:
+            results = cr.read_individual(csv_path)
+            freq = ru.get_full_sequence_frequency(results)
+        elif file_type is cu.FileTypes.SUMMARY:
+            freq = cr.read_summary(csv_path)
+        else:
+            print("[ERROR] Unknown CSV file type")
+            return
 
         # Loading reference sequence if path provided
         if ref_path == "":
@@ -327,7 +337,9 @@ class HeatMapWriter():
         else:
             col = self._event_label_colour
 
-        dwg.add(svg.text.Text("%.1f" % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        number_format = "%%.%if" % self._event_label_decimal_places
+
+        dwg.add(svg.text.Text(number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
         
 def get_event_pos_ranges(freq, round=1):
     pos_t_min = sys.maxsize
