@@ -67,10 +67,19 @@ class EventMapWriter():
     ## PUBLIC METHODS
 
     def write_map_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False):
+        # Determining what sort of CSV file has been selected (individual or summary)
+        file_type = cu.get_file_type(csv_path)
+        
         # Loading results from CSV
         cr = cu.CSVReader()
-        results = cr.read_individual(csv_path)
-        freq = ru.get_full_sequence_frequency(results)
+        if file_type is cu.FileTypes.INDIVIDUAL:
+            results = cr.read_individual(csv_path)
+            freq = ru.get_full_sequence_frequency(results)
+        elif file_type is cu.FileTypes.SUMMARY:
+            freq = cr.read_summary(csv_path)
+        else:
+            print("[ERROR] Unknown CSV file type")
+            return
 
         # Loading reference sequence if path provided
         if ref_path == "":

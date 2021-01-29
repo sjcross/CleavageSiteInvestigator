@@ -15,7 +15,7 @@ from utils import sequenceutils as su
 from utils import eventmapwriter as emw
 from utils import heatmapwriter as hmw
 
-
+### Parameters ###
 ### DEFAULT PARAMETERS ###
 def_repeat_filter = "" # Expression for filtering sequences by number of repeats
 
@@ -211,12 +211,12 @@ if write_eventmap:
 
 if write_heatmap_auto:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter()
+    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
     heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, append_dt=True)
 
 if write_heatmap_full:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter()
+    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
     heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref=ref, append_dt=True)
 
 # Creating the CSVWriter object
