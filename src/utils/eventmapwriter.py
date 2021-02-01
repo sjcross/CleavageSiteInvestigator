@@ -8,9 +8,6 @@ import svgwrite as svg
 from enum import Enum
 from matplotlib import cm
 from utils import abstractmapwriter as amw
-from utils import csvutils as cu  
-from utils import fileutils as fu
-from utils import reportutils as ru
 
 
 class DNA_MODE(Enum):
