@@ -147,5 +147,5 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 event_colourmap = args.event_colourmap
 event_label_opts = (event_label_show,args.event_label_size,args.event_label_colour,args.event_label_decimal_places,args.event_label_zeros_vis)
 
-writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap)
+writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts)
 writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)

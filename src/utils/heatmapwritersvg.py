@@ -9,8 +9,8 @@ import svgwrite as svg
 
 class HeatMapWriterSVG(amw.AbstractMapWriter):
     ## CONSTRUCTOR
-    
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="cool", event_label_opts=(True,10,"invert",True), sum_show=True):
+
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="cool", event_label_opts=(True,10,"invert",1,True), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -274,5 +274,7 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         else:
             col = self._event_label_colour
 
-        dwg.add(svg.text.Text("%.1f" % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        number_format = "%%.%if" % self._event_label_decimal_places
+
+        dwg.add(svg.text.Text(number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
     
