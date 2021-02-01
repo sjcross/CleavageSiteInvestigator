@@ -3,7 +3,7 @@ $cass_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New 
 $ref_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New files\pUC19.fa"
 
 # Running a single file
-python .\src\csi.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New files\mix.fasta" -en 3 -pr -we -wo -wi -ws
+python .\src\csi.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-04-28 New files\mix.fasta" -en 3 -pr -we -wo -wi -ws -wha
 
 # # Running a folder full of files (will only process .fa or .fasta files)
 # $test_path = "D:\People\CSI\2020-06-04 Mix files"

@@ -41,7 +41,8 @@ class HeatMapWriterCS(amw.AbstractMapWriter):
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
-        self._event_label_zeros_show = event_label_opts[3]
+        self._event_label_decimal_places = event_label_opts[3]
+        self._event_label_zeros_show = event_label_opts[4]
 
         self._sum_show = sum_show
 
@@ -124,7 +125,7 @@ class HeatMapWriterCS(amw.AbstractMapWriter):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
 
         # Determining extra grid length if sum column and row are to be shown
-        sum_l = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
+        event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
 
         # Getting range of vertical grid lines
         grid_pos_t_min = self._grid_interval*math.ceil(pos_t_min/self._grid_interval)
@@ -135,7 +136,7 @@ class HeatMapWriterCS(amw.AbstractMapWriter):
         # Adding vertical grid lines
         for grid_pos_t in range(grid_pos_t_min, grid_pos_t_max, self._grid_interval):
             grid_x = map_x1 + (map_x2-map_x1)*((grid_pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
-            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2+sum_l), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((grid_x, map_y1), (grid_x, map_y2+event_dim), stroke=self._grid_colour, stroke_width=self._grid_size))
 
         # Getting range of horizontal grid lines
         grid_pos_b_min = self._grid_interval*math.ceil(pos_b_min/self._grid_interval)
@@ -146,11 +147,14 @@ class HeatMapWriterCS(amw.AbstractMapWriter):
         # Adding horizontal grid lines
         for grid_pos_b in range(grid_pos_b_min, grid_pos_b_max, self._grid_interval):
             grid_y = map_y1 + (map_y2-map_y1)*((grid_pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
-            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2+sum_l, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
+            dwg.add(svg.shapes.Line((map_x1, grid_y), (map_x2+event_dim, grid_y), stroke=self._grid_colour, stroke_width=self._grid_size))
 
     def _add_grid_labels(self, dwg, pos_range, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_range
         (map_x1, map_y1, map_x2, map_y2) = map_xy
+
+        # Determining extra grid length if sum column and row are to be shown
+        event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1) if self._sum_show else 0
 
         # Getting range of vertical grid label positions
         grid_label_pos_t_min = self._grid_label_interval*math.ceil(pos_t_min/self._grid_label_interval)
@@ -180,14 +184,14 @@ class HeatMapWriterCS(amw.AbstractMapWriter):
         # Adding sum labels if sum column and row are to be shown
         if self._sum_show:
             # Adding top strand sum label
-            grid_label_x = map_x1 + (map_x2-map_x1)*(((grid_label_pos_t_max+0.5)-pos_t_min)/(pos_t_max-pos_t_min+1)) + self._grid_label_size*0.375
+            grid_label_x = map_x2 + event_dim/2 + self._grid_label_size*0.375
             grid_label_y = map_y1-self._border_size/2-self._grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
             dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
             # Adding bottom strand sum label
             grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
-            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b_max+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
+            grid_label_y = map_y2 + event_dim/2 + self._grid_label_size*0.375
             dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
     def _add_events(self, dwg, pos_range, map_xy, freq):

@@ -64,7 +64,7 @@ required.add_argument("-o", "--out_path", type=str, help="Path to location where
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
 
-required.add_argument("-r", "--ref_path", type=str, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
+optional.add_argument("-r", "--ref_path", type=str, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
 
 optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)\n\n")
 
@@ -127,8 +127,6 @@ end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 event_opts = (args.event_max_size,args.event_colourmap)
-
-
 
 writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_opts=event_opts)
 writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)
