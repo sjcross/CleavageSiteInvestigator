@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
-from utils import heatmapwriter as hmw
+from utils import heatmapwritersvg as hmw
 
 
 # Using an enum rather than bool, so default can be set for argparse
@@ -73,7 +73,7 @@ required.add_argument("-r", "--ref_path", type=str, help="Path to reference sequ
 
 optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)\n\n")
 
-optional.add_argument("-pr", "--pos_ranges", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as a pair of integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
+optional.add_argument("-pr", "--pos_range", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as a pair of integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
 
 optional.add_argument("-id", "--im_dim", type=int, default=def_im_dim, help="Pixel dimensions of the output .svg image.  Event map image is square, so specified as a single integer number.  Default: \"%i\".\n\n" % def_im_dim)
 
@@ -132,7 +132,7 @@ grid_show = True if args.grid_vis is SHOWHIDE.SHOW else False
 grid_label_show = True if args.grid_label_vis is SHOWHIDE.SHOW else False
 
 # Required arguments
-pos_ranges = tuple(args.pos_ranges) if args.pos_ranges != [0,0,0,0] else None
+pos_range = tuple(args.pos_range) if args.pos_range != [0,0,0,0] else None
 im_dim = args.im_dim
 rel_pos = tuple(args.map_rel_pos)
 border_opts = (border_show,args.border_size,args.border_colour)
@@ -140,5 +140,5 @@ grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 event_colourmap = args.event_colourmap
 
-writer = hmw.HeatMapWriter(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap)
-writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_ranges=pos_ranges, append_dt=args.append_datetime)
+writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap)
+writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)

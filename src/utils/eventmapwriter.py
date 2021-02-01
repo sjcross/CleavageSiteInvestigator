@@ -7,6 +7,7 @@ import svgwrite as svg
 
 from enum import Enum
 from matplotlib import cm
+from utils import abstractmapwriter as amw
 from utils import csvutils as cu  
 from utils import fileutils as fu
 from utils import reportutils as ru
@@ -21,7 +22,7 @@ class DNA_MODE(Enum):
         return str(self.value)
 
 
-class EventMapWriter():
+class EventMapWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
     def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.9), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
@@ -66,30 +67,15 @@ class EventMapWriter():
 
     ## PUBLIC METHODS
 
-    def write_map_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False):
-        # Loading results from CSV
-        cr = cu.CSVReader()
-        results = cr.read_individual(csv_path)
-        freq = ru.get_full_sequence_frequency(results)
-
-        # Loading reference sequence if path provided
-        if ref_path == "":
-            ref = None
-        else:
-            filereader = fu.FileReader(verbose=False)
-            ref = filereader.read_sequence(ref_path)[0][0]
-            
-            self.write_map(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
-
     def write_map(self, out_path, freq, ref=None, pos_range=None, append_dt=False):
+        pos_min = 0
+        pos_max = len(ref)-1
         if pos_range is None:
-            pos_min = 0
             if ref is None:
                 # Rounding up to the nearest 10
-                pos_max = get_max_event_pos(freq)
-                pos_max = math.ceil(pos_max/10)*10
-            else:
-                pos_max = len(ref)-1
+                pos_ranges = amw.get_event_pos_ranges(freq, round=10)
+                pos_min = min(pos_ranges[0],pos_ranges[2])
+                pos_max = max(pos_ranges[1],pos_ranges[3])
         else:
             pos_min = pos_range[0]
             pos_max = pos_range[1]
@@ -239,11 +225,3 @@ class EventMapWriter():
             col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
 
             dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))              
-
-def get_max_event_pos(freq):
-    pos_max = 0
-    for (cleavage_site_t, cleavage_site_b) in freq.keys():
-        pos_max = math.max(pos_max,cleavage_site_t)
-        pos_max = math.max(pos_max,cleavage_site_b)
-    
-    return pos_max
