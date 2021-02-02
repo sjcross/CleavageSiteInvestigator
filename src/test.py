@@ -1,6 +1,7 @@
 from utils import fileutils as fu
 from utils import eventmapwriter as emw
-from utils import heatmapwriter as hmw
+from utils import heatmapwritercsv as hmwc
+from utils import heatmapwritersvg as hmws
 from utils import reportutils as ru
 
 verbose = False
@@ -31,5 +32,8 @@ freq = ru.sort_results(freq_full)
 # writer = emw.EventMapWriter(dna_opts=(emw.DNA_MODE.SEQUENCE,8,"black"), grid_opts=(True,1,"lightgray",5), grid_label_opts=(True,12,"gray",20,10), event_opts=(2, "plasma"))
 # writer.write_map(out_path+"Example eventmap.svg", freq_full, ref=ref, pos_range=(400,500))
 
-writer = hmw.HeatMapWriter(grid_opts=(True,1,"lightgray",1), grid_label_opts=(True,12,"gray",1,10), event_colourmap="plasma")
-writer.write_map(out_path+"Example heatmapa.svg", freq, ref=ref, pos_ranges=(440,460,440,460))
+writer = hmws.HeatMapWriterSVG(grid_opts=(True,1,"lightgray",1), grid_label_opts=(True,12,"gray",1,10), event_colourmap="plasma")
+writer.write_map(out_path+"Example heatmapb.svg", freq, ref, (440,460,440,460), False)
+
+writer = hmwc.HeatMapWriterCSV()
+writer.write_map(out_path+"Example heatmapb.csv", freq, ref, (440,460,440,460), False)
