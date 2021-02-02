@@ -10,7 +10,7 @@ import svgwrite as svg
 class HeatMapWriterSVG(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="cool", event_label_opts=(True,10,"invert",1,True), sum_show=True):
+    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",1,True), sum_show=True):
         self._im_dim = im_dim
         
         self._map_rel_top = rel_pos[0]
@@ -208,6 +208,9 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         # Adding background
         self._add_background(dwg, pos_range, map_xy)
         
+        # If there are no events in this range, we can skip
+
+
         # Adding events
         for pos_t in range(pos_t_min,pos_t_max+1):
             for pos_b in range(pos_b_min,pos_b_max+1):   
@@ -216,9 +219,12 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
 
                 norm_count = amw.get_event_norm_count((pos_t,pos_b), freq, max_events)
                 event_pc = amw.get_event_pc((pos_t,pos_b), freq, sum_events)
-                if (pos_t,pos_b) in freq.keys() or self._event_label_zeros_show:                    
-                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
-        
+                if (pos_t,pos_b) in freq.keys():                    
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
+
+                if self._event_label_show and ((pos_t,pos_b) in freq.keys() or self._event_label_zeros_show):
+                    self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+                    
         # If enabled, showing sum row and column
         if self._sum_show:
             (freq_t, freq_b) = amw.get_full_sequence_summed_frequency(freq, pos_range)
@@ -230,7 +236,10 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
                 norm_count = amw.get_event_norm_count(pos_t, freq_t, max_events)
                 event_pc = amw.get_event_pc(pos_t, freq_t, sum_events)
                 if pos_t in freq_t or self._event_label_zeros_show:                    
-                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
+
+                if self._event_label_show and (pos_t in freq_t or self._event_label_zeros_show):
+                    self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
             for pos_b in range(pos_b_min,pos_b_max+1):
                 event_x1 = map_x2
@@ -239,7 +248,10 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
                 norm_count = amw.get_event_norm_count(pos_b, freq_b, max_events)
                 event_pc = amw.get_event_pc(pos_b, freq_b, sum_events)
                 if pos_b in freq_b or self._event_label_zeros_show:
-                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
+                    self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
+
+                if self._event_label_show and (pos_b in freq_b or self._event_label_zeros_show):
+                    self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
     def _add_background(self, dwg, pos_range, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_range
@@ -257,15 +269,11 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
             dwg.add(svg.shapes.Rect(insert=(map_x1+map_w,map_y1), size=(event_dim,map_h), fill=col, stroke='none'))
             dwg.add(svg.shapes.Rect(insert=(map_x1,map_y1+map_h), size=(map_w,event_dim), fill=col, stroke='none'))            
 
-    def _add_event(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
+    def _add_event(self, dwg, event_x1, event_y1, event_dim, norm_count):
         rgba = self._cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
         
         dwg.add(svg.shapes.Rect(insert=(event_x1,event_y1), size=(event_dim,event_dim), fill=col, stroke='none'))
-
-        # If selected, adding event percentage labels
-        if self._event_label_show:              
-            self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
     def _add_event_label(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
         event_label_x = event_x1 + event_dim/2

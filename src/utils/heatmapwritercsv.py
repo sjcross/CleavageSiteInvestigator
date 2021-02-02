@@ -1,7 +1,6 @@
 from utils import abstractmapwriter as amw
 from utils import fileutils as fu
 
-import datetime as dt
 import os
 
 

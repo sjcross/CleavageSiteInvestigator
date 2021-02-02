@@ -13,7 +13,8 @@ from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
 from utils import eventmapwriter as emw
-from utils import heatmapwriter as hmw
+from utils import heatmapwritercsv as hmwc
+from utils import heatmapwritersvg as hmws
 
 ### Parameters ###
 ### DEFAULT PARAMETERS ###
@@ -71,9 +72,13 @@ optional.add_argument("-sp", "--show_plots", action='store_true', help="Display 
 
 optional.add_argument("-we", "--write_eventmap", action='store_true', help="Write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.\n\n")
 
-optional.add_argument("-wha", "--write_heatmap_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsa", "--write_heatmap_svg_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
-optional.add_argument("-whf", "--write_heatmap_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsf", "--write_heatmap_svg_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+
+optional.add_argument("-whca", "--write_heatmap_csv_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+
+optional.add_argument("-whcf", "--write_heatmap_csv_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
 optional.add_argument("-wi", "--write_individual", action='store_true', help="Write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.\n\n")
 
@@ -103,8 +108,10 @@ print_results = args.print_results  # Display results in terminal as they are ge
 show_plots = args.show_plots  # Display plots in pyplot windows as they are generated
 append_dt = args.append_datetime # Append time and date to all output filenames
 write_eventmap = args.write_eventmap # Write event map image to SVG file
-write_heatmap_auto = args.write_heatmap_auto # Write heatmap to SVG file for identified event range
-write_heatmap_full = args.write_heatmap_full # Write heatmap to SVG file for full reference range
+write_heatmap_svg_auto = args.write_heatmap_svg_auto # Write heatmap to SVG file for identified event range
+write_heatmap_svg_full = args.write_heatmap_svg_full # Write heatmap to SVG file for full reference range
+write_heatmap_csv_auto = args.write_heatmap_csv_auto # Write heatmap to CSV file for identified event range
+write_heatmap_csv_full = args.write_heatmap_csv_full # Write heatmap to CSV file for full reference range
 write_individual = args.write_individual # Write cleavage results to CSV file
 write_summary = args.write_summary # Write summary of results to CSV file
 write_output = args.write_output # Write console output to text file
@@ -209,15 +216,25 @@ if write_eventmap:
     eventmap_writer = emw.EventMapWriter()
     eventmap_writer.write_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
-if write_heatmap_auto:
+if write_heatmap_svg_auto:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, append_dt=True)
+    heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
+    heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, None, None, append_dt)
 
-if write_heatmap_full:
+if write_heatmap_svg_full:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref=ref, append_dt=True)
+    heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
+    heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref, None, append_dt)
+
+if write_heatmap_csv_auto:
+    # Showing events as heatmap
+    heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
+    heatmap_writer.write_map(root_name+'_autoheatmap.csv', freq_full, None, None, append_dt)
+
+if write_heatmap_csv_full:
+    # Showing events as heatmap
+    heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
+    heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, ref, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
