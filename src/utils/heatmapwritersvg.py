@@ -43,7 +43,7 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
-        self._event_label_decimal_places = event_label_opts[3]
+        self._number_format = "%%.%if" % event_label_opts[3]
         self._event_label_zeros_show = event_label_opts[4]
 
         self._sum_show = sum_show
@@ -209,33 +209,36 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         self._add_background(dwg, pos_range, map_xy)
         
         # Adding events
-        for cleavage_site_t in range(pos_t_min,pos_t_max+1):
-            for cleavage_site_b in range(pos_b_min,pos_b_max+1):   
-                event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
-                event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
+        for pos_t in range(pos_t_min,pos_t_max+1):
+            for pos_b in range(pos_b_min,pos_b_max+1):   
+                event_x1 = map_x1 + (map_x2-map_x1)*((pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
+                event_y1 = map_y1 + (map_y2-map_y1)*((pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
-                (norm_count, event_pc) = amw.get_event_stats((cleavage_site_t,cleavage_site_b), freq, max_events, sum_events)
-                if (cleavage_site_t,cleavage_site_b) in freq.keys() or self._event_label_zeros_show:                    
+                norm_count = amw.get_event_norm_count((pos_t,pos_b), freq, max_events)
+                event_pc = amw.get_event_pc((pos_t,pos_b), freq, sum_events)
+                if (pos_t,pos_b) in freq.keys() or self._event_label_zeros_show:                    
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
         # If enabled, showing sum row and column
         if self._sum_show:
             (freq_t, freq_b) = amw.get_full_sequence_summed_frequency(freq, pos_range)
 
-            for cleavage_site_t in range(pos_t_min,pos_t_max+1):
-                event_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_t_min)/(pos_t_max-pos_t_min+1))
+            for pos_t in range(pos_t_min,pos_t_max+1):
+                event_x1 = map_x1 + (map_x2-map_x1)*((pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y2
 
-                (norm_count, event_pc) = amw.get_event_stats(cleavage_site_t, freq_t, max_events, sum_events)
-                if cleavage_site_t in freq_t or self._event_label_zeros_show:                    
+                norm_count = amw.get_event_norm_count(pos_t, freq_t, max_events)
+                event_pc = amw.get_event_pc(pos_t, freq_t, sum_events)
+                if pos_t in freq_t or self._event_label_zeros_show:                    
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
 
-            for cleavage_site_b in range(pos_b_min,pos_b_max+1):
+            for pos_b in range(pos_b_min,pos_b_max+1):
                 event_x1 = map_x2
-                event_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_b-pos_b_min)/(pos_b_max-pos_b_min+1))
+                event_y1 = map_y1 + (map_y2-map_y1)*((pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
-                (norm_count, event_pc) = amw.get_event_stats(cleavage_site_b, freq_b, max_events, sum_events)
-                if cleavage_site_b in freq_b or self._event_label_zeros_show:
+                norm_count = amw.get_event_norm_count(pos_b, freq_b, max_events)
+                event_pc = amw.get_event_pc(pos_b, freq_b, sum_events)
+                if pos_b in freq_b or self._event_label_zeros_show:
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
         
     def _add_background(self, dwg, pos_range, map_xy):
@@ -274,7 +277,5 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         else:
             col = self._event_label_colour
 
-        number_format = "%%.%if" % self._event_label_decimal_places
-
-        dwg.add(svg.text.Text(number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        dwg.add(svg.text.Text(self._number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
     

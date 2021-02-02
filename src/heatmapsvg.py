@@ -1,5 +1,4 @@
 import argparse
-from matplotlib import pyplot as plt
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
@@ -124,17 +123,16 @@ optional.add_argument("-eldp", "--event_label_decimal_places", type=int, default
 
 optional.add_argument("-elzv", "--event_label_zeros_vis", type=SHOWHIDE, default=def_event_label_zeros_vis, choices=list(SHOWHIDE), help="Controls whether labels for positions with zero events are rendered.  Showing these labels can greatly increase file size - especially when rendering a large position range.  Must be either \"show\" or \"hide\" (e.g. -elzv \"show\").  Default: \"%s\".\n\n" % def_event_label_zeros_vis)
 
-optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, choices=list(SHOWHIDE), help="Controls whether the sum row and columns are rendered.  These event cells are rendered using the same settings as for standard events (e.g. font size, colour and zeros visibility).  Must be either \"show\" or \"hide\" (e.g. -elv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
+optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, choices=list(SHOWHIDE), help="Controls whether the sum row and columns are rendered.  These event cells are rendered using the same settings as for standard events (e.g. font size, colour and zeros visibility).  Must be either \"show\" or \"hide\" (e.g. -sv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
 
 args = parser.parse_args()
 
-data_path = args.data_path
-ref_path = args.ref_path
-border_show = True if args.border_vis is SHOWHIDE.SHOW else False
-axis_label_show = True if args.axis_label_vis is SHOWHIDE.SHOW else False
-grid_show = True if args.grid_vis is SHOWHIDE.SHOW else False
-grid_label_show = True if args.grid_label_vis is SHOWHIDE.SHOW else False
-event_label_show = True if args.event_label_vis is SHOWHIDE.SHOW else False
+border_show = args.border_vis is SHOWHIDE.SHOW
+axis_label_show = args.axis_label_vis is SHOWHIDE.SHOW
+grid_show = args.grid_vis is SHOWHIDE.SHOW
+grid_label_show = args.grid_label_vis is SHOWHIDE.SHOW
+event_label_show = args.event_label_vis is SHOWHIDE.SHOW
+sum_show = args.sum_vis is SHOWHIDE.SHOW
 
 # Required arguments
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0,0,0] else None
@@ -147,5 +145,5 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 event_colourmap = args.event_colourmap
 event_label_opts = (event_label_show,args.event_label_size,args.event_label_colour,args.event_label_decimal_places,args.event_label_zeros_vis)
 
-writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts)
-writer.write_map_from_file(data_path, args.out_path, ref_path=ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts, sum_show=sum_show)
+writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)

@@ -124,12 +124,18 @@ def get_full_sequence_summed_frequency(freq_full, pos_range):
 
     return (freq_t, freq_b)
 
-def get_event_stats(key, freq, max_events, sum_events):
+def get_event_norm_count(key, freq, max_events):
     if key in freq:
         norm_count = freq.get(key)/max_events
-        event_pc = 100*freq.get(key)/sum_events  
     else:
         norm_count = 0
+
+    return norm_count
+
+def get_event_pc(key, freq, sum_events):
+    if key in freq:
+        event_pc = 100*freq.get(key)/sum_events  
+    else:
         event_pc = 0
 
-    return (norm_count, event_pc)
+    return event_pc
