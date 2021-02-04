@@ -1,5 +1,6 @@
 from Bio import Align
 from enums.ends import Ends
+from enums.orientation import Orientation
 
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
@@ -47,11 +48,12 @@ class SequenceSearcher():
     def get_cleavage_positions(self, ref, cass, test):
         if self._verbose:
             print("        Finding first cassette end in test sequence:")
-        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START)
+        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START, Orientation.BOTH)
                 
         if self._verbose:
             print("        Finding second cassette end in test sequence:")
-        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
+        orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
+        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
         
         # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
@@ -113,10 +115,18 @@ class SequenceSearcher():
             
         return (cleavage_site_t, cleavage_site_b)
     
-    def _find_best_cassette_end(self, cass, test, end):
-        # Testing both orientations and taking best result
-        cass_pos = self._find_cassette_end(cass, test, end)     
-        cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
+    def _find_best_cassette_end(self, cass, test, end, orientation=Orientation.BOTH):
+        # Testing cassette in sense orientation
+        if orientation is Orientation.SENSE or orientation is Orientation.BOTH:
+            cass_pos = self._find_cassette_end(cass, test, end)     
+        else:
+            cass_pos = None
+        
+        # Testing cassette in reverse complement orientation
+        if orientation is Orientation.RC or orientation is Orientation.BOTH:
+            cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
+        else:
+            cass_pos_rc = None
 
         if cass_pos is None and cass_pos_rc is not None:
             if self._verbose:
