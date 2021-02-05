@@ -142,6 +142,7 @@ def _point_rotate(ox, oy, cx, cy, angle):
 # Create the animaton
 window = create_window()
 canvas = create_canvas(window)
+animate_pause(window,300)
 
 # Displaying DNA sequences
 create_text(canvas, 0.5, heading_y, "Loading cassette, reference and test sequences", heading_font, tags=["heading","text"])
