@@ -54,6 +54,8 @@ class SequenceSearcher():
             print("        Finding second cassette end in test sequence:")
         orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
         (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
+
+        print(f"ANI: {cass_pos_1.path}_{cass_pos_2.path}")
         
         # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
@@ -72,12 +74,12 @@ class SequenceSearcher():
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence:")
-        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
+        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases)
         test_cut_1 = test_cut_1 + self._num_bases
         
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence:")
-        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
+        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0)
         
         if alignment1 is None or alignment2 is None:
             if self._verbose:
@@ -153,7 +155,7 @@ class SequenceSearcher():
     def _find_cassette_end(self, cass, test, end):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
-
+        
         if end is Ends.CASS_START:
             # Checking for "full" cassette end
             alignments = self._aligner.align(test, cass[0: self._num_bases])
@@ -175,7 +177,7 @@ class SequenceSearcher():
 
         max_isRC = False
         max_en = 0
-        for en in range(len(path)):
+        for en in range(len(path)): # The last position in the path is definitely the end
             (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length)
 
             if alignment is None:
@@ -199,6 +201,7 @@ class SequenceSearcher():
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
         test_target = get_seq(test, pos, pos+search_length)
+        print(f"ANI: testing {test_target}")
         if test_target is None:
             if self._verbose:
                 print("            No test sequence found")
