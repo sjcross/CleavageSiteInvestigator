@@ -8,9 +8,9 @@ win_h=600
 fps = 30
 step_size = 0.01
 
-bubble_outline_start_sense = "blue"
-bubble_outline_start_rc = "red"
-bubble_outline_end_sense = "orange"
+bubble_outline_start_sense = "orange"
+bubble_outline_start_rc = "magenta"
+bubble_outline_end_sense = "cyan"
 bubble_outline_end_rc = "green"
 bubble_width = 3
 bubble_w = 0.05
@@ -22,19 +22,19 @@ dna_width = 3
 dna_label_font = ("Ariel", 12, "")
 dna_label_gap = 0.02
 
-cass_seq_fill = "cyan"
+cass_seq_fill = "blue"
 cass_x1 = 0.3
 cass_y1 = 0.25
 cass_x2 = 0.7
 cass_y2 = 0.35
 
-ref_seq_fill = "magenta"
+ref_seq_fill = "black"
 ref_x1 = 0.2
 ref_y1 = 0.5
 ref_x2 = 0.8
 ref_y2 = 0.6
 
-test_seq_fill = "black"
+test_seq_fill = "red"
 test_x1 = 0.1
 test_y1 = 0.75
 test_x2 = 0.9
@@ -142,7 +142,7 @@ def _point_rotate(ox, oy, cx, cy, angle):
 # Create the animaton
 window = create_window()
 canvas = create_canvas(window)
-animate_pause(window,300)
+animate_pause(window,100)
 
 # Displaying DNA sequences
 create_text(canvas, 0.5, heading_y, "Loading cassette, reference and test sequences", heading_font, tags=["heading","text"])
