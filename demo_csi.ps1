@@ -1,6 +1,6 @@
 # For neatness setting these values as variables
-$cass_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\Chloramphenicol Cassette overhang.fa"
-$ref_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\Stephen files\CAT cassette Forward as amplified by RA101 & 102 from pACYC184.txt"
+$cass_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\2020-11-25 Problem file\Splint1TA.fa"
+$ref_path = "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\pUC19.fa"
 
 # Running a single file
 python .\src\csi.py -c $cass_path -r $ref_path -t "\\LUCA\People\Oscar\2020-02-20 Sequencing analysis\puc19long.fa" -en 3 -pr -we -wo -wi -ws -nb 40 -sp -mg 300

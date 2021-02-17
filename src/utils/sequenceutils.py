@@ -109,19 +109,6 @@ class SequenceSearcher():
             if error_store is not None:
                 error_store.max_gap_exceeded()
             return (None, None)
-
-        # (5' overhangs only) both sequences should match
-        if cleavage_site_t < cleavage_site_b:
-            diff = cleavage_site_b - cleavage_site_t
-            overhang_1 = test[test_cut_1 - diff :test_cut_1]
-            overhang_2 = test[test_cut_2: test_cut_2 + diff]
-            
-            if overhang_1 != overhang_2:
-                if self._verbose:
-                    print("ERROR: Missmatch in 5' overhang (%s, %s)\n" % (overhang_1, overhang_2))
-                if error_store is not None:
-                    error_store.overhang_mismatch()
-                return (None, None)
             
         return (cleavage_site_t, cleavage_site_b)
     

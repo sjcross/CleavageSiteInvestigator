@@ -25,7 +25,7 @@ def_extra_nt = 0 # Number of additional nucleotides to be displayed either side 
 
 def_local_r = 1 # Half width of the local sequences to be extracted at restriction sites
 
-def_max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
+def_max_gap = 10000 # Maximum number of bp between 3' and 5' restriction sites
 
 def_min_quality = 1.0 # Minimum match quality ("1" is perfect)
 
