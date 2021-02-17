@@ -140,6 +140,7 @@ if verbose:
     print("INPUT: Loading sequences from file")
 ref = filereader.read_sequence(ref_path)[0][0]
 cass = filereader.read_sequence(cass_path)[0][0]
+
 (tests,(n_acc,n_rej)) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
 if verbose:
     print("        Accepted = %i (%.2f%%), rejected = %i (%.2f%%)" % (n_acc, (100*n_acc/(n_acc+n_rej)), n_rej, (100*n_rej/(n_acc+n_rej))))
