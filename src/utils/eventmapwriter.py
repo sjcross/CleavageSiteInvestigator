@@ -104,7 +104,9 @@ class EventMapWriter(amw.AbstractMapWriter):
         if self._end_label_show:
             self._add_end_labels(dwg, map_xy)
 
-        self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq)
+        if len(freq) > 0:
+            self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq)
+            
         self._add_dna(dwg, pos_min, pos_max, map_xy, ref=ref)
 
         # Writing SVG to file

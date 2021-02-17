@@ -8,6 +8,7 @@ from Bio import Align
 from tqdm import tqdm
 
 from utils import csvutils as cu
+from utils import errorstore as es
 from utils import fileutils as fu
 from utils import plotutils as pu
 from utils import reportutils as ru
@@ -156,6 +157,7 @@ searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality
 
 # Dict to store results as dual cleavage site tuple
 results = {}
+error_store = es.ErrorStore()
 error_count = 0
 
 if verbose:
@@ -165,7 +167,7 @@ for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
         print("    Processing test sequence %i" % (iteration + 1))
 
-    (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
+    (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test, error_store=error_store)
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
 
     if cleavage_site_t == None:
@@ -201,10 +203,12 @@ if print_results:
     ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
 
     # Reporting number of errors
+    print("    Summary of errors:\n")
+    error_store.print_counts(offset="    ")
     ru.print_error_rate(error_count, len(tests), offset="    ")
 
 # Plotting sequence distributions
-if show_plots:
+if show_plots and len(results) > 0:
     pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
     # Reporting top and bottom sequence co-occurrence
@@ -234,7 +238,7 @@ if write_heatmap_csv_auto:
 if write_heatmap_csv_full:
     # Showing events as heatmap
     heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
-    heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, ref, append_dt=append_dt)
+    heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, ref, None, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
