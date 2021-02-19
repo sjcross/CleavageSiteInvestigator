@@ -52,7 +52,16 @@ class SequenceSearcher():
                 
         if self._verbose:
             print("        Finding second cassette end in test sequence:")
-        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
+        orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
+        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
+
+        # Both should be RC or normal.
+        if cass1_isRC != cass2_isRC:
+            if self._verbose:
+                print("ERROR: Cassette RC mismatch\n")
+            if error_store is not None:
+                error_store.cassette_ends_mismatch()
+            return (None, None)
 
         # Checking results are OK
         if cass_pos_1 is None or cass_pos_2 is None:
@@ -62,13 +71,6 @@ class SequenceSearcher():
                 error_store.cassette_not_found_in_test()
             return (None, None)  
 
-        # Both should be RC or normal.
-        if cass1_isRC != cass2_isRC:
-            if self._verbose:
-                print("ERROR: Cassette RC mismatch\n")
-            if error_store is not None:
-                error_store.cassette_ends_mismatch()
-            return (None, None)
 
         # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
 
