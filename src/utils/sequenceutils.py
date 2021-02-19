@@ -1,5 +1,6 @@
 from Bio import Align
 from enums.ends import Ends
+from enums.orientation import Orientation
 
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
@@ -47,19 +48,12 @@ class SequenceSearcher():
     def get_cleavage_positions(self, ref, cass, test, error_store=None):
         if self._verbose:
             print("        Finding first cassette end in test sequence:")
-        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START)
+        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START, Orientation.BOTH)
                 
         if self._verbose:
             print("        Finding second cassette end in test sequence:")
-        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
-
-        # Checking results are OK
-        if cass_pos_1 is None or cass_pos_2 is None:
-            if self._verbose:
-                print("ERROR: Cassette ends not found\n")
-            if error_store is not None:
-                error_store.cassette_not_found_in_test()
-            return (None, None)  
+        orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
+        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
 
         # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
@@ -69,17 +63,26 @@ class SequenceSearcher():
                 error_store.cassette_ends_mismatch()
             return (None, None)
 
+        # Checking results are OK
+        if cass_pos_1 is None or cass_pos_2 is None:
+            if self._verbose:
+                print("ERROR: Cassette ends not found\n")
+            if error_store is not None:
+                error_store.cassette_not_found_in_test()
+            return (None, None)  
+
+
         # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
 
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence:")
-        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path, self._num_bases, self._num_bases)
+        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases)
         test_cut_1 = test_cut_1 + self._num_bases
         
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence:")
-        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path, self._num_bases, 0)
+        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0)
         
         if alignment1 is None or alignment2 is None:
             if self._verbose:
@@ -112,10 +115,18 @@ class SequenceSearcher():
             
         return (cleavage_site_t, cleavage_site_b)
     
-    def _find_best_cassette_end(self, cass, test, end):
-        # Testing both orientations and taking best result
-        cass_pos = self._find_cassette_end(cass, test, end)     
-        cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
+    def _find_best_cassette_end(self, cass, test, end, orientation=Orientation.BOTH):
+        # Testing cassette in sense orientation
+        if orientation is Orientation.SENSE or orientation is Orientation.BOTH:
+            cass_pos = self._find_cassette_end(cass, test, end)     
+        else:
+            cass_pos = None
+        
+        # Testing cassette in reverse complement orientation
+        if orientation is Orientation.RC or orientation is Orientation.BOTH:
+            cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
+        else:
+            cass_pos_rc = None
 
         if cass_pos is None and cass_pos_rc is not None:
             if self._verbose:
@@ -142,7 +153,7 @@ class SequenceSearcher():
     def _find_cassette_end(self, cass, test, end):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
-
+        
         if end is Ends.CASS_START:
             # Checking for "full" cassette end
             alignments = self._aligner.align(test, cass[0: self._num_bases])
@@ -164,7 +175,7 @@ class SequenceSearcher():
 
         max_isRC = False
         max_en = 0
-        for en in range(len(path)):
+        for en in range(len(path)): # The last position in the path is definitely the end
             (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length)
 
             if alignment is None:
@@ -188,6 +199,7 @@ class SequenceSearcher():
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
         test_target = get_seq(test, pos, pos+search_length)
+        print(f"ANI: testing {test_target}")
         if test_target is None:
             if self._verbose:
                 print("            No test sequence found")
