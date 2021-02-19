@@ -45,29 +45,30 @@ class SequenceSearcher():
     #     cleavage_site_t = index of nucleotide immediately 3' of cleavage site on bottom strand
     #     local_seq_1 = local sequence at top strand cleavage site (local_r nucleotides either side of cleavage site)
     #     local_seq_2 = local sequence at bottom strand cleavage site (local_r nucleotides either side of cleavage site)
-    def get_cleavage_positions(self, ref, cass, test):
+    def get_cleavage_positions(self, ref, cass, test, error_store=None):
         if self._verbose:
             print("        Finding first cassette end in test sequence:")
         (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START, Orientation.BOTH)
                 
         if self._verbose:
             print("        Finding second cassette end in test sequence:")
-        orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
-        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
-
-        print(f"ANI: {cass_pos_1.path}_{cass_pos_2.path}")
-        
-        # Both should be RC or normal.
-        if cass1_isRC != cass2_isRC:
-            if self._verbose:
-                print("ERROR: Cassette RC mismatch\n")
-            return (None, None)
+        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END)
 
         # Checking results are OK
         if cass_pos_1 is None or cass_pos_2 is None:
             if self._verbose:
                 print("ERROR: Cassette ends not found\n")
+            if error_store is not None:
+                error_store.cassette_not_found_in_test()
             return (None, None)  
+
+        # Both should be RC or normal.
+        if cass1_isRC != cass2_isRC:
+            if self._verbose:
+                print("ERROR: Cassette RC mismatch\n")
+            if error_store is not None:
+                error_store.cassette_ends_mismatch()
+            return (None, None)
 
         # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
 
@@ -84,12 +85,16 @@ class SequenceSearcher():
         if alignment1 is None or alignment2 is None:
             if self._verbose:
                 print("ERROR: Test sequence not found in reference\n")
+            if error_store is not None:
+                error_store.test_not_found_in_reference()
             return (None, None)
 
         # Both should be RC or normal
         if isRC1 != isRC2:
             if self._verbose:
                 print("ERROR: RC mismatch\n")
+            if error_store is not None:
+                error_store.test_ends_mismatch()
             return (None, None)
 
         if isRC1:
@@ -102,18 +107,9 @@ class SequenceSearcher():
         if abs(cleavage_site_t - cleavage_site_b) > self._max_gap:
             if self._verbose:
                 print("ERROR: cleavage site gap (%i) exceeds maximum permitted\n" % abs(cleavage_site_b - cleavage_site_t))
+            if error_store is not None:
+                error_store.max_gap_exceeded()
             return (None, None)
-
-        # (5' overhangs only) both sequences should match
-        if cleavage_site_t < cleavage_site_b:
-            diff = cleavage_site_b - cleavage_site_t
-            overhang_1 = test[test_cut_1 - diff :test_cut_1]
-            overhang_2 = test[test_cut_2: test_cut_2 + diff]
-            
-            if overhang_1 != overhang_2:
-                if self._verbose:
-                    print("ERROR: Missmatch in 5' overhang (%s, %s)\n" % (overhang_1, overhang_2))
-                return (None, None)
             
         return (cleavage_site_t, cleavage_site_b)
     

@@ -51,7 +51,7 @@ class FileReader():
         sequence_string = self._remove_repeats(sequence_string)
         sequence_string = convert_to_upper_case(sequence_string)
 
-        return [Seq(sequence_string), (1, 1)]
+        return [[Seq(sequence_string)], (1, 1)]
 
     def _read_dna(self, path, repeat_filter=""):
         if repeat_filter != "":
@@ -69,7 +69,7 @@ class FileReader():
         sequence_string = self._get_longest_sequence(instances).decode()
         sequence_string = convert_to_upper_case(sequence_string)
 
-        return [Seq(sequence_string), (1, 1)]
+        return [[Seq(sequence_string)], (1, 1)]
 
     def _read_fasta(self, path, repeat_filter=""):
         if self._verbose:
@@ -134,7 +134,7 @@ class FileReader():
         sequence_string = sequence_string.replace("\n", "")
         sequence_string = convert_to_upper_case(sequence_string)
 
-        return [Seq(sequence_string), (1, 1)]
+        return [[Seq(sequence_string)], (1, 1)]
 
     def _read_txt(self, path, repeat_filter=""):
         if repeat_filter != "":
@@ -144,7 +144,7 @@ class FileReader():
             print("        Reading as \".txt\" format")
 
         file = open(path, "r")
-        return [Seq(convert_to_upper_case(file.read())), (1, 1)]
+        return [[Seq(convert_to_upper_case(file.read()))], (1, 1)]
 
     def _get_longest_sequence(self, instances):
         max_len = 0
