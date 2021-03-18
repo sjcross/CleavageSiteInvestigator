@@ -169,6 +169,8 @@ for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
         print("    Processing test sequence %i" % (iteration + 1))
 
     (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test, error_store=error_store)
+    midpoint_site = searcher.get_midpoint_position(ref, cass, test)
+
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
 
     if cleavage_site_t == None:
@@ -180,8 +182,8 @@ for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
         print("        Result:")
         ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b,extra_nt=extra_nt,offset="        ")
+        ru.print_type(cleavage_site_t, cleavage_site_b, midpoint_site, offset="        ")
+        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b, midpoint_site,extra_nt=extra_nt,offset="        ")
 
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
@@ -192,7 +194,7 @@ freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalM
 if print_results:
     print("\rRESULTS:")
     print("    Full sequence frequency:\n")
-    ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, offset="")
+    ru.print_full_sequence_frequency(ref, freq_full, midpoint_site, extra_nt=extra_nt, offset="")
 
     print("    Local dinucleotide frequencies:\n")
     ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")

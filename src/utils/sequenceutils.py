@@ -2,6 +2,8 @@ from Bio import Align
 from enums.ends import Ends
 from enums.orientation import Orientation
 
+import math
+
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
         self._aligner = aligner
@@ -114,7 +116,33 @@ class SequenceSearcher():
             return (None, None)
             
         return (cleavage_site_t, cleavage_site_b)
-    
+
+    def get_midpoint_position(self, ref, cass, test, error_store=None):
+        # Finding middle of cassette in test (checking normal and reverse)    
+        cass_mid_pos = math.floor((len(cass)/2)-(self._num_bases/2))
+        
+        # Getting circularly-opposite sequence from test (this is the midpoint sequence)        
+        (alignment, isRC) = self._find_target_in_ref(test, cass, cass_mid_pos, self._num_bases)
+        if alignment is None:
+            if self._verbose:
+                print("ERROR: Midpoint sequence not found\n")
+            if error_store is not None:
+                error_store.midpoint_not_found()
+            return None  
+        
+        test_mid_pos = (alignment.path[0][0]+math.floor((len(test)/2))) % len(test)
+        
+        # Finding position of midpoint sequence in reference (this is the midpoint position)
+        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases)
+        if midpoint is None:
+            if self._verbose:
+                print("ERROR: Midpoint sequence not found\n")
+            if error_store is not None:
+                error_store.midpoint_not_found()
+            return None  
+
+        return midpoint.path[0][0]
+
     def _find_best_cassette_end(self, cass, test, end, orientation=Orientation.BOTH):
         # Testing cassette in sense orientation
         if orientation is Orientation.SENSE or orientation is Orientation.BOTH:
@@ -199,7 +227,6 @@ class SequenceSearcher():
 
     def _find_target_in_ref(self, ref, test, pos, search_length):
         test_target = get_seq(test, pos, pos+search_length)
-        print(f"ANI: testing {test_target}")
         if test_target is None:
             if self._verbose:
                 print("            No test sequence found")
@@ -282,12 +309,15 @@ def get_local_sequences(ref, cleavage_site_t, cleavage_site_b, local_r=1):
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
 
-def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
+def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, midpoint_site, extra_nt=0):
     if cleavage_site_b is None or cleavage_site_t is None:
         return (None, None)
 
+    # If sample is looped logic is reversed
+    looped = sample_is_looped(cleavage_site_t, cleavage_site_b, midpoint_site)
+
     # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
+    if (cleavage_site_b < cleavage_site_t and not looped) or (cleavage_site_b > cleavage_site_t and looped):
         # 3' overhang
         left_seq1 = ref[cleavage_site_b - 1 - extra_nt : cleavage_site_b]
         mid_seq1 = ref[cleavage_site_b : cleavage_site_t]
@@ -315,7 +345,7 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         
         return (seq1, seq2)
 
-    elif cleavage_site_b > cleavage_site_t:
+    elif (cleavage_site_b > cleavage_site_t and not looped) or (cleavage_site_b < cleavage_site_t and looped):
         # 5' overhang
         left_seq1 = ref[cleavage_site_t - 1 - extra_nt : cleavage_site_t]
         mid_seq1 = ref[cleavage_site_t : cleavage_site_b]
@@ -330,16 +360,22 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
 
         return (seq1, seq2)
 
-def get_type_str(cleavage_site_t, cleavage_site_b):
+def get_type_str(cleavage_site_t, cleavage_site_b, midpoint_site):
     if cleavage_site_b is None or cleavage_site_t is None:
         return None
 
+    # If sample is looped logic is reversed
+    looped = sample_is_looped(cleavage_site_t, cleavage_site_b, midpoint_site)
+
     # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
+    if (cleavage_site_b < cleavage_site_t and not looped) or (cleavage_site_b > cleavage_site_t and looped):
         return "3' overhang"
         
-    elif (cleavage_site_b == cleavage_site_t):
+    elif cleavage_site_b == cleavage_site_t:
         return "Blunt end"
 
-    elif cleavage_site_b > cleavage_site_t:
+    elif (cleavage_site_b > cleavage_site_t and not looped) or (cleavage_site_b < cleavage_site_t and looped):
         return "5' overhang"
+
+def sample_is_looped(cleavage_site_t, cleavage_site_b, midpoint_site):
+    return (cleavage_site_t < midpoint_site and cleavage_site_b > midpoint_site) or (cleavage_site_b < midpoint_site and cleavage_site_t > midpoint_site)

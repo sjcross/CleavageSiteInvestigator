@@ -89,7 +89,7 @@ def get_sequence_cooccurrence(results, local_r):
         
     return (labels,freq)    
 
-def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
+def print_full_sequence_frequency(ref, freq, midpoint_site, extra_nt = 0, offset=""):
     total = sum(list(freq.values()))
     
     # Displaying sequence frequency results
@@ -100,8 +100,8 @@ def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
 
         print_position(cleavage_site_t, cleavage_site_b, offset=offset)
         print_count(count, total, offset=offset)
-        print_type(cleavage_site_t, cleavage_site_b, offset=offset)
-        print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=extra_nt, offset=offset)
+        print_type(cleavage_site_t, cleavage_site_b, midpoint_site, offset=offset)
+        print_sequence(ref, cleavage_site_t, cleavage_site_b, midpoint_site, extra_nt=extra_nt, offset=offset)
         
     print("\n")
 
@@ -116,23 +116,24 @@ def print_position(cleavage_site_t, cleavage_site_b, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:
         return
 
-    print("%s    Position:    %i, %i" % (offset, cleavage_site_t, cleavage_site_b))
+    print("%s    TS position: %i" % (offset, cleavage_site_t))
+    print("%s    BS position: %i" % (offset, cleavage_site_b))
 
 def print_count(count, total, offset=""):
     print("%s    Count:       %i/%i (%.1f%% of events)" % (offset, count, total, 100*(count/total)))
 
-def print_type(cleavage_site_t, cleavage_site_b, offset=""):
-    type_str = su.get_type_str(cleavage_site_t, cleavage_site_b)
+def print_type(cleavage_site_t, cleavage_site_b, midpoint_site, offset=""):
+    type_str = su.get_type_str(cleavage_site_t, cleavage_site_b, midpoint_site)
     if type_str is None:
         return
 
     print("%s    Type:        %s" % (offset, type_str))
 
-def print_sequence(ref, cleavage_site_t, cleavage_site_b, extra_nt=0, offset=""):
+def print_sequence(ref, cleavage_site_t, cleavage_site_b, midpoint_site, extra_nt=0, offset=""):
     if cleavage_site_b is None or cleavage_site_t is None:
         return
 
-    (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=extra_nt)
+    (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, midpoint_site, extra_nt=extra_nt)
 
     print("%s    Sequence:    %s\r\n                 %s%s\r\n" % (offset, seq1, offset, seq2))
         
