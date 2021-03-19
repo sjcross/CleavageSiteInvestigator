@@ -375,8 +375,8 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=0):
         
     elif cleavage_site_b == cleavage_site_t:
         # Blunt end
-        left_seq1 = get_seq(ref,cleavage_site_b - 3 - extra_nt, cleavage_site_b)
-        right_seq1 = get_seq(cleavage_site_t, cleavage_site_t + 3 + extra_nt)
+        left_seq1 = get_seq(ref, cleavage_site_b - 3 - extra_nt, cleavage_site_b)
+        right_seq1 = get_seq(ref, cleavage_site_t, cleavage_site_t + 3 + extra_nt)
 
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
