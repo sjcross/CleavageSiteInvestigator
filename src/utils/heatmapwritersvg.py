@@ -50,7 +50,7 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
 
     def write_map(self, out_path, freq, ref, pos_range, append_dt):
         # Getting pos ranges to plot based on available information
-        pos_range = amw.get_pos_range(freq, ref, pos_range)
+        pos_range = amw.get_double_pos_range(freq, ref, pos_range)
         if pos_range is None:
             return
 
@@ -208,21 +208,18 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         # Adding background
         self._add_background(dwg, pos_range, map_xy)
         
-        # If there are no events in this range, we can skip
-
-
         # Adding events
         for pos_t in range(pos_t_min,pos_t_max+1):
-            for pos_b in range(pos_b_min,pos_b_max+1):   
+            for pos_b in range(pos_b_min,pos_b_max+1):  
                 event_x1 = map_x1 + (map_x2-map_x1)*((pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y1 + (map_y2-map_y1)*((pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
-                norm_count = amw.get_event_norm_count((pos_t,pos_b), freq, max_events)
-                event_pc = amw.get_event_pc((pos_t,pos_b), freq, sum_events)
-                if (pos_t,pos_b) in freq.keys():                    
+                norm_count = amw.get_event_norm_count((pos_t,pos_b,True), freq, max_events) + amw.get_event_norm_count((pos_t,pos_b,False), freq, max_events)
+                event_pc = amw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + amw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
+                if (pos_t,pos_b,True) in freq.keys() or (pos_t,pos_b,False) in freq.keys():                    
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
 
-                if self._event_label_show and ((pos_t,pos_b) in freq.keys() or self._event_label_zeros_show):
+                if self._event_label_show and (((pos_t,pos_b,True) in freq.keys() or ((pos_t,pos_b,False) in freq.keys())) or self._event_label_zeros_show):
                     self._add_event_label(dwg, event_x1, event_y1, event_dim, norm_count, event_pc)
                     
         # If enabled, showing sum row and column

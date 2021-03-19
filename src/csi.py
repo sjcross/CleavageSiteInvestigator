@@ -138,10 +138,10 @@ filereader = fu.FileReader(verbose=verbose)
 # Loading reference, cassette and test sequences
 if verbose:
     print("INPUT: Loading sequences from file")
-ref = filereader.read_sequence(ref_path)[0][0]
-cass = filereader.read_sequence(cass_path)[0][0]
+ref = filereader.read_sequence(ref_path)[0][0][0]
+cass = filereader.read_sequence(cass_path)[0][0][0]
 
-(tests,(n_acc,n_rej)) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
+(tests,n_acc,n_rej) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
 if verbose:
     print("        Accepted = %i (%.2f%%), rejected = %i (%.2f%%)" % (n_acc, (100*n_acc/(n_acc+n_rej)), n_rej, (100*n_rej/(n_acc+n_rej))))
 
@@ -166,24 +166,26 @@ if verbose:
 
 for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
-        print("    Processing test sequence %i" % (iteration + 1))
+        if test[1] is not "":
+            print("    Processing test sequence %i (%s)" % (iteration + 1,test[1]))
+        else:
+            print("    Processing test sequence %i" % (iteration + 1))
 
-    (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test, error_store=error_store)
-    midpoint_site = searcher.get_midpoint_position(ref, cass, test)
-
+    (cleavage_site_t,cleavage_site_b,split) = searcher.get_cleavage_positions(ref, cass, test[0], error_store=error_store)
+    
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
 
     if cleavage_site_t == None:
         error_count = error_count + 1
         continue
 
-    results[iteration] = (cleavage_site_t, cleavage_site_b, local_seq_t,local_seq_b)
+    results[iteration] = (cleavage_site_t, cleavage_site_b, split, local_seq_t, local_seq_b, test[1])
 
     if verbose:
         print("        Result:")
-        ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_type(cleavage_site_t, cleavage_site_b, midpoint_site, offset="        ")
-        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b, midpoint_site,extra_nt=extra_nt,offset="        ")
+        ru.print_position(cleavage_site_t, cleavage_site_b, split, offset="        ")
+        ru.print_type(cleavage_site_t, cleavage_site_b, split, offset="        ")
+        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b, split,extra_nt=extra_nt,offset="        ")
 
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
@@ -194,7 +196,7 @@ freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalM
 if print_results:
     print("\rRESULTS:")
     print("    Full sequence frequency:\n")
-    ru.print_full_sequence_frequency(ref, freq_full, midpoint_site, extra_nt=extra_nt, offset="")
+    ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, offset="")
 
     print("    Local dinucleotide frequencies:\n")
     ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")

@@ -87,7 +87,7 @@ class CSVWriter():
         file.close()
 
     def _get_individual_header_line(self):
-        row = "INDEX,TYPE,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
+        row = "INDEX,HEADER,TYPE,TOP_POS,BOTTOM_POS,SPLIT_SEQ,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
             return row + "SEQUENCE\n"
@@ -101,23 +101,29 @@ class CSVWriter():
         if result is None:
             return new_row + '\n'
 
-        (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = result
+        (cleavage_site_t, cleavage_site_b, split, local_seq_t, local_seq_b, header) = result
+
+        # Adding header text
+        new_row = new_row + header + ","
 
         # Adding cleavage type
-        new_row = new_row + su.get_type_str(cleavage_site_t, cleavage_site_b) + ','
+        new_row = new_row + su.get_type_str(cleavage_site_t, cleavage_site_b, split) + ','
 
         # Adding top and bottom cleavage positions
         new_row = new_row + str(cleavage_site_t) + ','
         new_row = new_row + str(cleavage_site_b) + ','
+
+        # Adding split sequence boolean
+        new_row = new_row + str(split) + ','
 
         # Adding top and bottom cleavage local sequences
         new_row = new_row + str(local_seq_t) + ','
         new_row = new_row + str(local_seq_b) + ','
 
         # Adding sequences
-        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=self._extra_nt)
+        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=self._extra_nt)
         if self._double_line_mode:
-            new_row = new_row + seq1 + '\n,,,,,,' + seq2
+            new_row = new_row + seq1 + '\n,,,,,,,,' + seq2
         else:
             new_row = new_row + seq1 + ','
             new_row = new_row + seq2
@@ -141,10 +147,11 @@ class CSVWriter():
         for cleavage_sites in freq.keys():        
             cleavage_site_t = cleavage_sites[0]
             cleavage_site_b = cleavage_sites[1]
+            split = cleavage_sites[2]
             count = freq.get(cleavage_sites)
             event_pc = 100*count/total
 
-            row = self._get_summary_result_line(cleavage_site_t, cleavage_site_b, count, event_pc, ref)
+            row = self._get_summary_result_line(cleavage_site_t, cleavage_site_b, split, count, event_pc, ref)
             file.write(row)
 
         # Adding a line for the number of errors
@@ -154,24 +161,27 @@ class CSVWriter():
         file.close()
 
     def _get_summary_header_line(self):
-        row = "TYPE,COUNT,EVENT_%,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
+        row = "TYPE,COUNT,EVENT_%,TOP_POS,BOTTOM_POS,SPLIT_SEQ,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
             return row + "SEQUENCE\n"
         else:
             return row + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
 
-    def _get_summary_result_line(self, cleavage_site_t, cleavage_site_b, count, event_pc, ref):
+    def _get_summary_result_line(self, cleavage_site_t, cleavage_site_b, split, count, event_pc, ref):
         if cleavage_site_b is None or cleavage_site_t is None:
             return '\n'
 
         # Initialising string for this line with the cleavage type, count and event %
-        type = su.get_type_str(cleavage_site_t,cleavage_site_b)
+        type = su.get_type_str(cleavage_site_t,cleavage_site_b,split)
         new_row = type + ',' + str(count) + ',' + str(event_pc) + ','
 
         # Adding top and bottom cleavage positions
         new_row = new_row + str(cleavage_site_t) + ','
         new_row = new_row + str(cleavage_site_b) + ','
+
+        # Adding split sequence boolean
+        new_row = new_row + str(split) + ','
 
         # Adding top and bottom cleavage local sequences
         (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=self._local_r)
@@ -179,9 +189,9 @@ class CSVWriter():
         new_row = new_row + str(local_seq_b) + ','
 
         # Adding sequences
-        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=self._extra_nt)
+        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=self._extra_nt)
         if self._double_line_mode:
-            new_row = new_row + seq1 + '\n,,,,,,,' + seq2
+            new_row = new_row + seq1 + '\n,,,,,,,,' + seq2
         else:
             new_row = new_row + seq1 + ','
             new_row = new_row + seq2
