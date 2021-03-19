@@ -74,6 +74,9 @@ class SequenceSearcher():
                 error_store.cassette_not_found_in_test()
             return (None, None, False)  
 
+        # print(cass_pos_1.path)
+        # print(cass_pos_2.path)
+
         # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
 
         # Finding cassette-adjacent test sequence in reference
@@ -92,6 +95,9 @@ class SequenceSearcher():
             if error_store is not None:
                 error_store.test_not_found_in_reference()
             return (None, None, False)
+
+        # print(alignment1.path)
+        # print(alignment2.path)
 
         # Both should be RC or normal
         if isRC1 != isRC2:
@@ -134,9 +140,11 @@ class SequenceSearcher():
         cass_mid_pos = math.floor((len(cass)/2)-(self._num_bases/2))
         
         # Getting circularly-opposite sequence from test (this is the midpoint sequence)        
-        (alignment, isRC) = self._find_target_in_ref(test, cass, cass_mid_pos, self._num_bases, 0.75)
+        (alignment, isRC) = self._find_target_in_ref(test, cass, cass_mid_pos, self._num_bases, 0.7)
         if alignment is None:
             return None  
+
+        # print(alignment.path)
 
         if self._verbose:
                 print("            Best score = %.2f (reverse complement)" % alignment.score)
@@ -144,9 +152,11 @@ class SequenceSearcher():
         test_mid_pos = (alignment.path[0][0]+math.floor((len(test)/2))) % len(test)
         
         # Finding position of midpoint sequence in reference (this is the midpoint position)
-        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.75)
+        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.7)
         if midpoint is None:
             return None  
+
+        # print(midpoint.path)
 
         if self._verbose:
                 print("            Best score = %.2f (reverse complement)" % midpoint.score)
@@ -243,11 +253,12 @@ class SequenceSearcher():
 
     def _find_target_in_ref(self, ref, test, pos, search_length, min_quality):
         test_target = get_seq(test, pos, pos+search_length)
+        # print(test_target)
         
         # Adding a repetition to the end of the sequence, incase the target sequence spans the ends
         len_ref = len(ref)
         ref = ref + get_seq(ref, 0, search_length)
-
+        
         if test_target is None:
             if self._verbose:
                 print("            No test sequence found")

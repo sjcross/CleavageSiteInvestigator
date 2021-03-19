@@ -152,7 +152,7 @@ if verbose:
 aligner = Align.PairwiseAligner()
 aligner.mode = 'local'
 aligner.match_score = 1.0
-aligner.mismatch_score = -1.0
+# aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
 searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
@@ -166,7 +166,7 @@ if verbose:
 
 for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
-        if test[1] is not "":
+        if test[1] != "":
             print("    Processing test sequence %i (%s)" % (iteration + 1,test[1]))
         else:
             print("    Processing test sequence %i" % (iteration + 1))
