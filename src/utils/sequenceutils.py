@@ -1,6 +1,9 @@
 from Bio import Align
+from matplotlib.pyplot import minorticks_off
 from enums.ends import Ends
 from enums.orientation import Orientation
+
+import math
 
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
@@ -61,7 +64,7 @@ class SequenceSearcher():
                 print("ERROR: Cassette RC mismatch\n")
             if error_store is not None:
                 error_store.cassette_ends_mismatch()
-            return (None, None)
+            return (None, None, False)
 
         # Checking results are OK
         if cass_pos_1 is None or cass_pos_2 is None:
@@ -69,27 +72,32 @@ class SequenceSearcher():
                 print("ERROR: Cassette ends not found\n")
             if error_store is not None:
                 error_store.cassette_not_found_in_test()
-            return (None, None)  
+            return (None, None, False)  
 
+        # print(cass_pos_1.path)
+        # print(cass_pos_2.path)
 
         # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
 
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence:")
-        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases)
+        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases, self._min_quality)
         test_cut_1 = test_cut_1 + self._num_bases
         
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence:")
-        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0)
+        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0, self._min_quality)
         
         if alignment1 is None or alignment2 is None:
             if self._verbose:
                 print("ERROR: Test sequence not found in reference\n")
             if error_store is not None:
                 error_store.test_not_found_in_reference()
-            return (None, None)
+            return (None, None, False)
+
+        # print(alignment1.path)
+        # print(alignment2.path)
 
         # Both should be RC or normal
         if isRC1 != isRC2:
@@ -97,9 +105,9 @@ class SequenceSearcher():
                 print("ERROR: RC mismatch\n")
             if error_store is not None:
                 error_store.test_ends_mismatch()
-            return (None, None)
+            return (None, None, False)
 
-        if isRC1:
+        if isRC1:            
             cleavage_site_t = alignment1.path[0][0]
             cleavage_site_b = alignment2.path[-1][0]
         else:
@@ -111,10 +119,50 @@ class SequenceSearcher():
                 print("ERROR: cleavage site gap (%i) exceeds maximum permitted\n" % abs(cleavage_site_b - cleavage_site_t))
             if error_store is not None:
                 error_store.max_gap_exceeded()
-            return (None, None)
+            return (None, None, False)
             
-        return (cleavage_site_t, cleavage_site_b)
-    
+        if self._verbose:
+            print("        Testing for sequence splitting:")
+        midpoint_site = self.get_midpoint_position(ref, cass, test)     
+        if midpoint_site is None:
+            if self._verbose:
+                print("ERROR: Midpoint sequence not found\n")
+            if error_store is not None:
+                error_store.midpoint_not_found()
+            return (None, None, False)
+
+        split = sample_is_split(cleavage_site_t, cleavage_site_b, midpoint_site)
+
+        return (cleavage_site_t, cleavage_site_b, split)
+
+    def get_midpoint_position(self, ref, cass, test, error_store=None):
+        # Finding middle of cassette in test (checking normal and reverse)    
+        cass_mid_pos = math.floor((len(cass)/2)-(self._num_bases/2))
+        
+        # Getting circularly-opposite sequence from test (this is the midpoint sequence)        
+        (alignment, isRC) = self._find_target_in_ref(test, cass, cass_mid_pos, self._num_bases, 0.7)
+        if alignment is None:
+            return None  
+
+        # print(alignment.path)
+
+        if self._verbose:
+                print("            Best score = %.2f (reverse complement)" % alignment.score)
+        
+        test_mid_pos = (alignment.path[0][0]+math.floor((len(test)/2))) % len(test)
+        
+        # Finding position of midpoint sequence in reference (this is the midpoint position)
+        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.7)
+        if midpoint is None:
+            return None  
+
+        # print(midpoint.path)
+
+        if self._verbose:
+                print("            Best score = %.2f (reverse complement)" % midpoint.score)
+
+        return midpoint.path[0][0]
+
     def _find_best_cassette_end(self, cass, test, end, orientation=Orientation.BOTH):
         # Testing cassette in sense orientation
         if orientation is Orientation.SENSE or orientation is Orientation.BOTH:
@@ -153,30 +201,36 @@ class SequenceSearcher():
     def _find_cassette_end(self, cass, test, end):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
+
+        # Adding a repetition to the end of the sequence, incase the target sequence spans the ends
+        len_test = len(test)
+        test = test + get_seq(test, 0, self._num_bases)
         
         if end is Ends.CASS_START:
             # Checking for "full" cassette end
             alignments = self._aligner.align(test, cass[0: self._num_bases])
-            max_alignment = self._get_max_alignment(alignments)
+            max_alignment = self._get_max_alignment(alignments,self._min_quality)
 
         elif end is Ends.CASS_END:
             # Checking for "full" cassette end
             alignments = self._aligner.align(test, cass[-self._num_bases ::])
-            max_alignment = self._get_max_alignment(alignments)
+            max_alignment = self._get_max_alignment(alignments,self._min_quality)
 
         if max_alignment is None:
             return None
                   
+        max_alignment.path = remove_path_rollover(max_alignment.path,len_test)
+
         return max_alignment
 
-    def _find_best_target_in_ref(self, ref, test, path, search_length, search_offset):
+    def _find_best_target_in_ref(self, ref, test, path, search_length, search_offset, min_quality):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
 
         max_isRC = False
         max_en = 0
         for en in range(len(path)): # The last position in the path is definitely the end
-            (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length)
+            (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length, min_quality)
 
             if alignment is None:
                 continue
@@ -186,7 +240,7 @@ class SequenceSearcher():
                 max_isRC = isRC
                 max_en = en
 
-        if max_alignment.score == 0 or get_quality(max_alignment) < self._min_quality:
+        if max_alignment.score == 0 or get_quality(max_alignment) < min_quality:
             return (None, False, 0)
 
         if self._verbose:
@@ -197,9 +251,14 @@ class SequenceSearcher():
 
         return (max_alignment, max_isRC, path[max_en][0]-search_offset)
 
-    def _find_target_in_ref(self, ref, test, pos, search_length):
+    def _find_target_in_ref(self, ref, test, pos, search_length, min_quality):
         test_target = get_seq(test, pos, pos+search_length)
-        print(f"ANI: testing {test_target}")
+        # print(test_target)
+        
+        # Adding a repetition to the end of the sequence, incase the target sequence spans the ends
+        len_ref = len(ref)
+        ref = ref + get_seq(ref, 0, search_length)
+        
         if test_target is None:
             if self._verbose:
                 print("            No test sequence found")
@@ -207,32 +266,36 @@ class SequenceSearcher():
 
         # Finding test target in reference sequence
         alignments = self._aligner.align(ref, test_target)
-        max_alignment = self._get_max_alignment(alignments)
+        max_alignment = self._get_max_alignment(alignments,min_quality)
 
         # If no matches were found, try the reverse complement of the test target
         alignments_rc = self._aligner.align(ref, test_target.reverse_complement())
-        max_alignment_rc = self._get_max_alignment(alignments_rc)
+        max_alignment_rc = self._get_max_alignment(alignments_rc,min_quality)
 
         if max_alignment is None and max_alignment_rc is not None:
+            max_alignment_rc.path = remove_path_rollover(max_alignment_rc.path,len_ref)
             return (max_alignment_rc, True)
 
         elif max_alignment is not None and max_alignment_rc is None:
+            max_alignment.path = remove_path_rollover(max_alignment.path,len_ref)
             return (max_alignment, False)
 
         elif max_alignment is None and max_alignment_rc is None:
             return (None, False)
 
         if max_alignment_rc.score > max_alignment.score:
+            max_alignment_rc.path = remove_path_rollover(max_alignment_rc.path,len_ref)
             return (max_alignment_rc, True)
         else:
+            max_alignment.path = remove_path_rollover(max_alignment.path,len_ref)
             return (max_alignment, False)
 
-    def _get_max_alignment(self, alignments):
+    def _get_max_alignment(self, alignments, min_quality):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
 
         for alignment in alignments:
-            if alignment.score > max_alignment.score and get_quality(alignment) >= self._min_quality:
+            if alignment.score > max_alignment.score and get_quality(alignment) >= min_quality:
                 max_alignment = alignment
 
         if max_alignment.score == 0:
@@ -274,24 +337,32 @@ def get_local_sequences(ref, cleavage_site_t, cleavage_site_b, local_r=1):
     if cleavage_site_t is None or cleavage_site_b is None:
         return ("", "")
 
-    local_seq_t = ref[cleavage_site_t - local_r :cleavage_site_t + local_r]
-    local_seq_b = ref[cleavage_site_b - local_r : cleavage_site_b + local_r].reverse_complement()
+    local_seq_t = get_seq(ref,cleavage_site_t - local_r, cleavage_site_t + local_r)
+    local_seq_b = get_seq(ref, cleavage_site_b - local_r, cleavage_site_b + local_r).reverse_complement()
         
     return (local_seq_t, local_seq_b)
+
+def get_event_width(cleavage_site_t, cleavage_site_b, split, seq_len):
+    if split:
+        return seq_len-(max(cleavage_site_b,cleavage_site_t)-min(cleavage_site_b,cleavage_site_t))
+    else:
+        return max(cleavage_site_b,cleavage_site_t)-min(cleavage_site_b,cleavage_site_t)
 
 def get_quality(alignment):
     return alignment.score / len(alignment.query)
 
-def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
+def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=0):
     if cleavage_site_b is None or cleavage_site_t is None:
         return (None, None)
 
+    event_width = get_event_width(cleavage_site_t, cleavage_site_b, split, len(ref))
+
     # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
+    if (cleavage_site_b < cleavage_site_t and not split) or (cleavage_site_b > cleavage_site_t and split):
         # 3' overhang
-        left_seq1 = ref[cleavage_site_b - 1 - extra_nt : cleavage_site_b]
-        mid_seq1 = ref[cleavage_site_b : cleavage_site_t]
-        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 1 + extra_nt]
+        left_seq1 = get_seq(ref,cleavage_site_b - 1 - extra_nt, cleavage_site_b)
+        mid_seq1 = get_seq(ref,cleavage_site_b,cleavage_site_b+event_width)
+        right_seq1 = get_seq(ref,cleavage_site_t, cleavage_site_t + 1 + extra_nt)
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()
@@ -304,8 +375,8 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         
     elif cleavage_site_b == cleavage_site_t:
         # Blunt end
-        left_seq1 = ref[cleavage_site_b - 3 - extra_nt : cleavage_site_b]
-        right_seq1 = ref[cleavage_site_t : cleavage_site_t + 3 + extra_nt]
+        left_seq1 = get_seq(ref, cleavage_site_b - 3 - extra_nt, cleavage_site_b)
+        right_seq1 = get_seq(ref, cleavage_site_t, cleavage_site_t + 3 + extra_nt)
 
         left_seq2 = left_seq1.complement()
         right_seq2 = right_seq1.complement()
@@ -315,11 +386,11 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
         
         return (seq1, seq2)
 
-    elif cleavage_site_b > cleavage_site_t:
+    elif (cleavage_site_b > cleavage_site_t and not split) or (cleavage_site_b < cleavage_site_t and split):
         # 5' overhang
-        left_seq1 = ref[cleavage_site_t - 1 - extra_nt : cleavage_site_t]
-        mid_seq1 = ref[cleavage_site_t : cleavage_site_b]
-        right_seq1 = ref[cleavage_site_b : cleavage_site_b + 1 + extra_nt]
+        left_seq1 = get_seq(ref, cleavage_site_t - 1 - extra_nt, cleavage_site_t)
+        mid_seq1 = get_seq(ref, cleavage_site_t, cleavage_site_t+event_width)
+        right_seq1 = get_seq(ref, cleavage_site_b, cleavage_site_b + 1 + extra_nt)
 
         left_seq2 = left_seq1.complement()
         mid_seq2 = mid_seq1.complement()
@@ -330,16 +401,26 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=0):
 
         return (seq1, seq2)
 
-def get_type_str(cleavage_site_t, cleavage_site_b):
+def get_type_str(cleavage_site_t, cleavage_site_b, split):
     if cleavage_site_b is None or cleavage_site_t is None:
         return None
 
     # Identifying break type
-    if cleavage_site_b < cleavage_site_t:
+    if (cleavage_site_b < cleavage_site_t and not split) or (cleavage_site_b > cleavage_site_t and split):
         return "3' overhang"
         
-    elif (cleavage_site_b == cleavage_site_t):
+    elif cleavage_site_b == cleavage_site_t:
         return "Blunt end"
 
-    elif cleavage_site_b > cleavage_site_t:
+    elif (cleavage_site_b > cleavage_site_t and not split) or (cleavage_site_b < cleavage_site_t and split):
         return "5' overhang"
+
+def sample_is_split(cleavage_site_t, cleavage_site_b, midpoint_site):
+    return (cleavage_site_t < midpoint_site and cleavage_site_b > midpoint_site) or (cleavage_site_b < midpoint_site and cleavage_site_t > midpoint_site)
+
+def remove_path_rollover(path,seq_length):
+    path = list(path)
+    for i in range(len(path)):
+        path[i] = (path[i][0] % seq_length,path[i][1])
+    
+    return tuple(path)

@@ -21,23 +21,43 @@ class AbstractMapWriter():
             ref = None
         else:
             filereader = fu.FileReader(verbose=False)
-            ref = filereader.read_sequence(ref_path)[0][0]
+            ref = filereader.read_sequence(ref_path)[0][0][0]
             
             self.write_map(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
 
     @abstractmethod
     def write_map(self, out_path, freq, ref=None, pos_range=None, append_dt=False):
         pass
-    
-def get_pos_range(freq, ref, pos_range):
+
+def get_single_pos_range(freq, ref, pos_range):
     if pos_range is None:
-        pos_t_min = 0
-        pos_b_min = 0
         if ref is None:
             # Rounding up to the nearest 10
-            (pos_t_min,pos_t_max,pos_b_min,pos_b_max) = get_event_pos_range(freq)
-            
+            pos_ranges = get_event_pos_range(freq, round=10)
+            pos_min = min(pos_ranges[0],pos_ranges[2])
+            pos_max = max(pos_ranges[1],pos_ranges[3])
         else:
+            pos_min = 0
+            pos_max = len(ref)-1
+    else:
+        pos_min = pos_range[0]
+        pos_max = pos_range[1]
+
+    # Checking pos_min and pos_max are different (to prevent divide by zero errors)
+    if pos_min == pos_max:
+        print("WARNING: Min and max sequence positions must be different")
+        return
+
+    return (pos_min, pos_max)
+
+def get_double_pos_range(freq, ref, pos_range):
+    if pos_range is None:        
+        if ref is None:
+            # Rounding up to the nearest 10
+            (pos_t_min,pos_t_max,pos_b_min,pos_b_max) = get_event_pos_range(freq, round=10)
+        else:
+            pos_t_min = 0
+            pos_b_min = 0
             pos_t_max = len(ref)-1
             pos_b_max = len(ref)-1
     else:
@@ -45,16 +65,13 @@ def get_pos_range(freq, ref, pos_range):
         pos_t_max = pos_range[1]
         pos_b_min = pos_range[2]
         pos_b_max = pos_range[3]
-
-    # Updating the pos_range variable (neater to pass as an argument)
-    pos_range = (pos_t_min, pos_t_max, pos_b_min, pos_b_max)
         
     # Checking pos_min and pos_max are different (to prevent divide by zero errors)
     if pos_t_min == pos_t_max or pos_b_min == pos_b_max:
         print("WARNING: Min and max sequence positions must be different")
         return
 
-    return pos_range
+    return (pos_t_min, pos_t_max, pos_b_min, pos_b_max)
 
 def get_event_pos_range(freq, round=1):
     pos_t_min = sys.maxsize
@@ -62,7 +79,7 @@ def get_event_pos_range(freq, round=1):
     pos_b_min = sys.maxsize
     pos_b_max = 0
 
-    for (cleavage_site_t, cleavage_site_b) in freq.keys():
+    for (cleavage_site_t, cleavage_site_b,split) in freq.keys():
         pos_t_min = min(pos_t_min,cleavage_site_t)
         pos_t_max = max(pos_t_max,cleavage_site_t)
         pos_b_min = min(pos_b_min,cleavage_site_b)
@@ -92,9 +109,9 @@ def get_max_events(pos_range, freq, sum_show):
                 max_events = max(max_events,freq_b.get(b))
 
     else:
-        for (t,b) in freq.keys():
+        for (t,b,split) in freq.keys():
             if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
-                max_events = max(max_events,freq.get((t,b)))
+                max_events = max(max_events,freq.get((t,b,split)))
 
     return max_events
 
@@ -102,9 +119,9 @@ def get_sum_events(pos_range, freq):
     (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_range
 
     sum_events = 0
-    for (t,b) in freq.keys():
+    for (t,b,split) in freq.keys():
             if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
-                sum_events = sum_events + freq.get((t,b))
+                sum_events = sum_events + freq.get((t,b,split))
 
     return sum_events
 
@@ -114,9 +131,9 @@ def get_full_sequence_summed_frequency(freq_full, pos_range):
     freq_t = {}
     freq_b = {}
 
-    for (t, b) in freq_full.keys():
-        freq = freq_full.get((t, b))
-
+    for (t, b, split) in freq_full.keys():        
+        freq = freq_full.get((t, b, split))
+        
         # Adding this frequency to the relevant elements of freq_t and freq_b
         if t >= pos_t_min and t <= pos_t_max and b >= pos_b_min and b <= pos_b_max:
             freq_t[t] = freq_t[t] + freq if t in freq_t else freq

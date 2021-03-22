@@ -16,7 +16,7 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
 
     def write_map(self, out_path, freq, ref, pos_range, append_dt):
         # Getting pos ranges to plot based on available information
-        pos_range = amw.get_pos_range(freq, ref, pos_range)
+        pos_range = amw.get_double_pos_range(freq, ref, pos_range)
         if pos_range is None:
             return
 
@@ -26,7 +26,7 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
                 
         # Determining total events in the given position range
         sum_events = amw.get_sum_events(pos_range, freq)
-        
+
         # If showing sum, calculating relevant statistics
         (freq_t, freq_b) = amw.get_full_sequence_summed_frequency(freq, pos_range)
 
@@ -73,7 +73,7 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
 
         # Iterating over each top-strand position, adding as a new column
         for pos_t in range(pos_t_min, pos_t_max+1):
-            event_pc = amw.get_event_pc((pos_t,pos_b), freq, sum_events)
+            event_pc = amw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + amw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
             row = row + "," + str(self._number_format % event_pc)
 
         # Adding sum if necessary
