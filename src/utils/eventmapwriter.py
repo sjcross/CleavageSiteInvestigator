@@ -181,7 +181,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         if diff_events == 0:
             diff_events = 1
 
-        for (cleavage_site_t, cleavage_site_b, split) in freq.keys():        
+        for (cleavage_site_t, cleavage_site_b, split) in freq.keys():   
             # Checking this event is within the rendered range
             if cleavage_site_t < pos_min or cleavage_site_t > pos_max or cleavage_site_b < pos_min or cleavage_site_b > pos_max:
                 continue;
@@ -218,7 +218,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))
 
     def _add_split_line(self, dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count):  
-        print("NEED TO IMPLEMENT")  
+        print("NEED TO IMPLEMENT SPLIT LINE EVENT RENDERING")  
 
         # (map_x1, map_y1, map_x2, map_y2) = map_xy
         # cmap = cm.get_cmap(self._event_colourmap)

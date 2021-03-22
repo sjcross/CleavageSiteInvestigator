@@ -21,7 +21,7 @@ class AbstractMapWriter():
             ref = None
         else:
             filereader = fu.FileReader(verbose=False)
-            ref = filereader.read_sequence(ref_path)[0][0]
+            ref = filereader.read_sequence(ref_path)[0][0][0]
             
             self.write_map(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
 

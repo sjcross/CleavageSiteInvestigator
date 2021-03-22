@@ -51,7 +51,8 @@ class CSVReader():
 
     def _read_individual_result_line(self, row):
         contents = row.split(',')
-        return (int(contents[2]), int(contents[3]), contents[4], contents[5])
+        
+        return (int(contents[3]), int(contents[4]), contents[5] == "True", contents[6], contents[7], contents[2])
 
     def _read_summary_result_line(self, row):
         contents = row.split(',')
@@ -59,8 +60,8 @@ class CSVReader():
         # The final line of the summary file is a record of the number of failed sequences
         if contents[0] == "Error":
             return (None, None)
-
-        key = (int(contents[3]), int(contents[4]))
+        
+        key = (int(contents[3]), int(contents[4], bool(contents[5])))
         value = int(contents[1])
 
         return (key, value)
@@ -214,4 +215,4 @@ def get_file_type(filename):
 def _get_double_line_mode(filename):
         with open(filename, newline='\n') as csvfile:
             headings = next(csvfile).split(',')
-            return "TOP" not in headings[6]
+            return "TOP" in headings[6]
