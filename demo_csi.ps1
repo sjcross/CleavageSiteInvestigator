@@ -12,8 +12,8 @@
 #     python .\src\main.py -c $cass_path -r $ref_path -t $_.FullName -sr -en 3
 # }
 
-$cass_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\Cassette_200bp.fa"
-$ref_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\Ref_400bp.fa"
+$cass_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2020-11-25 Problem file\Splint1TA.fa"
+$ref_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\X data sets\A\puc19_2.fa"
 
 # Running a single file
-python .\src\csi.py -c $cass_path -r $ref_path -t "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\BE_loop.fa" -en 3 -pr
+python .\src\csi.py -c $cass_path -r $ref_path -t "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\X data sets\A\A.fasta" -en 3 -pr

@@ -133,7 +133,7 @@ class SequenceSearcher():
             test_mid_pos = int((cass_start-cass_end)/2 + cass_end)
 
         # Finding position of midpoint sequence in reference (this is the midpoint position)
-        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.7)
+        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.75)
         if midpoint is None:
             return None  
 
