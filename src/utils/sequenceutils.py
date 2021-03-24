@@ -316,8 +316,8 @@ def get_local_sequences(ref, cleavage_site_t, cleavage_site_b, local_r=1):
     if cleavage_site_t is None or cleavage_site_b is None:
         return ("", "")
 
-    local_seq_t = ref[cleavage_site_t - local_r :cleavage_site_t + local_r]
-    local_seq_b = ref[cleavage_site_b - local_r : cleavage_site_b + local_r].reverse_complement()
+    local_seq_t = get_seq(ref,cleavage_site_t - local_r, cleavage_site_t + local_r)
+    local_seq_b = get_seq(ref, cleavage_site_b - local_r, cleavage_site_b + local_r).reverse_complement()
         
     return (local_seq_t, local_seq_b)
 
