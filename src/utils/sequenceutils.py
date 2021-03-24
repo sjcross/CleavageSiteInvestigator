@@ -74,20 +74,14 @@ class SequenceSearcher():
                 error_store.cassette_not_found_in_test()
             return (None, None, False)  
 
-        # print(cass_pos_1.path)
-        # print(cass_pos_2.path)
-
-        # Note: cass_pos_1 should always be less than cass_pos_2 due to the way it's searched for - it doesn't matter if it's sense or RC
-
         # Finding cassette-adjacent test sequence in reference
         if self._verbose:
             print("        Finding first cassette-adjacent test sequence in reference sequence:")
-        (alignment1, isRC1, test_cut_1) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases, self._min_quality)
-        test_cut_1 = test_cut_1 + self._num_bases
-        
+        (alignment1, isRC1, cass_start) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases, self._min_quality)
+                
         if self._verbose:
             print("        Finding second cassette-adjacent test sequence in reference sequence:")
-        (alignment2, isRC2, test_cut_2) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0, self._min_quality)
+        (alignment2, isRC2, cass_end) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0, self._min_quality)
         
         if alignment1 is None or alignment2 is None:
             if self._verbose:
@@ -95,9 +89,6 @@ class SequenceSearcher():
             if error_store is not None:
                 error_store.test_not_found_in_reference()
             return (None, None, False)
-
-        # print(alignment1.path)
-        # print(alignment2.path)
 
         # Both should be RC or normal
         if isRC1 != isRC2:
@@ -123,7 +114,7 @@ class SequenceSearcher():
             
         if self._verbose:
             print("        Testing for sequence splitting:")
-        midpoint_site = self.get_midpoint_position(ref, cass, test)     
+        midpoint_site = self.get_midpoint_position(ref, test, cass_start, cass_end)     
         if midpoint_site is None:
             if self._verbose:
                 print("ERROR: Midpoint sequence not found\n")
@@ -135,28 +126,16 @@ class SequenceSearcher():
 
         return (cleavage_site_t, cleavage_site_b, split)
 
-    def get_midpoint_position(self, ref, cass, test, error_store=None):
-        # Finding middle of cassette in test (checking normal and reverse)    
-        cass_mid_pos = math.floor((len(cass)/2)-(self._num_bases/2))
-        
-        # Getting circularly-opposite sequence from test (this is the midpoint sequence)        
-        (alignment, isRC) = self._find_target_in_ref(test, cass, cass_mid_pos, self._num_bases, 0.7)
-        if alignment is None:
-            return None  
+    def get_midpoint_position(self, ref, test, cass_start, cass_end):
+        if cass_start < cass_end:
+            test_mid_pos = int((len(test)+cass_end+cass_start)/2 % len(test))
+        else:
+            test_mid_pos = int((cass_start-cass_end)/2 + cass_end)
 
-        # print(alignment.path)
-
-        if self._verbose:
-                print("            Best score = %.2f (reverse complement)" % alignment.score)
-        
-        test_mid_pos = (alignment.path[0][0]+math.floor((len(test)/2))) % len(test)
-        
         # Finding position of midpoint sequence in reference (this is the midpoint position)
-        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.7)
+        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.75)
         if midpoint is None:
             return None  
-
-        # print(midpoint.path)
 
         if self._verbose:
                 print("            Best score = %.2f (reverse complement)" % midpoint.score)
@@ -249,7 +228,7 @@ class SequenceSearcher():
             else:
                 print("            Best score = %.2f (sense)" % max_alignment.score)
 
-        return (max_alignment, max_isRC, path[max_en][0]-search_offset)
+        return (max_alignment, max_isRC, path[max_en][0])
 
     def _find_target_in_ref(self, ref, test, pos, search_length, min_quality):
         test_target = get_seq(test, pos, pos+search_length)
