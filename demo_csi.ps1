@@ -16,4 +16,4 @@ $cass_path = "C:\Users\steph\Desktop\Oscar\Chloramphenicol Cassette overhang.fa"
 $ref_path = "C:\Users\steph\Desktop\Oscar\pUC19.fa"
 
 # Running a single file
-python .\src\csi.py -c $cass_path -r $ref_path -t "C:\Users\steph\Desktop\Oscar\mix.fasta" -en 3 -rf "x>=3" -wi -ws
+python .\src\csi.py -c $cass_path -r $ref_path -t "C:\Users\steph\Desktop\Oscar\mix.fasta" -en 3 -rf "x>=3" -mq 0.8
