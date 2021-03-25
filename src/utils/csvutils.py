@@ -51,7 +51,8 @@ class CSVReader():
 
     def _read_individual_result_line(self, row):
         contents = row.split(',')
-        return (int(contents[2]), int(contents[3]), contents[4], contents[5])
+        
+        return (int(contents[3]), int(contents[4]), contents[5] == "True", contents[6], contents[7], contents[2])
 
     def _read_summary_result_line(self, row):
         contents = row.split(',')
@@ -59,8 +60,8 @@ class CSVReader():
         # The final line of the summary file is a record of the number of failed sequences
         if contents[0] == "Error":
             return (None, None)
-
-        key = (int(contents[3]), int(contents[4]))
+        
+        key = (int(contents[3]), int(contents[4]), contents[5]== "True")
         value = int(contents[1])
 
         return (key, value)
@@ -76,53 +77,59 @@ class CSVWriter():
         file = fu.open_file(root_name, '_individual', 'csv', append_dt=self._append_dt)
 
         # Initialising string
-        str = self._get_individual_header_line()
-        file.write(str)
+        row = self._get_individual_header_line()
+        file.write(row)
 
         # Iterating over each result, adding it as a new line
         for index, result in enumerate(results.values()):
-            str = self._get_individual_result_line(result, index, ref)
-            file.write(str)
+            row = self._get_individual_result_line(result, index, ref)
+            file.write(row)
 
         file.close()
 
     def _get_individual_header_line(self):
-        str = "INDEX,TYPE,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
+        row = "INDEX,HEADER,TYPE,TOP_POS,BOTTOM_POS,SPLIT_SEQ,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
-            return str + "SEQUENCE\n"
+            return row + "SEQUENCE\n"
         else:
-            return str + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
+            return row + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
 
     def _get_individual_result_line(self, result, index, ref):
         # Initialising string for this line with the result index
-        new_str = str(index+1) + ','
+        new_row = str(index+1) + ','
 
         if result is None:
-            return new_str + '\n'
+            return new_row + '\n'
 
-        (cleavage_site_t, cleavage_site_b, local_seq_t, local_seq_b) = result
+        (cleavage_site_t, cleavage_site_b, split, local_seq_t, local_seq_b, header) = result
+
+        # Adding header text
+        new_row = new_row + header + ","
 
         # Adding cleavage type
-        new_str = new_str + su.get_type_str(cleavage_site_t, cleavage_site_b) + ','
+        new_row = new_row + su.get_type_str(cleavage_site_t, cleavage_site_b, split) + ','
 
         # Adding top and bottom cleavage positions
-        new_str = new_str + str(cleavage_site_t) + ','
-        new_str = new_str + str(cleavage_site_b) + ','
+        new_row = new_row + str(cleavage_site_t) + ','
+        new_row = new_row + str(cleavage_site_b) + ','
+
+        # Adding split sequence boolean
+        new_row = new_row + str(split) + ','
 
         # Adding top and bottom cleavage local sequences
-        new_str = new_str + str(local_seq_t) + ','
-        new_str = new_str + str(local_seq_b) + ','
+        new_row = new_row + str(local_seq_t) + ','
+        new_row = new_row + str(local_seq_b) + ','
 
         # Adding sequences
-        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=self._extra_nt)
+        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=self._extra_nt)
         if self._double_line_mode:
-            new_str = new_str + seq1 + '\n,,,,,,' + seq2
+            new_row = new_row + seq1 + '\n,,,,,,,,' + seq2
         else:
-            new_str = new_str + seq1 + ','
-            new_str = new_str + seq2
+            new_row = new_row + seq1 + ','
+            new_row = new_row + seq2
 
-        return new_str + '\n'
+        return new_row + '\n'
         
     def write_summary(self, root_name, freq, ref, error_count):
         file = fu.open_file(root_name, '_summary', 'csv', append_dt=self._append_dt)
@@ -134,59 +141,63 @@ class CSVWriter():
         total = sum(list(freq.values())) 
 
         # Initialising string
-        str = self._get_summary_header_line()
-        file.write(str)
+        row = self._get_summary_header_line()
+        file.write(row)
 
         # Iterating over each result, adding it as a new line
         for cleavage_sites in freq.keys():        
             cleavage_site_t = cleavage_sites[0]
             cleavage_site_b = cleavage_sites[1]
+            split = cleavage_sites[2]
             count = freq.get(cleavage_sites)
             event_pc = 100*count/total
 
-            str = self._get_summary_result_line(cleavage_site_t, cleavage_site_b, count, event_pc, ref)
-            file.write(str)
+            row = self._get_summary_result_line(cleavage_site_t, cleavage_site_b, split, count, event_pc, ref)
+            file.write(row)
 
         # Adding a line for the number of errors
-        str = self._get_summary_error_line(error_count)
-        file.write(str)
+        row = self._get_summary_error_line(error_count)
+        file.write(row)
 
         file.close()
 
     def _get_summary_header_line(self):
-        str = "TYPE,COUNT,EVENT_%,TOP_POS,BOTTOM_POS,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
+        row = "TYPE,COUNT,EVENT_%,TOP_POS,BOTTOM_POS,SPLIT_SEQ,TOP_LOCAL_SEQ,BOTTOM_LOCAL_SEQ,"
 
         if self._double_line_mode:
-            return str + "SEQUENCE\n"
+            return row + "SEQUENCE\n"
         else:
-            return str + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
+            return row + "TOP_SEQUENCE,BOTTOM_SEQUENCE\n"
 
-    def _get_summary_result_line(self, cleavage_site_t, cleavage_site_b, count, event_pc, ref):
+    def _get_summary_result_line(self, cleavage_site_t, cleavage_site_b, split, count, event_pc, ref):
         if cleavage_site_b is None or cleavage_site_t is None:
             return '\n'
 
         # Initialising string for this line with the cleavage type, count and event %
-        type = su.get_type_str(cleavage_site_t,cleavage_site_b)
-        new_str = type + ',' + str(count) + ',' + str(event_pc) + ','
+        type = su.get_type_str(cleavage_site_t,cleavage_site_b,split)
+        new_row = type + ',' + str(count) + ',' + str(event_pc) + ','
 
         # Adding top and bottom cleavage positions
-        new_str = new_str + str(cleavage_site_t) + ','
-        new_str = new_str + str(cleavage_site_b) + ','
+        new_row = new_row + str(cleavage_site_t) + ','
+        new_row = new_row + str(cleavage_site_b) + ','
+
+        # Adding split sequence boolean
+        new_row = new_row + str(split) + ','
 
         # Adding top and bottom cleavage local sequences
         (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=self._local_r)
-        new_str = new_str + str(local_seq_t) + ','
-        new_str = new_str + str(local_seq_b) + ','
+        new_row = new_row + str(local_seq_t) + ','
+        new_row = new_row + str(local_seq_b) + ','
 
         # Adding sequences
-        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, extra_nt=self._extra_nt)
+        (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=self._extra_nt)
         if self._double_line_mode:
-            new_str = new_str + seq1 + '\n,,,,,,,' + seq2
+            new_row = new_row + seq1 + '\n,,,,,,,,' + seq2
         else:
-            new_str = new_str + seq1 + ','
-            new_str = new_str + seq2
+            new_row = new_row + seq1 + ','
+            new_row = new_row + seq2
 
-        return new_str + '\n'
+        return new_row + '\n'
 
     def _get_summary_error_line(self, count):
         return 'Error,' + str(count) + '\n'
@@ -204,4 +215,4 @@ def get_file_type(filename):
 def _get_double_line_mode(filename):
         with open(filename, newline='\n') as csvfile:
             headings = next(csvfile).split(',')
-            return "TOP" not in headings[6]
+            return "TOP" in headings[6]

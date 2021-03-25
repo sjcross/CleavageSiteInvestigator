@@ -8,12 +8,14 @@ from Bio import Align
 from tqdm import tqdm
 
 from utils import csvutils as cu
+from utils import errorstore as es
 from utils import fileutils as fu
 from utils import plotutils as pu
 from utils import reportutils as ru
 from utils import sequenceutils as su
 from utils import eventmapwriter as emw
-from utils import heatmapwriter as hmw
+from utils import heatmapwritercsv as hmwc
+from utils import heatmapwritersvg as hmws
 
 ### Parameters ###
 ### DEFAULT PARAMETERS ###
@@ -23,7 +25,7 @@ def_extra_nt = 0 # Number of additional nucleotides to be displayed either side 
 
 def_local_r = 1 # Half width of the local sequences to be extracted at restriction sites
 
-def_max_gap = 10 # Maximum number of bp between 3' and 5' restriction sites
+def_max_gap = 10000 # Maximum number of bp between 3' and 5' restriction sites
 
 def_min_quality = 1.0 # Minimum match quality ("1" is perfect)
 
@@ -71,9 +73,13 @@ optional.add_argument("-sp", "--show_plots", action='store_true', help="Display 
 
 optional.add_argument("-we", "--write_eventmap", action='store_true', help="Write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.\n\n")
 
-optional.add_argument("-wha", "--write_heatmap_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsa", "--write_heatmap_svg_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
-optional.add_argument("-whf", "--write_heatmap_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsf", "--write_heatmap_svg_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+
+optional.add_argument("-whca", "--write_heatmap_csv_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+
+optional.add_argument("-whcf", "--write_heatmap_csv_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
 optional.add_argument("-wi", "--write_individual", action='store_true', help="Write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.\n\n")
 
@@ -103,8 +109,10 @@ print_results = args.print_results  # Display results in terminal as they are ge
 show_plots = args.show_plots  # Display plots in pyplot windows as they are generated
 append_dt = args.append_datetime # Append time and date to all output filenames
 write_eventmap = args.write_eventmap # Write event map image to SVG file
-write_heatmap_auto = args.write_heatmap_auto # Write heatmap to SVG file for identified event range
-write_heatmap_full = args.write_heatmap_full # Write heatmap to SVG file for full reference range
+write_heatmap_svg_auto = args.write_heatmap_svg_auto # Write heatmap to SVG file for identified event range
+write_heatmap_svg_full = args.write_heatmap_svg_full # Write heatmap to SVG file for full reference range
+write_heatmap_csv_auto = args.write_heatmap_csv_auto # Write heatmap to CSV file for identified event range
+write_heatmap_csv_full = args.write_heatmap_csv_full # Write heatmap to CSV file for full reference range
 write_individual = args.write_individual # Write cleavage results to CSV file
 write_summary = args.write_summary # Write summary of results to CSV file
 write_output = args.write_output # Write console output to text file
@@ -130,9 +138,10 @@ filereader = fu.FileReader(verbose=verbose)
 # Loading reference, cassette and test sequences
 if verbose:
     print("INPUT: Loading sequences from file")
-ref = filereader.read_sequence(ref_path)[0][0]
-cass = filereader.read_sequence(cass_path)[0][0]
-(tests,(n_acc,n_rej)) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
+ref = filereader.read_sequence(ref_path)[0][0][0]
+cass = filereader.read_sequence(cass_path)[0][0][0]
+
+(tests,n_acc,n_rej) = filereader.read_sequence(test_path,repeat_filter=repeat_filter)
 if verbose:
     print("        Accepted = %i (%.2f%%), rejected = %i (%.2f%%)" % (n_acc, (100*n_acc/(n_acc+n_rej)), n_rej, (100*n_rej/(n_acc+n_rej))))
 
@@ -143,12 +152,13 @@ if verbose:
 aligner = Align.PairwiseAligner()
 aligner.mode = 'local'
 aligner.match_score = 1.0
-aligner.mismatch_score = -1.0
+# aligner.mismatch_score = -1.0
 aligner.gap_score = -1.0
 searcher = su.SequenceSearcher(aligner, max_gap=max_gap, min_quality=min_quality, num_bases=num_bases, verbose=verbose)
 
 # Dict to store results as dual cleavage site tuple
 results = {}
+error_store = es.ErrorStore()
 error_count = 0
 
 if verbose:
@@ -156,22 +166,26 @@ if verbose:
 
 for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
     if verbose:
-        print("    Processing test sequence %i" % (iteration + 1))
+        if test[1] != "":
+            print("    Processing test sequence %i (%s)" % (iteration + 1,test[1]))
+        else:
+            print("    Processing test sequence %i" % (iteration + 1))
 
-    (cleavage_site_t,cleavage_site_b) = searcher.get_cleavage_positions(ref, cass, test)
+    (cleavage_site_t,cleavage_site_b,split) = searcher.get_cleavage_positions(ref, cass, test[0], error_store=error_store)
+    
     (local_seq_t, local_seq_b) = su.get_local_sequences(ref,cleavage_site_t,cleavage_site_b,local_r=local_r)
 
     if cleavage_site_t == None:
         error_count = error_count + 1
         continue
 
-    results[iteration] = (cleavage_site_t, cleavage_site_b, local_seq_t,local_seq_b)
+    results[iteration] = (cleavage_site_t, cleavage_site_b, split, local_seq_t, local_seq_b, test[1])
 
     if verbose:
         print("        Result:")
-        ru.print_position(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_type(cleavage_site_t, cleavage_site_b, offset="        ")
-        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b,extra_nt=extra_nt,offset="        ")
+        ru.print_position(cleavage_site_t, cleavage_site_b, split, offset="        ")
+        ru.print_type(cleavage_site_t, cleavage_site_b, split, offset="        ")
+        ru.print_sequence(ref,cleavage_site_t,cleavage_site_b, split,extra_nt=extra_nt,offset="        ")
 
 # Reporting full sequence frequency
 freq_full = ru.get_full_sequence_frequency(results)
@@ -194,10 +208,12 @@ if print_results:
     ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
 
     # Reporting number of errors
+    print("    Summary of errors:\n")
+    error_store.print_counts(offset="    ")
     ru.print_error_rate(error_count, len(tests), offset="    ")
 
 # Plotting sequence distributions
-if show_plots:
+if show_plots and len(results) > 0:
     pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
     # Reporting top and bottom sequence co-occurrence
@@ -209,15 +225,25 @@ if write_eventmap:
     eventmap_writer = emw.EventMapWriter()
     eventmap_writer.write_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
-if write_heatmap_auto:
+if write_heatmap_svg_auto:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, append_dt=True)
+    heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
+    heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, None, None, append_dt)
 
-if write_heatmap_full:
+if write_heatmap_svg_full:
     # Showing events as heatmap
-    heatmap_writer = hmw.HeatMapWriter(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref=ref, append_dt=True)
+    heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
+    heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref, None, append_dt)
+
+if write_heatmap_csv_auto:
+    # Showing events as heatmap
+    heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
+    heatmap_writer.write_map(root_name+'_autoheatmap.csv', freq_full, None, None, append_dt)
+
+if write_heatmap_csv_full:
+    # Showing events as heatmap
+    heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
+    heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, ref, None, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
