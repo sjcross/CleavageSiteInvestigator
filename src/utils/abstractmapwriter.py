@@ -13,8 +13,13 @@ class AbstractMapWriter():
     def write_map_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False):
         # Loading results from CSV
         cr = cu.CSVReader()
-        results = cr.read_individual(csv_path)
-        freq = ru.get_full_sequence_frequency(results)
+
+        file_type = cu.get_file_type(csv_path)
+        if file_type == cu.FileTypes.INDIVIDUAL:
+            results = cr.read_individual(csv_path)
+            freq = ru.get_full_sequence_frequency(results)
+        elif file_type == cu.FileTypes.SUMMARY:
+            freq = cr.read_summary(csv_path)
 
         # Loading reference sequence if path provided
         if ref_path == "":

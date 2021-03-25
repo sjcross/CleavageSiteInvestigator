@@ -22,8 +22,8 @@ class DNA_MODE(Enum):
 class EventMapWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
-    def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.9), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
-    grid_label_opts=(True,12,"gray",500,10), event_opts=(2,"cool")):
+    def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.8), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
+    grid_label_opts=(True,12,"gray",500,10), colourbar_opts=(True,0.91,0.02,1), colourbar_label_opts=(True,12,"black"), event_opts=(0.2,2,"cool",0.2,True)):
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
 
@@ -51,9 +51,21 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._grid_label_colour = grid_label_opts[2]
         self._grid_label_interval = grid_label_opts[3]
         self._grid_label_gap = grid_label_opts[4]
+
+        self._colourbar_show = colourbar_opts[0]
+        self._colourbar_rel_left = colourbar_opts[1]
+        self._colourbar_rel_width = colourbar_opts[2]
+        self._colourbar_border_size = colourbar_opts[3]
+
+        self._colourbar_label_show = colourbar_label_opts[0]
+        self._colourbar_label_size = colourbar_label_opts[1]
+        self._colourbar_label_colour = colourbar_label_opts[2]
         
-        self._event_max_size = event_opts[0]
-        self._event_colourmap = event_opts[1]
+        self._event_min_size = event_opts[0]
+        self._event_max_size = event_opts[1]
+        self._event_colourmap = event_opts[2]
+        self._event_opacity = event_opts[3]
+        self._event_fill_range = event_opts[4]
 
 
     ## GETTERS AND SETTERS
@@ -88,6 +100,9 @@ class EventMapWriter(amw.AbstractMapWriter):
         
         if self._end_label_show:
             self._add_end_labels(dwg, map_xy)
+
+        if self._colourbar_show:
+            self._add_colourbar(dwg, freq)
 
         if len(freq) > 0:
             self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq)
@@ -138,7 +153,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         
         if self._dna_mode is DNA_MODE.SEQUENCE and ref is None:
             print("WARNING: No reference path provided.  DNA rendered as solid lines.")
-            dna_seq_show = DNA_MODE.LINE
+            self._dna_mode = DNA_MODE.LINE
 
         if self._dna_mode is DNA_MODE.SEQUENCE:
             # Draw DNA as text sequence
@@ -169,6 +184,48 @@ class EventMapWriter(amw.AbstractMapWriter):
         dwg.add(svg.text.Text("3'", insert=(end_label_x1, end_label_y2), style="text-anchor:end", font_size=self._end_label_size, fill=self._end_label_colour))
         dwg.add(svg.text.Text("5'", insert=(end_label_x2, end_label_y2), style="text-anchor:start", font_size=self._end_label_size, fill=self._end_label_colour))
 
+    def _add_colourbar(self, dwg, freq):
+        colourbar_x1 = self._im_w*self._colourbar_rel_left
+        colourbar_y1 = self._im_h*self._map_rel_top
+        colourbar_x2 = colourbar_x1 + self._im_w*self._colourbar_rel_width
+        colourbar_y2 = colourbar_y1 + self._im_h*self._map_rel_height
+        colourbar_w = self._im_w*self._colourbar_rel_width
+        colourbar_h = self._im_h*self._map_rel_height
+
+        # Adding colourbar lines
+        cmap = cm.get_cmap(self._event_colourmap)    
+
+        line_w = colourbar_h/256+0.1 # A bit extra width to prevent gaps appearing between lines
+        line_offs = colourbar_h/255
+        for i in range(0,256):
+            y = colourbar_y2-i*line_offs
+            rgba = cmap(i/256)
+            col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+            dwg.add(svg.shapes.Line((colourbar_x1, y), (colourbar_x2, y), stroke=col, stroke_width=line_w, style="stroke-linecap:square"))
+
+        # Adding border around colourbar
+        dwg.add(svg.shapes.Rect(insert=(colourbar_x1,colourbar_y1), size=(colourbar_w,colourbar_h), stroke="black", fill="none", stroke_width=self._colourbar_border_size, style="stroke-linecap:square"))
+
+        if self._colourbar_label_show:
+            total = sum(freq.values())
+            max_events = max(freq.values())
+            min_events = min(freq.values())
+
+            if self._event_fill_range:
+                min_text = "%.1f%%" % ((min_events/total)*100)
+                max_text = "%.1f%%" % ((max_events/total)*100)
+            else:
+                min_text = "0%"
+                max_text = "100%"
+
+            end_label_x = colourbar_x2+self._end_label_gap
+            end_label_y1 = colourbar_y1+self._colourbar_label_size*0.375
+            end_label_y2 = colourbar_y2+self._colourbar_label_size*0.375
+
+
+            dwg.add(svg.text.Text(max_text, insert=(end_label_x, end_label_y1), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
+            dwg.add(svg.text.Text(min_text, insert=(end_label_x, end_label_y2), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
+
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq):
         # Adding cleavage event lines
         total = sum(freq.values())
@@ -185,8 +242,10 @@ class EventMapWriter(amw.AbstractMapWriter):
             if cleavage_site_t < pos_min or cleavage_site_t > pos_max or cleavage_site_b < pos_min or cleavage_site_b > pos_max:
                 continue;
                 
-            norm_count = (freq.get((cleavage_site_t, cleavage_site_b, split))-min_events)/diff_events
-            # norm_count = freq.get((cleavage_site_t, cleavage_site_b, split)/total
+            if self._event_fill_range:
+                norm_count = (freq.get((cleavage_site_t, cleavage_site_b, split))-min_events)/diff_events
+            else:
+                norm_count = freq.get((cleavage_site_t, cleavage_site_b, split))/total
 
             if split:
                 self._add_split_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count)
@@ -199,8 +258,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         cmap = cm.get_cmap(self._event_colourmap)
 
         # Adding line (adding width 1 to ensure everything is visible)
-        event_width = self._event_max_size*norm_count+1
-
+        event_width = (self._event_max_size-self._event_min_size)*norm_count+self._event_min_size
+        
         event_t_xc = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
         event_t_x1 = event_t_xc-event_width
         event_t_x2 = event_t_xc+event_width
@@ -214,7 +273,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         rgba = cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
 
-        dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))
+        dwg.add(svg.shapes.Line((event_t_xc, event_t_y), (event_b_xc, event_b_y), stroke=col, stroke_width=event_width, style="stroke-linecap:square;stroke-opacity:%f" % self._event_opacity))
+        # dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col,style="fill-opacity:0.1"))
 
     def _add_split_line(self, dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count):  
         print("NEED TO IMPLEMENT SPLIT LINE EVENT RENDERING")  

@@ -61,7 +61,7 @@ class CSVReader():
         if contents[0] == "Error":
             return (None, None)
         
-        key = (int(contents[3]), int(contents[4], bool(contents[5])))
+        key = (int(contents[3]), int(contents[4]), contents[5]== "True")
         value = int(contents[1])
 
         return (key, value)
