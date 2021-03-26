@@ -143,8 +143,8 @@ def print_error_rate(error_count, sample_count, offset=""):
     error_rate = 100*error_count/sample_count
     print("%sCompleted with %i errors (%f%%)" % (offset, error_count, error_rate))
     
-def sort_results(results):
-    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
+def sort_results(results,ascending=True):
+    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=ascending)
     
     return dict(sorted_results)
 

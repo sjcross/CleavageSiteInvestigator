@@ -52,7 +52,7 @@ class CSVReader():
     def _read_individual_result_line(self, row):
         contents = row.split(',')
         
-        return (int(contents[3]), int(contents[4]), contents[5] == "True", contents[6], contents[7], contents[2])
+        return (int(contents[3]), int(contents[4]), contents[5] == "True" or contents[5] == "TRUE", contents[6], contents[7], contents[2])
 
     def _read_summary_result_line(self, row):
         contents = row.split(',')
@@ -61,7 +61,7 @@ class CSVReader():
         if contents[0] == "Error":
             return (None, None)
         
-        key = (int(contents[3]), int(contents[4]), contents[5]== "True")
+        key = (int(contents[3]), int(contents[4]), contents[5] == "True" or contents[5] == "TRUE")
         value = int(contents[1])
 
         return (key, value)

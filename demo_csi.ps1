@@ -16,4 +16,4 @@ $cass_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2020-11-25 
 $ref_path = "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\X data sets\A\puc19_2.fa"
 
 # Running a single file
-python .\src\csi.py -c $cass_path -r $ref_path -t "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\X data sets\A\A.fasta" -en 3 -pr
+python .\src\csi.py -c $cass_path -r $ref_path -t "D:\Stephen\People\Oscar\2020-02-20 Sequencing analysis\2021-02-23 Circularity test data\X data sets\A\A_short.fasta" -en 3 -pr -wi -ws
