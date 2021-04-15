@@ -43,7 +43,7 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         self._event_label_show = event_label_opts[0]
         self._event_label_size = event_label_opts[1]
         self._event_label_colour = event_label_opts[2]
-        self._number_format = "%%.%if" % event_label_opts[3]
+        self._event_label_number_format = "%%.%if" % event_label_opts[3]
         self._event_label_zeros_show = event_label_opts[4]
 
         self._sum_show = sum_show
@@ -282,5 +282,5 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         else:
             col = self._event_label_colour
 
-        dwg.add(svg.text.Text(self._number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        dwg.add(svg.text.Text(self._event_label_number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
     
