@@ -51,10 +51,13 @@ def_colourbar_border_size = 1
 def_colourbar_label_vis = SHOWHIDE.SHOW
 def_colourbar_label_size = 12
 def_colourbar_label_colour = "black"
+def_colourbar_label_interval = 50
 
 def_event_min_size = 0.5
 def_event_max_size = 2
 def_event_colourmap = "cool"
+def_event_min_range = 0
+def_event_max_range = 100
 def_event_opacity = 0.2
 def_event_stack_order = 1
 
@@ -130,6 +133,8 @@ optional.add_argument("-cls", "--colourbar_label_size", type=int, default=def_co
 
 optional.add_argument("-clc", "--colourbar_label_colour", type=str, default=def_colourbar_label_colour, help="Colour of the rendered colourbar labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_colourbar_label_colour)
 
+optional.add_argument("-cli", "--colourbar_label_interval", type=int, default=def_colourbar_label_interval, help="Interval between labels shown in colourbar.  Default: \"%.1f\".\n\n" % def_colourbar_label_interval)
+
 optional.add_argument("-emis", "--event_min_size", type=float, default=def_event_min_size, help="Width of line corresponding to the least frequent cleavage event.  Default: \"%.1f\".\n\n" % def_event_min_size)
 
 optional.add_argument("-emas", "--event_max_size", type=float, default=def_event_max_size, help="Width of line corresponding to the most frequent cleavage event.  Default: \"%.1f\".\n\n" % def_event_max_size)
@@ -138,7 +143,7 @@ optional.add_argument("-ec", "--event_colourmap", type=str, default=def_event_co
 
 optional.add_argument("-eo", "--event_opacity", type=float, default=def_event_opacity, help="Opacity of each event line.  Values in the range 0-1.  Default: \"%.1f\".\n\n" % def_event_opacity)
 
-optional.add_argument("-efr", "--event_fill_range", action='store_true', help="Use the full colourmap range.")
+optional.add_argument("-er", "--event_range", type=int, default=[def_event_min_range,def_event_max_range], nargs=2, help="Range of values colourscale will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_event_min_range,def_event_max_range))
 
 optional.add_argument("-eso", "--event_stack_order", type=int, default=def_event_stack_order, help="Mode for ordering events.  Options: 1 (most frequent at back), 2 (most frequent at front).  Default: \"%.1f\".\n\n" % def_event_stack_order)
 
@@ -159,8 +164,8 @@ end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 colourbar_opts = (colourbar_show,args.colourbar_rel_pos[0],args.colourbar_rel_pos[1],args.colourbar_size)
-colourbar_label_opts = (colourbar_label_show,args.colourbar_label_size,args.colourbar_label_colour)
-event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_opacity,args.event_fill_range,args.event_stack_order)
+colourbar_label_opts = (colourbar_label_show,args.colourbar_label_size,args.colourbar_label_colour,args.colourbar_label_interval)
+event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
 
 writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, colourbar_opts=colourbar_opts, colourbar_label_opts=colourbar_label_opts, event_opts=event_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)

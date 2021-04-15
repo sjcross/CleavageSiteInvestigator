@@ -13,4 +13,4 @@ $out_path = "C:\\Users\\steph\\Desktop\\Oscar\\heatmap_subset2.csv"
 python .\src\heatmapcsv.py -d $data_path -o $out_path -r $ref_path -pr 420 440 420 440
 
 $out_path = "C:\\Users\\steph\\Desktop\\Oscar\\heatmap_subset2.svg"
-python .\src\heatmapsvg.py -d $data_path -o $out_path -r $ref_path -pr 420 440 420 440
+python .\src\heatmapsvg.py -d $data_path -o $out_path -r $ref_path -pr 420 440 420 440 -gli 5

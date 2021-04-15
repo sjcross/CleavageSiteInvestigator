@@ -24,7 +24,7 @@ class EventMapWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
     def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.8), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
-    grid_label_opts=(True,12,"gray",500,10), colourbar_opts=(True,0.91,0.02,1), colourbar_label_opts=(True,12,"black"), event_opts=(0.2,2,"cool",0.2,True,1)):
+    grid_label_opts=(True,12,"gray",500,10), colourbar_opts=(True,0.91,0.02,1,50), colourbar_label_opts=(True,12,"black",50), event_opts=(0.2,2,"cool",0,100,0.2,1)):
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
 
@@ -61,13 +61,15 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._colourbar_label_show = colourbar_label_opts[0]
         self._colourbar_label_size = colourbar_label_opts[1]
         self._colourbar_label_colour = colourbar_label_opts[2]
+        self._colourbar_label_increment = colourbar_label_opts[3]
         
         self._event_min_size = event_opts[0]
         self._event_max_size = event_opts[1]
         self._event_colourmap = event_opts[2]
-        self._event_opacity = event_opts[3]
-        self._event_fill_range = event_opts[4]
-        self._event_stack_order = event_opts[5]
+        self._event_min_range = event_opts[3]
+        self._event_max_range = event_opts[4]
+        self._event_opacity = event_opts[5]
+        self._event_stack_order = event_opts[6]
 
 
     ## GETTERS AND SETTERS
@@ -172,13 +174,13 @@ class EventMapWriter(amw.AbstractMapWriter):
         if self._dna_mode is DNA_MODE.SEQUENCE:
             # Draw DNA as text sequence
             dna_pos_interval = (map_x2-map_x1)/(pos_max-pos_min)
-            ref_rc = ref.reverse_complement()
+            ref_c = ref.complement()
             for dna_pos in range(pos_min,pos_max+1):
                 dna_seq_x = map_x1+dna_pos_interval*(dna_pos-pos_min)
                 dna_seq_y1 = map_y1+self._dna_size*0.375
                 dna_seq_y2 = map_y2+self._dna_size*0.375
-                dwg.add(svg.text.Text(str(ref[dna_pos]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=self._dna_size, fill=self._dna_colour))
-                dwg.add(svg.text.Text(str(ref_rc[dna_pos]), insert=(dna_seq_x, dna_seq_y2), style="text-anchor:middle", font_size=self._dna_size, fill=self._dna_colour))
+                dwg.add(svg.text.Text(str(ref[dna_pos-1]), insert=(dna_seq_x, dna_seq_y1), style="text-anchor:middle", font_size=self._dna_size, fill=self._dna_colour))
+                dwg.add(svg.text.Text(str(ref_c[dna_pos-1]), insert=(dna_seq_x, dna_seq_y2), style="text-anchor:middle", font_size=self._dna_size, fill=self._dna_colour))
 
         elif self._dna_mode is DNA_MODE.LINE:
             # Draw DNA as lines
@@ -219,32 +221,41 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         # Adding border around colourbar
         dwg.add(svg.shapes.Rect(insert=(colourbar_x1,colourbar_y1), size=(colourbar_w,colourbar_h), stroke="black", fill="none", stroke_width=self._colourbar_border_size, style="stroke-linecap:square"))
-
+            
         if self._colourbar_label_show:
-            total = sum(freq.values())
-            max_events = max(freq.values())
-            min_events = min(freq.values())
-
-            if self._event_fill_range:
-                min_text = "%.1f%%" % ((min_events/total)*100)
-                max_text = "%.1f%%" % ((max_events/total)*100)
+            if self._event_min_range == -1 and self._event_max_range == -1:
+                total = sum(freq.values())
+                event_min_range = math.floor((min(freq.values())/total)*100)
+                event_max_range = math.ceil((max(freq.values())/total)*100)
             else:
-                min_text = "0%"
-                max_text = "100%"
+                event_min_range = self._event_min_range
+                event_max_range = self._event_max_range
+
+            diff_events = event_max_range-event_min_range       
+
+            # Preventing divide by zero errors
+            if diff_events == 0:
+                diff_events = 1
 
             end_label_x = colourbar_x2+self._end_label_gap
-            end_label_y1 = colourbar_y1+self._colourbar_label_size*0.375
-            end_label_y2 = colourbar_y2+self._colourbar_label_size*0.375
+            for label_value in range(event_min_range,event_max_range,self._colourbar_label_increment):
+                end_label_y = colourbar_y2-colourbar_h*(label_value-event_min_range)/diff_events + self._colourbar_label_size*0.375
+                dwg.add(svg.text.Text("%i%%" % label_value, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
 
-            dwg.add(svg.text.Text(max_text, insert=(end_label_x, end_label_y1), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
-            dwg.add(svg.text.Text(min_text, insert=(end_label_x, end_label_y2), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
+            # Adding final label (keeping this separate means we still get it, even if it's not on the increment)
+            end_label_y = colourbar_y2-colourbar_h*(event_max_range-event_min_range)/diff_events + self._colourbar_label_size*0.375
+            dwg.add(svg.text.Text("%i%%" % event_max_range, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
 
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref_len):
-        # Adding cleavage event lines
         total = sum(freq.values())
-        max_events = max(freq.values())
-        min_events = min(freq.values())
-        diff_events = max_events-min_events
+        if self._event_min_range == -1 and self._event_max_range == -1:
+            event_min_range = math.floor((min(freq.values())/total)*100)
+            event_max_range = math.ceil((max(freq.values())/total)*100)
+        else:
+            event_min_range = self._event_min_range
+            event_max_range = self._event_max_range
+
+        diff_events = event_max_range-event_min_range       
 
         # Preventing divide by zero errors
         if diff_events == 0:
@@ -254,11 +265,9 @@ class EventMapWriter(amw.AbstractMapWriter):
             # Checking this event is within the rendered range
             if cleavage_site_t < pos_min or cleavage_site_t > pos_max or cleavage_site_b < pos_min or cleavage_site_b > pos_max:
                 continue;
-                
-            if self._event_fill_range:
-                norm_count = (freq.get((cleavage_site_t, cleavage_site_b, split))-min_events)/diff_events
-            else:
-                norm_count = freq.get((cleavage_site_t, cleavage_site_b, split))/total
+            
+            event_pc = (freq.get((cleavage_site_t, cleavage_site_b, split))/total)*100
+            norm_count = (event_pc-event_min_range)/diff_events
             
             if split:
                 self._add_split_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count, ref_len)
@@ -273,10 +282,10 @@ class EventMapWriter(amw.AbstractMapWriter):
         # Adding line (adding width 1 to ensure everything is visible)
         event_width = (self._event_max_size-self._event_min_size)*norm_count+self._event_min_size
         
-        event_t_x = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+        event_t_x = map_x1 + (map_x2-map_x1)*((cleavage_site_t+0.5-pos_min)/(pos_max-pos_min))
         event_t_y = map_y1+self._dna_size/2
 
-        event_b_x = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+        event_b_x = map_x1 + (map_x2-map_x1)*((cleavage_site_b+0.5-pos_min)/(pos_max-pos_min))
         event_b_y = map_y2-self._dna_size/2
 
         rgba = cmap(norm_count)
@@ -296,26 +305,26 @@ class EventMapWriter(amw.AbstractMapWriter):
             site_sep = ref_len - (cleavage_site_b-cleavage_site_t)
 
             event_t_x1 = map_x1
-            event_t_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_t-pos_min)/site_sep)
-            event_t_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+            event_t_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_t+0.5-pos_min)/site_sep)
+            event_t_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_t+0.5-pos_min)/(pos_max-pos_min))
             event_t_y2 = map_y1 + self._dna_size/2
 
-            event_b_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+            event_b_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_b+0.5-pos_min)/(pos_max-pos_min))
             event_b_y1 = map_y2 - self._dna_size/2
             event_b_x2 = map_x2
-            event_b_y2 = map_y2 - (map_y2-map_y1)*((pos_max-cleavage_site_b)/site_sep)
+            event_b_y2 = map_y2 - (map_y2-map_y1)*((pos_max-(cleavage_site_b+0.5))/site_sep)
 
         else:
             site_sep = ref_len - (cleavage_site_t-cleavage_site_b)
 
-            event_t_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+            event_t_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t+0.5-pos_min)/(pos_max-pos_min))
             event_t_y1 = map_y1 + self._dna_size/2
             event_t_x2 = map_x2
-            event_t_y2 = map_y1 + (map_y2-map_y1)*((pos_max-cleavage_site_t)/site_sep)
+            event_t_y2 = map_y1 + (map_y2-map_y1)*((pos_max-(cleavage_site_t+0.5))/site_sep)
 
             event_b_x1 = map_x1
-            event_b_y1 = map_y2 - (map_y2-map_y1)*((cleavage_site_b-pos_min)/site_sep)
-            event_b_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+            event_b_y1 = map_y2 - (map_y2-map_y1)*((cleavage_site_b+0.5-pos_min)/site_sep)
+            event_b_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_b+0.5-pos_min)/(pos_max-pos_min))
             event_b_y2 = map_y2 - self._dna_size/2
 
         rgba = cmap(norm_count)
