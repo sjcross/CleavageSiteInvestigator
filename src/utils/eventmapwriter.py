@@ -8,6 +8,7 @@ import svgwrite as svg
 from enum import Enum
 from matplotlib import cm
 from utils import abstractmapwriter as amw
+from utils import reportutils as ru
 
 
 class DNA_MODE(Enum):
@@ -23,7 +24,7 @@ class EventMapWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
     def __init__(self, im_dims=(800,200), rel_pos=(0.3,0.6,0.05,0.8), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",10), grid_opts=(True,1,"gray",100), 
-    grid_label_opts=(True,12,"gray",500,10), colourbar_opts=(True,0.91,0.02,1), colourbar_label_opts=(True,12,"black"), event_opts=(0.2,2,"cool",0.2,True)):
+    grid_label_opts=(True,12,"gray",500,10), colourbar_opts=(True,0.91,0.02,1), colourbar_label_opts=(True,12,"black"), event_opts=(0.2,2,"cool",0.2,True,1)):
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
 
@@ -66,6 +67,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._event_colourmap = event_opts[2]
         self._event_opacity = event_opts[3]
         self._event_fill_range = event_opts[4]
+        self._event_stack_order = event_opts[5]
 
 
     ## GETTERS AND SETTERS
@@ -77,6 +79,11 @@ class EventMapWriter(amw.AbstractMapWriter):
     ## PUBLIC METHODS
 
     def write_map(self, out_path, freq, ref=None, pos_range=None, append_dt=False):
+        if self._event_stack_order == 1:
+            freq = ru.sort_results(freq,True)
+        elif self._event_stack_order == 2:
+            freq = ru.sort_results(freq,False)
+            
         (pos_min, pos_max) = amw.get_single_pos_range(freq, ref, pos_range)
 
         # Creating output SVG document
@@ -105,7 +112,14 @@ class EventMapWriter(amw.AbstractMapWriter):
             self._add_colourbar(dwg, freq)
 
         if len(freq) > 0:
-            self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq)
+            # Getting reference length (or estimating)
+            if ref is None:
+                pos_ranges = amw.get_event_pos_range(freq, round=1)
+                ref_len = max(pos_ranges[1],pos_ranges[3])
+            else:
+                ref_len = len(ref)
+
+            self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref_len)
             
         self._add_dna(dwg, pos_min, pos_max, map_xy, ref=ref)
 
@@ -222,11 +236,10 @@ class EventMapWriter(amw.AbstractMapWriter):
             end_label_y1 = colourbar_y1+self._colourbar_label_size*0.375
             end_label_y2 = colourbar_y2+self._colourbar_label_size*0.375
 
-
             dwg.add(svg.text.Text(max_text, insert=(end_label_x, end_label_y1), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
             dwg.add(svg.text.Text(min_text, insert=(end_label_x, end_label_y2), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
 
-    def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq):
+    def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref_len):
         # Adding cleavage event lines
         total = sum(freq.values())
         max_events = max(freq.values())
@@ -246,9 +259,9 @@ class EventMapWriter(amw.AbstractMapWriter):
                 norm_count = (freq.get((cleavage_site_t, cleavage_site_b, split))-min_events)/diff_events
             else:
                 norm_count = freq.get((cleavage_site_t, cleavage_site_b, split))/total
-
+            
             if split:
-                self._add_split_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count)
+                self._add_split_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count, ref_len)
             else:
                 self._add_continuous_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count)
                      
@@ -260,42 +273,53 @@ class EventMapWriter(amw.AbstractMapWriter):
         # Adding line (adding width 1 to ensure everything is visible)
         event_width = (self._event_max_size-self._event_min_size)*norm_count+self._event_min_size
         
-        event_t_xc = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
-        event_t_x1 = event_t_xc-event_width
-        event_t_x2 = event_t_xc+event_width
+        event_t_x = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
         event_t_y = map_y1+self._dna_size/2
 
-        event_b_xc = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
-        event_b_x1 = event_b_xc-event_width
-        event_b_x2 = event_b_xc+event_width
+        event_b_x = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
         event_b_y = map_y2-self._dna_size/2
 
         rgba = cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
 
-        dwg.add(svg.shapes.Line((event_t_xc, event_t_y), (event_b_xc, event_b_y), stroke=col, stroke_width=event_width, style="stroke-linecap:square;stroke-opacity:%f" % self._event_opacity))
-        # dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col,style="fill-opacity:0.1"))
+        dwg.add(svg.shapes.Line((event_t_x, event_t_y), (event_b_x, event_b_y), stroke=col, stroke_width=event_width, style="stroke-linecap:square;stroke-opacity:%f" % self._event_opacity))
 
-    def _add_split_line(self, dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count):  
-        print("NEED TO IMPLEMENT SPLIT LINE EVENT RENDERING")  
+    def _add_split_line(self, dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count, ref_len):  
+        (map_x1, map_y1, map_x2, map_y2) = map_xy
+        cmap = cm.get_cmap(self._event_colourmap)
 
-        # (map_x1, map_y1, map_x2, map_y2) = map_xy
-        # cmap = cm.get_cmap(self._event_colourmap)
+        # Adding line (adding width 1 to ensure everything is visible)
+        event_width = (self._event_max_size-self._event_min_size)*norm_count+self._event_min_size
+                
+        # Processing is dependent on which site is lower
+        if cleavage_site_t < cleavage_site_b:
+            site_sep = ref_len - (cleavage_site_b-cleavage_site_t)
 
-        # # Adding line (adding width 1 to ensure everything is visible)
-        # event_width = self._event_max_size*norm_count+1
+            event_t_x1 = map_x1
+            event_t_y1 = map_y1 + (map_y2-map_y1)*((cleavage_site_t-pos_min)/site_sep)
+            event_t_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+            event_t_y2 = map_y1 + self._dna_size/2
 
-        # event_t_xc = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
-        # event_t_x1 = event_t_xc-event_width
-        # event_t_x2 = event_t_xc+event_width
-        # event_t_y = map_y1+self._dna_size/2
+            event_b_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+            event_b_y1 = map_y2 - self._dna_size/2
+            event_b_x2 = map_x2
+            event_b_y2 = map_y2 - (map_y2-map_y1)*((pos_max-cleavage_site_b)/site_sep)
 
-        # event_b_xc = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
-        # event_b_x1 = event_b_xc-event_width
-        # event_b_x2 = event_b_xc+event_width
-        # event_b_y = map_y2-self._dna_size/2
+        else:
+            site_sep = ref_len - (cleavage_site_t-cleavage_site_b)
 
-        # rgba = cmap(norm_count)
-        # col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+            event_t_x1 = map_x1 + (map_x2-map_x1)*((cleavage_site_t-pos_min)/(pos_max-pos_min))
+            event_t_y1 = map_y1 + self._dna_size/2
+            event_t_x2 = map_x2
+            event_t_y2 = map_y1 + (map_y2-map_y1)*((pos_max-cleavage_site_t)/site_sep)
 
-        # dwg.add(svg.shapes.Polygon(points=[(event_t_x1,event_t_y), (event_t_x2,event_t_y), (event_b_x2,event_b_y), (event_b_x1,event_b_y)], fill=col))
+            event_b_x1 = map_x1
+            event_b_y1 = map_y2 - (map_y2-map_y1)*((cleavage_site_b-pos_min)/site_sep)
+            event_b_x2 = map_x1 + (map_x2-map_x1)*((cleavage_site_b-pos_min)/(pos_max-pos_min))
+            event_b_y2 = map_y2 - self._dna_size/2
+
+        rgba = cmap(norm_count)
+        col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
+
+        dwg.add(svg.shapes.Line((event_t_x1, event_t_y1), (event_t_x2, event_t_y2), stroke=col, stroke_width=event_width, style="stroke-linecap:square;stroke-opacity:%f" % self._event_opacity))
+        dwg.add(svg.shapes.Line((event_b_x1, event_b_y1), (event_b_x2, event_b_y2), stroke=col, stroke_width=event_width, style="stroke-linecap:square;stroke-opacity:%f" % self._event_opacity))

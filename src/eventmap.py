@@ -56,6 +56,7 @@ def_event_min_size = 0.5
 def_event_max_size = 2
 def_event_colourmap = "cool"
 def_event_opacity = 0.2
+def_event_stack_order = 1
 
 
 ### ARGUMENT PARSING ###
@@ -83,7 +84,7 @@ optional.add_argument("-pr", "--pos_range", type=int, default=[0,0], nargs=2, he
 
 optional.add_argument("-id", "--im_dims", type=int, default=[def_im_w, def_im_h], nargs=2, help="Pixel dimensions of the output .svg image.  Specified as a pair of integer numbers in the order width height (e.g. -id 800 200).  Default: \"%i %i\".\n\n" % (def_im_w, def_im_h))
 
-optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width], nargs=4, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 4 floating-point numbers in the order top height left width (e.g. -drp 0.3 0.6 0.05 0.9).  Default: \"%.2f %.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width))
+optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width], nargs=4, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 4 floating-point numbers in the order top height left width (e.g. -mrp 0.3 0.6 0.05 0.9).  Default: \"%.2f %.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width))
 
 optional.add_argument("-dm", "--dna_mode", type=emw.DNA_MODE, default=def_dna_mode, choices=list(emw.DNA_MODE), help="Rendering mode for DNA strands.  \"line\" displays DNA as a pair of solid lines with width controlled by --dna_size.  \"seq\" displays DNA as a pair of letter sequences with font size controlled by --dna_size (Note: position range must be sufficiently narrow in sequence mode to prevent text overlap).  \"none\" displays nothing.  Default: \"%s\".\n\n" % def_dna_mode)
 
@@ -139,6 +140,8 @@ optional.add_argument("-eo", "--event_opacity", type=float, default=def_event_op
 
 optional.add_argument("-efr", "--event_fill_range", action='store_true', help="Use the full colourmap range.")
 
+optional.add_argument("-eso", "--event_stack_order", type=int, default=def_event_stack_order, help="Mode for ordering events.  Options: 1 (most frequent at back), 2 (most frequent at front).  Default: \"%.1f\".\n\n" % def_event_stack_order)
+
 args = parser.parse_args()
 
 end_label_show = args.end_label_vis is SHOWHIDE.SHOW
@@ -157,7 +160,7 @@ grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
 colourbar_opts = (colourbar_show,args.colourbar_rel_pos[0],args.colourbar_rel_pos[1],args.colourbar_size)
 colourbar_label_opts = (colourbar_label_show,args.colourbar_label_size,args.colourbar_label_colour)
-event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_opacity,args.event_fill_range)
+event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_opacity,args.event_fill_range,args.event_stack_order)
 
 writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, colourbar_opts=colourbar_opts, colourbar_label_opts=colourbar_label_opts, event_opts=event_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
