@@ -16,10 +16,10 @@ class SHOWHIDE(Enum):
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
-def_im_h = 200
+def_im_h = 300
 
-def_map_rel_top = 0.3
-def_map_rel_height = 0.6
+def_map_rel_top = 0.4
+def_map_rel_height = 0.3
 def_map_rel_left = 0.05
 def_map_rel_width = 0.8
 
@@ -30,7 +30,7 @@ def_dna_colour = "black"
 def_end_label_vis = SHOWHIDE.SHOW
 def_end_label_size = 20
 def_end_label_colour = "black"
-def_end_label_gap = 10
+def_end_label_rel_gap = 0.01
 
 def_grid_vis = SHOWHIDE.SHOW
 def_grid_size = 1
@@ -41,7 +41,7 @@ def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
 def_grid_label_colour = "gray"
 def_grid_label_interval = 500
-def_grid_label_gap = 10
+def_grid_label_rel_gap = 0.02
 
 def_colourbar_vis = SHOWHIDE.SHOW
 def_colourbar_rel_left = 0.91
@@ -101,7 +101,7 @@ optional.add_argument("-els", "--end_label_size", type=int, default=def_end_labe
 
 optional.add_argument("-elc", "--end_label_colour", type=str, default=def_end_label_colour, help="Colour of the rendered DNA end labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_end_label_colour)
 
-optional.add_argument("-elg", "--end_label_gap", type=float, default=def_end_label_gap, help="Gap between end labels and the rendered DNA strands.  Specified in integer pixel units.  Default: \"%i\".\n\n" % def_end_label_gap)
+optional.add_argument("-elrg", "--end_label_rel_gap", type=float, default=def_end_label_rel_gap, help="Gap between end labels and the rendered DNA strands.  Specified as a fraction of the image width.  Default: \"%i\".\n\n" % def_end_label_rel_gap)
 
 optional.add_argument("-gv", "--grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_grid_vis)
 
@@ -119,7 +119,7 @@ optional.add_argument("-glc", "--grid_label_colour", type=str, default=def_grid_
 
 optional.add_argument("-gli", "--grid_label_interval", type=int, default=def_grid_label_interval, help="Interval between adjacent grid labels.  Default: \"%i\".\n\n" % def_grid_label_interval)
 
-optional.add_argument("-glg", "--grid_label_gap", type=float, default=def_grid_label_gap, help="Gap between grid labels and the rendered DNA strands.  Specified in integer pixel units.  Default: \"%i\".\n\n" % def_grid_label_gap)
+optional.add_argument("-glrg", "--grid_label_rel_gap", type=float, default=def_grid_label_rel_gap, help="Gap between grid labels and the rendered DNA strands.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_grid_label_rel_gap)
 
 optional.add_argument("-cv", "--colourbar_vis", type=SHOWHIDE, default=def_colourbar_vis, choices=list(SHOWHIDE), help="Controls whether the colourbar is rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_colourbar_vis)
 
@@ -160,9 +160,9 @@ pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
 im_dims = tuple(args.im_dims)
 rel_pos = tuple(args.map_rel_pos)
 dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
-end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_gap)
+end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_rel_gap)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
-grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_gap)
+grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
 colourbar_opts = (colourbar_show,args.colourbar_rel_pos[0],args.colourbar_rel_pos[1],args.colourbar_size)
 colourbar_label_opts = (colourbar_label_show,args.colourbar_label_size,args.colourbar_label_colour,args.colourbar_label_interval)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)

@@ -87,7 +87,28 @@ def get_sequence_cooccurrence(results, local_r):
 
         freq[idx_top, idx_bottom] = freq[idx_top, idx_bottom] + 1
         
-    return (labels,freq)    
+    return (labels,freq)  
+
+def get_position_frequency(freq):
+    freq_t = {}
+    freq_b = {}
+
+    for cleavage_sites in freq.keys():
+        cleavage_site_t = cleavage_sites[0]
+        cleavage_site_b = cleavage_sites[1]
+        count = freq.get(cleavage_sites)
+
+        if cleavage_site_t not in freq_t:
+            freq_t[cleavage_site_t] = count
+        else:
+            freq_t[cleavage_site_t] = freq_t[cleavage_site_t] + count
+
+        if cleavage_site_b not in freq_b:
+            freq_b[cleavage_site_b] = count
+        else:
+            freq_b[cleavage_site_b] = freq_b[cleavage_site_b] + count
+
+    return (freq_t, freq_b)
 
 def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
     total = sum(list(freq.values()))
