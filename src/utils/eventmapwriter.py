@@ -25,7 +25,8 @@ class DNA_MODE(Enum):
 class EventMapWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
-    def __init__(self, im_dims=(800,300), rel_pos=(0.5,0.4,0.05,0.8), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",0.02), grid_opts=(True,1,"gray",100), grid_label_opts=(True,12,"gray",500,0.02), colourbar_opts=(True,0.91,0.02,1,50), colourbar_label_opts=(True,12,"black",50), event_opts=(0.2,2,"cool",0,100,0.2,1), hist_opts=(True,0.2,0.05,0,100,1)):
+    def __init__(self, im_dims=(800,300), rel_pos=(0.5,0.4,0.05,0.8), dna_opts=(DNA_MODE.LINE,2,"black"), end_label_opts=(True,20,"black",0.02), grid_opts=(True,1,"gray",100), grid_label_opts=(True,12,"gray",500,0.02), cbar_opts=(True,0.91,0.02,1,50), cbar_label_opts=(True,12,"gray",50,0.01), event_opts=(0.2,2,"cool",0,100,0.2,1), hist_opts=(True,0,100,5,"orange",0.16,0.07), hist_label_opts=(True,12,"gray",50,0.01)):
+
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
 
@@ -54,15 +55,16 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._grid_label_interval = grid_label_opts[3]
         self._grid_label_rel_gap = grid_label_opts[4]
 
-        self._colourbar_show = colourbar_opts[0]
-        self._colourbar_rel_left = colourbar_opts[1]
-        self._colourbar_rel_width = colourbar_opts[2]
-        self._colourbar_border_size = colourbar_opts[3]
+        self._cbar_show = cbar_opts[0]
+        self._cbar_rel_left = cbar_opts[1]
+        self._cbar_rel_width = cbar_opts[2]
+        self._cbar_border_size = cbar_opts[3]
 
-        self._colourbar_label_show = colourbar_label_opts[0]
-        self._colourbar_label_size = colourbar_label_opts[1]
-        self._colourbar_label_colour = colourbar_label_opts[2]
-        self._colourbar_label_increment = colourbar_label_opts[3]
+        self._cbar_label_show = cbar_label_opts[0]
+        self._cbar_label_size = cbar_label_opts[1]
+        self._cbar_label_colour = cbar_label_opts[2]
+        self._cbar_label_interval = cbar_label_opts[3]
+        self._cbar_label_rel_gap = cbar_label_opts[4]
         
         self._event_min_size = event_opts[0]
         self._event_max_size = event_opts[1]
@@ -73,12 +75,18 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._event_stack_order = event_opts[6]
 
         self._hist_show = hist_opts[0]
-        self._hist_rel_height = hist_opts[1]
-        self._hist_rel_gap = hist_opts[2]
-        self._hist_min_range = hist_opts[3]
-        self._hist_max_range = hist_opts[4]
-        self._hist_bin_width = hist_opts[5]
+        self._hist_min_range = hist_opts[1]
+        self._hist_max_range = hist_opts[2]
+        self._hist_bin_width = hist_opts[3]
+        self._hist_colour = hist_opts[4]
+        self._hist_rel_height = hist_opts[5]
+        self._hist_rel_gap = hist_opts[6]
 
+        self._hist_label_show = hist_label_opts[0]
+        self._hist_label_size = hist_label_opts[1]
+        self._hist_label_colour = hist_label_opts[2]
+        self._hist_label_increment = hist_label_opts[3]
+        self._hist_label_rel_gap = hist_label_opts[4]
 
     ## GETTERS AND SETTERS
 
@@ -118,11 +126,13 @@ class EventMapWriter(amw.AbstractMapWriter):
         if self._end_label_show:
             self._add_end_labels(dwg, map_xy)
 
-        if self._colourbar_show:
-            self._add_colourbar(dwg, freq)
+        if self._cbar_show:
+            self._add_cbar(dwg, map_xy, freq)
 
         if self._hist_show:
-            self._add_hist(dwg, pos_min, pos_max, map_xy, freq)
+            (freq_t, freq_b) = ru.get_position_frequency(freq)
+            self._add_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
+            self._add_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
 
         self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref)
             
@@ -135,8 +145,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
 
         # Adding horizontal grid line
-        grid_yc = (map_y1+map_y2)/2
-        dwg.add(svg.shapes.Line((map_x1, grid_yc), (map_x2, grid_yc), stroke=self._grid_colour, stroke_width=self._grid_size))
+        # grid_yc = (map_y1+map_y2)/2
+        # dwg.add(svg.shapes.Line((map_x1, grid_yc), (map_x2, grid_yc), stroke=self._grid_colour, stroke_width=self._grid_size))
 
         # Getting range of vertical grid lines
         grid_pos_min = self._grid_interval*math.ceil(pos_min/self._grid_interval)
@@ -150,6 +160,14 @@ class EventMapWriter(amw.AbstractMapWriter):
             grid_y1 = map_y1+self._dna_size/2
             grid_y2 = map_y2-self._dna_size/2
             dwg.add(svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2), stroke=self._grid_colour, stroke_width=self._grid_size))
+
+            if self._hist_show:
+                grid_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height)*self._im_h
+                grid_y2 = map_y1 - (self._hist_rel_gap*self._im_h)
+                dwg.add(svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2), stroke=self._grid_colour, stroke_width=self._grid_size))
+                grid_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height)*self._im_h
+                grid_y2 = map_y2 + (self._hist_rel_gap*self._im_h)
+                dwg.add(svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2), stroke=self._grid_colour, stroke_width=self._grid_size))
 
     def _add_grid_labels(self, dwg, pos_min, pos_max, map_xy):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
@@ -199,37 +217,46 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         end_label_x1 = map_x1-(self._end_label_rel_gap*self._im_w)
         end_label_x2 = map_x2+(self._end_label_rel_gap*self._im_w)
-        end_label_y1 = map_y1+self._end_label_size*0.375
-        end_label_y2 = map_y2+self._end_label_size*0.375
+        end_label_y1 = map_y1+self._end_label_size*0.75-self._dna_size/2
+        end_label_y2 = map_y2+self._dna_size/2
+        # end_label_y1 = map_y1+self._end_label_size*0.375
+        # end_label_y2 = map_y2+self._end_label_size*0.375
 
         dwg.add(svg.text.Text("5'", insert=(end_label_x1, end_label_y1), style="text-anchor:end", font_size=self._end_label_size, fill=self._end_label_colour))
         dwg.add(svg.text.Text("3'", insert=(end_label_x2, end_label_y1), style="text-anchor:start", font_size=self._end_label_size, fill=self._end_label_colour))
         dwg.add(svg.text.Text("3'", insert=(end_label_x1, end_label_y2), style="text-anchor:end", font_size=self._end_label_size, fill=self._end_label_colour))
         dwg.add(svg.text.Text("5'", insert=(end_label_x2, end_label_y2), style="text-anchor:start", font_size=self._end_label_size, fill=self._end_label_colour))
 
-    def _add_colourbar(self, dwg, freq):
-        colourbar_x1 = self._im_w*self._colourbar_rel_left
-        colourbar_y1 = self._im_h*self._map_rel_top
-        colourbar_x2 = colourbar_x1 + self._im_w*self._colourbar_rel_width
-        colourbar_y2 = colourbar_y1 + self._im_h*self._map_rel_height
-        colourbar_w = self._im_w*self._colourbar_rel_width
-        colourbar_h = self._im_h*self._map_rel_height
+    def _add_cbar(self, dwg, map_xy, freq):
+        (map_x1, map_y1, map_x2, map_y2) = map_xy
 
-        # Adding colourbar lines
+        cbar_x1 = self._im_w*self._cbar_rel_left
+        cbar_x2 = cbar_x1 + self._im_w*self._cbar_rel_width
+        cbar_w = self._im_w*self._cbar_rel_width
+
+        if self._hist_show:
+            cbar_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height)*self._im_h
+            cbar_y2 = map_y2 + (self._hist_rel_gap + self._hist_rel_height)*self._im_h
+        else:
+            cbar_y1 = self._im_h*self._map_rel_top
+            cbar_y2 = cbar_y1 + self._im_h*self._map_rel_height
+        cbar_h = cbar_y2-cbar_y1
+        
+        # Adding cbar lines
         cmap = cm.get_cmap(self._event_colourmap)    
 
-        line_w = colourbar_h/256+0.1 # A bit extra width to prevent gaps appearing between lines
-        line_offs = colourbar_h/255
+        line_w = cbar_h/256+0.1 # A bit extra width to prevent gaps appearing between lines
+        line_offs = cbar_h/255
         for i in range(0,256):
-            y = colourbar_y2-i*line_offs
+            y = cbar_y2-i*line_offs
             rgba = cmap(i/256)
             col = "rgb(%i,%i,%i)" % (rgba[0]*255,rgba[1]*255,rgba[2]*255)
-            dwg.add(svg.shapes.Line((colourbar_x1, y), (colourbar_x2, y), stroke=col, stroke_width=line_w, style="stroke-linecap:square"))
+            dwg.add(svg.shapes.Line((cbar_x1, y), (cbar_x2, y), stroke=col, stroke_width=line_w, style="stroke-linecap:square"))
 
-        # Adding border around colourbar
-        dwg.add(svg.shapes.Rect(insert=(colourbar_x1,colourbar_y1), size=(colourbar_w,colourbar_h), stroke="black", fill="none", stroke_width=self._colourbar_border_size, style="stroke-linecap:square"))
+        # Adding border around cbar
+        dwg.add(svg.shapes.Rect(insert=(cbar_x1,cbar_y1), size=(cbar_w,cbar_h), stroke="black", fill="none", stroke_width=self._cbar_border_size, style="stroke-linecap:square"))
             
-        if self._colourbar_label_show:
+        if self._cbar_label_show:
             if self._event_min_range == -1 and self._event_max_range == -1:
                 total = sum(freq.values())
                 event_min_range = math.floor((min(freq.values())/total)*100)
@@ -238,76 +265,87 @@ class EventMapWriter(amw.AbstractMapWriter):
                 event_min_range = self._event_min_range
                 event_max_range = self._event_max_range
 
-            diff_events = event_max_range-event_min_range       
+            event_range = event_max_range-event_min_range       
 
             # Preventing divide by zero errors
-            if diff_events == 0:
-                diff_events = 1
+            if event_range == 0:
+                event_range = 1
 
-            end_label_x = colourbar_x2+(self._end_label_rel_gap*self._im_w)
-            for label_value in range(event_min_range,event_max_range,self._colourbar_label_increment):
-                end_label_y = colourbar_y2-colourbar_h*(label_value-event_min_range)/diff_events + self._colourbar_label_size*0.375
-                dwg.add(svg.text.Text("%i%%" % label_value, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
+            end_label_x = cbar_x2+(self._cbar_label_rel_gap*self._im_w)
+            for label_value in range(event_min_range,event_max_range,self._cbar_label_interval):
+                end_label_y = cbar_y2-cbar_h*(label_value-event_min_range)/event_range + self._cbar_label_size*0.375
+                dwg.add(svg.text.Text("%i%%" % label_value, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._cbar_label_size, fill=self._cbar_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the increment)
-            end_label_y = colourbar_y2-colourbar_h*(event_max_range-event_min_range)/diff_events + self._colourbar_label_size*0.375
-            dwg.add(svg.text.Text("%i%%" % event_max_range, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._colourbar_label_size, fill=self._colourbar_label_colour))
+            end_label_y = cbar_y2-cbar_h*(event_max_range-event_min_range)/event_range + self._cbar_label_size*0.375
+            dwg.add(svg.text.Text("%i%%" % event_max_range, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._cbar_label_size, fill=self._cbar_label_colour))
 
-    def _add_hist(self, dwg, pos_min, pos_max, map_xy, freq):
+    def _add_hist(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
         if len(freq) == 0:
             return
 
         (map_x1, map_y1, map_x2, map_y2) = map_xy
-
-        (freq_t, freq_b) = ru.get_position_frequency(freq)
-        bar_width = self._hist_bin_width*(map_x2-map_x1)/(pos_max-pos_min)
+        bar_width = (map_x2-map_x1)/(pos_max-pos_min)
 
         # Getting the total number of events                   
         total = sum(freq.values())
         if self._hist_min_range == -1 and self._hist_max_range == -1:
-            event_min_range = math.floor((min(freq.values())/total)*100)
-            event_max_range = math.ceil((max(freq.values())/total)*100)
+            hist_min_range = math.floor((min(freq.values())/total)*100)
+            hist_max_range = math.ceil((max(freq.values())/total)*100)
         else:
-            event_min_range = self._hist_min_range
-            event_max_range = self._hist_max_range
-        diff_events = event_max_range-event_min_range       
-
+            hist_min_range = self._hist_min_range
+            hist_max_range = self._hist_max_range
+        hist_range = hist_max_range-hist_min_range  
+        
         # Iterating over each position, adding the histogram bar
-        for pos_t in range(pos_min,pos_max+1):
+        for pos in range(pos_min,pos_max+1):            
             # Checking this event is within the rendered range
-            if pos_t < pos_min or pos_t >= pos_max:
-                continue;
+            if pos < pos_min or pos >= pos_max:
+                continue
 
             # Only do the plotting once per bin
-            # if pos_t % 
-            if pos_t not in freq_t:
-                continue;
+            if pos % self._hist_bin_width != 0:
+                continue
 
-            event_pc = (freq_t.get(pos_t)/total)*100
-            norm_count = (event_pc-event_min_range)/diff_events
+            bin_total = 0
+            for curr_pos in range(pos,pos+self._hist_bin_width):
+                bin_total = bin_total + (0 if freq.get(curr_pos) is None else freq.get(curr_pos))
+                
+            event_pc = (bin_total/total)*100
+            norm_count = (event_pc-hist_min_range)/hist_range
 
-            bar_x = map_x1 + bar_width*(pos_t+0.5-pos_min)
-            bar_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height*norm_count)*self._im_h
-            bar_y2 = map_y1 - (self._hist_rel_gap*self._im_h)
-            dwg.add(svg.shapes.Line((bar_x, bar_y1), (bar_x, bar_y2), stroke=self._grid_colour, stroke_width=bar_width))
+            bar_x = map_x1 + bar_width*(pos+(0.5*self._hist_bin_width)-pos_min)
+            if is_top:
+                bar_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height*norm_count)*self._im_h
+                bar_y2 = map_y1 - (self._hist_rel_gap*self._im_h)
+            else:
+                bar_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height*norm_count)*self._im_h
+                bar_y2 = map_y2 + (self._hist_rel_gap*self._im_h)
 
-        for pos_b in range(pos_min,pos_max+1):
-            # Checking this event is within the rendered range
-            if pos_b < pos_min or pos_b >= pos_max:
-                continue;
+            dwg.add(svg.shapes.Line((bar_x, bar_y1), (bar_x, bar_y2), stroke=self._hist_colour, stroke_width=bar_width*self._hist_bin_width))
 
-            if pos_b not in freq_b:
-                continue;
+        if self._hist_label_show:     
+            # Preventing divide by zero errors
+            if hist_range == 0:
+                hist_range = 1
 
-            event_pc = (freq_b.get(pos_b)/total)*100
-            norm_count = (event_pc-event_min_range)/diff_events
+            # Used for positioning labels
+            sign = -1 if is_top else 1
 
-            bar_x = map_x1 + bar_width*(pos_b+0.5-pos_min)
-            bar_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height*norm_count)*self._im_h
-            bar_y2 = map_y2 + (self._hist_rel_gap*self._im_h)
-            dwg.add(svg.shapes.Line((bar_x, bar_y1), (bar_x, bar_y2), stroke=self._grid_colour, stroke_width=bar_width))
+            if is_top:
+                hist_y2 = map_y1 - (self._hist_rel_gap*self._im_h)
+            else:
+                hist_y2 = map_y2 + (self._hist_rel_gap*self._im_h)
 
-        return
+            hist_h = self._im_h*self._hist_rel_height
+            end_label_x = map_x2+(self._hist_label_rel_gap*self._im_w)
+            for label_value in range(hist_min_range,hist_max_range,self._cbar_label_interval):
+                end_label_y = hist_y2+sign*hist_h*(label_value-hist_min_range)/hist_range + self._hist_label_size*0.375
+                dwg.add(svg.text.Text("%i%%" % label_value, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._hist_label_size, fill=self._hist_label_colour))
+
+            # Adding final label (keeping this separate means we still get it, even if it's not on the increment)
+            end_label_y = hist_y2+sign*hist_h*(hist_max_range-hist_min_range)/hist_range + self._hist_label_size*0.375
+            dwg.add(svg.text.Text("%i%%" % hist_max_range, insert=(end_label_x, end_label_y), style="text-anchor:start", font_size=self._hist_label_size, fill=self._hist_label_colour))
 
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref):
         if len(freq) == 0:
@@ -320,11 +358,11 @@ class EventMapWriter(amw.AbstractMapWriter):
         else:
             event_min_range = self._event_min_range
             event_max_range = self._event_max_range
-        diff_events = event_max_range-event_min_range       
+        event_range = event_max_range-event_min_range       
 
         # Preventing divide by zero errors
-        if diff_events == 0:
-            diff_events = 1
+        if event_range == 0:
+            event_range = 1
 
         # Getting reference length (or estimating)
         if ref is None:
@@ -336,10 +374,10 @@ class EventMapWriter(amw.AbstractMapWriter):
         for (cleavage_site_t, cleavage_site_b, split) in freq.keys():   
             # Checking this event is within the rendered range
             if cleavage_site_t < pos_min or cleavage_site_t >= pos_max or cleavage_site_b < pos_min or cleavage_site_b >= pos_max:
-                continue;
+                continue
             
             event_pc = (freq.get((cleavage_site_t, cleavage_site_b, split))/total)*100
-            norm_count = (event_pc-event_min_range)/diff_events
+            norm_count = (event_pc-event_min_range)/event_range
             
             if split:
                 self._add_split_line(dwg, cleavage_site_t, cleavage_site_b, pos_min, pos_max, map_xy, norm_count, ref_len)

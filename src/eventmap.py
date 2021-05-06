@@ -18,10 +18,10 @@ class SHOWHIDE(Enum):
 def_im_w = 800
 def_im_h = 300
 
-def_map_rel_top = 0.4
+def_map_rel_top = 0.42
 def_map_rel_height = 0.3
-def_map_rel_left = 0.05
-def_map_rel_width = 0.8
+def_map_rel_left = 0.04
+def_map_rel_width = 0.78
 
 def_dna_mode = emw.DNA_MODE.LINE
 def_dna_size = 2.5
@@ -41,17 +41,18 @@ def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
 def_grid_label_colour = "gray"
 def_grid_label_interval = 500
-def_grid_label_rel_gap = 0.02
+def_grid_label_rel_gap = 0.04
 
-def_colourbar_vis = SHOWHIDE.SHOW
-def_colourbar_rel_left = 0.91
-def_colourbar_rel_width = 0.02
-def_colourbar_border_size = 1
+def_cbar_vis = SHOWHIDE.SHOW
+def_cbar_rel_left = 0.91
+def_cbar_rel_width = 0.02
+def_cbar_border_size = 1
 
-def_colourbar_label_vis = SHOWHIDE.SHOW
-def_colourbar_label_size = 12
-def_colourbar_label_colour = "black"
-def_colourbar_label_interval = 50
+def_cbar_label_vis = SHOWHIDE.SHOW
+def_cbar_label_size = 12
+def_cbar_label_colour = "gray"
+def_cbar_label_interval = 50
+def_cbar_label_rel_gap = 0.02
 
 def_event_min_size = 0.5
 def_event_max_size = 2
@@ -121,19 +122,21 @@ optional.add_argument("-gli", "--grid_label_interval", type=int, default=def_gri
 
 optional.add_argument("-glrg", "--grid_label_rel_gap", type=float, default=def_grid_label_rel_gap, help="Gap between grid labels and the rendered DNA strands.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_grid_label_rel_gap)
 
-optional.add_argument("-cv", "--colourbar_vis", type=SHOWHIDE, default=def_colourbar_vis, choices=list(SHOWHIDE), help="Controls whether the colourbar is rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_colourbar_vis)
+optional.add_argument("-cv", "--cbar_vis", type=SHOWHIDE, default=def_cbar_vis, choices=list(SHOWHIDE), help="Controls whether the colourbar is rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_cbar_vis)
 
-optional.add_argument("-crp", "--colourbar_rel_pos", type=float, default=[def_colourbar_rel_left,def_colourbar_rel_width], nargs=2, help="Position and size of colourbar in output image, relative to the top-left corner.  Specified as a list of 2 floating-point numbers in the order left width (e.g. -drp 0.9 0.02).  Default: \"%.2f %.2f\".\n\n" % (def_colourbar_rel_left, def_colourbar_rel_width))
+optional.add_argument("-crp", "--cbar_rel_pos", type=float, default=[def_cbar_rel_left,def_cbar_rel_width], nargs=2, help="Position and size of colourbar in output image, relative to the top-left corner.  Specified as a list of 2 floating-point numbers in the order left width (e.g. -drp 0.9 0.02).  Default: \"%.2f %.2f\".\n\n" % (def_cbar_rel_left, def_cbar_rel_width))
 
-optional.add_argument("-cs", "--colourbar_size", type=str, default=def_colourbar_border_size, help="Width of colourbar border.  Default: \"%s\".\n\n" % def_colourbar_border_size)
+optional.add_argument("-cs", "--cbar_size", type=str, default=def_cbar_border_size, help="Width of colourbar border.  Default: \"%s\".\n\n" % def_cbar_border_size)
 
-optional.add_argument("-clv", "--colourbar_label_vis", type=SHOWHIDE, default=def_colourbar_label_vis, choices=list(SHOWHIDE), help="Controls whether colourbar labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -glv \"show\").  Default: \"%s\".\n\n" % def_colourbar_label_vis)
+optional.add_argument("-clv", "--cbar_label_vis", type=SHOWHIDE, default=def_cbar_label_vis, choices=list(SHOWHIDE), help="Controls whether colourbar labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -glv \"show\").  Default: \"%s\".\n\n" % def_cbar_label_vis)
 
-optional.add_argument("-cls", "--colourbar_label_size", type=int, default=def_colourbar_label_size, help="Font size of colourbar labels.  Default: \"%.1f\".\n\n" % def_colourbar_label_size)
+optional.add_argument("-cls", "--cbar_label_size", type=int, default=def_cbar_label_size, help="Font size of colourbar labels.  Default: \"%.1f\".\n\n" % def_cbar_label_size)
 
-optional.add_argument("-clc", "--colourbar_label_colour", type=str, default=def_colourbar_label_colour, help="Colour of the rendered colourbar labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_colourbar_label_colour)
+optional.add_argument("-clc", "--cbar_label_colour", type=str, default=def_cbar_label_colour, help="Colour of the rendered colourbar labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_cbar_label_colour)
 
-optional.add_argument("-cli", "--colourbar_label_interval", type=int, default=def_colourbar_label_interval, help="Interval between labels shown in colourbar.  Default: \"%.1f\".\n\n" % def_colourbar_label_interval)
+optional.add_argument("-cli", "--cbar_label_interval", type=int, default=def_cbar_label_interval, help="Interval between labels shown in colourbar.  Default: \"%.1f\".\n\n" % def_cbar_label_interval)
+
+optional.add_argument("-clrg", "--cbar_label_rel_gap", type=float, default=def_cbar_label_rel_gap, help="Gap between colourbar labels and the colourbar itself.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_cbar_label_rel_gap)
 
 optional.add_argument("-emis", "--event_min_size", type=float, default=def_event_min_size, help="Width of line corresponding to the least frequent cleavage event.  Default: \"%.1f\".\n\n" % def_event_min_size)
 
@@ -152,8 +155,8 @@ args = parser.parse_args()
 end_label_show = args.end_label_vis is SHOWHIDE.SHOW
 grid_show = args.grid_vis is SHOWHIDE.SHOW
 grid_label_show = args.grid_label_vis is SHOWHIDE.SHOW
-colourbar_show = args.colourbar_vis is SHOWHIDE.SHOW
-colourbar_label_show = args.colourbar_label_vis is SHOWHIDE.SHOW
+cbar_show = args.cbar_vis is SHOWHIDE.SHOW
+cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
 
 # Required arguments
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
@@ -163,9 +166,9 @@ dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
 end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_rel_gap)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
-colourbar_opts = (colourbar_show,args.colourbar_rel_pos[0],args.colourbar_rel_pos[1],args.colourbar_size)
-colourbar_label_opts = (colourbar_label_show,args.colourbar_label_size,args.colourbar_label_colour,args.colourbar_label_interval)
+cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
+cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
 
-writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, colourbar_opts=colourbar_opts, colourbar_label_opts=colourbar_label_opts, event_opts=event_opts)
+writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
