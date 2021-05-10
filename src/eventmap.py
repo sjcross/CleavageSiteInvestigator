@@ -34,7 +34,7 @@ def_end_label_rel_gap = 0.01
 
 def_grid_vis = SHOWHIDE.SHOW
 def_grid_size = 1
-def_grid_colour = "gray"
+def_grid_colour = "lightgray"
 def_grid_interval = 100
 
 def_grid_label_vis = SHOWHIDE.SHOW
@@ -51,7 +51,7 @@ def_cbar_border_size = 1
 def_cbar_label_vis = SHOWHIDE.SHOW
 def_cbar_label_size = 12
 def_cbar_label_colour = "gray"
-def_cbar_label_interval = 50
+def_cbar_label_interval = 25
 def_cbar_label_rel_gap = 0.02
 
 def_event_min_size = 0.5
@@ -59,7 +59,7 @@ def_event_max_size = 2
 def_event_colourmap = "cool"
 def_event_min_range = 0
 def_event_max_range = 100
-def_event_opacity = 0.2
+def_event_opacity = 0.4
 def_event_stack_order = 1
 
 
