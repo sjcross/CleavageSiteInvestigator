@@ -20,7 +20,7 @@ def_im_h = 300
 
 def_map_rel_top = 0.42
 def_map_rel_height = 0.3
-def_map_rel_left = 0.04
+def_map_rel_left = 0.075
 def_map_rel_width = 0.78
 
 def_dna_mode = emw.DNA_MODE.LINE
@@ -61,6 +61,26 @@ def_event_min_range = 0
 def_event_max_range = 100
 def_event_opacity = 0.4
 def_event_stack_order = 1
+
+def_hist_vis = SHOWHIDE.SHOW
+def_hist_min_range = 0
+def_hist_max_range = 50
+def_hist_bin_width = 2
+def_hist_colour = "darkgray"
+def_hist_rel_height = 0.16
+def_hist_rel_gap = 0.07
+
+def_hist_label_vis = SHOWHIDE.SHOW
+def_hist_label_size = 12
+def_hist_label_colour = "gray"
+def_hist_label_interval = 25
+def_hist_label_rel_gap = 0.01
+def_hist_label_position = emw.POSITION.LEFT
+
+def_hist_grid_vis = SHOWHIDE.SHOW
+def_hist_grid_size = 1
+def_hist_grid_colour = "lightgray"
+def_hist_grid_interval = 25
 
 
 ### ARGUMENT PARSING ###
@@ -122,13 +142,13 @@ optional.add_argument("-gli", "--grid_label_interval", type=int, default=def_gri
 
 optional.add_argument("-glrg", "--grid_label_rel_gap", type=float, default=def_grid_label_rel_gap, help="Gap between grid labels and the rendered DNA strands.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_grid_label_rel_gap)
 
-optional.add_argument("-cv", "--cbar_vis", type=SHOWHIDE, default=def_cbar_vis, choices=list(SHOWHIDE), help="Controls whether the colourbar is rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_cbar_vis)
+optional.add_argument("-cv", "--cbar_vis", type=SHOWHIDE, default=def_cbar_vis, choices=list(SHOWHIDE), help="Controls whether the colourbar is rendered.  Must be either \"show\" or \"hide\" (e.g. -cv \"show\").  Default: \"%s\".\n\n" % def_cbar_vis)
 
-optional.add_argument("-crp", "--cbar_rel_pos", type=float, default=[def_cbar_rel_left,def_cbar_rel_width], nargs=2, help="Position and size of colourbar in output image, relative to the top-left corner.  Specified as a list of 2 floating-point numbers in the order left width (e.g. -drp 0.9 0.02).  Default: \"%.2f %.2f\".\n\n" % (def_cbar_rel_left, def_cbar_rel_width))
+optional.add_argument("-crp", "--cbar_rel_pos", type=float, default=[def_cbar_rel_left,def_cbar_rel_width], nargs=2, help="Position and size of colourbar in output image, relative to the top-left corner.  Specified as a list of 2 floating-point numbers in the order left width (e.g. -crp 0.9 0.02).  Default: \"%.2f %.2f\".\n\n" % (def_cbar_rel_left, def_cbar_rel_width))
 
 optional.add_argument("-cs", "--cbar_size", type=str, default=def_cbar_border_size, help="Width of colourbar border.  Default: \"%s\".\n\n" % def_cbar_border_size)
 
-optional.add_argument("-clv", "--cbar_label_vis", type=SHOWHIDE, default=def_cbar_label_vis, choices=list(SHOWHIDE), help="Controls whether colourbar labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -glv \"show\").  Default: \"%s\".\n\n" % def_cbar_label_vis)
+optional.add_argument("-clv", "--cbar_label_vis", type=SHOWHIDE, default=def_cbar_label_vis, choices=list(SHOWHIDE), help="Controls whether colourbar labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -clv \"show\").  Default: \"%s\".\n\n" % def_cbar_label_vis)
 
 optional.add_argument("-cls", "--cbar_label_size", type=int, default=def_cbar_label_size, help="Font size of colourbar labels.  Default: \"%.1f\".\n\n" % def_cbar_label_size)
 
@@ -150,6 +170,39 @@ optional.add_argument("-er", "--event_range", type=int, default=[def_event_min_r
 
 optional.add_argument("-eso", "--event_stack_order", type=int, default=def_event_stack_order, help="Mode for ordering events.  Options: 1 (most frequent at back), 2 (most frequent at front).  Default: \"%.1f\".\n\n" % def_event_stack_order)
 
+optional.add_argument("-hv", "--hist_vis", type=SHOWHIDE, default=def_hist_vis, choices=list(SHOWHIDE), help="Controls whether histograms are rendered above and below the eventmap.  Must be either \"show\" or \"hide\" (e.g. -hv \"show\").  Default: \"%s\".\n\n" % def_hist_vis)
+
+optional.add_argument("-hr", "--hist_range", type=int, default=[def_hist_min_range,def_hist_max_range], nargs=2, help="Range of values histogram will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_hist_min_range,def_hist_max_range))
+
+optional.add_argument("-hbw", "--hist_bin_width", type=int, default=def_hist_bin_width, help="Number of positions that will be binned into a single bar on the histogram.  Default: \"%.1f\".\n\n" % def_hist_bin_width)
+
+optional.add_argument("-hc", "--hist_colour", type=str, default=def_hist_colour, help="Colour of the rendered histogram bars.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_colour)
+
+optional.add_argument("-hrh", "--hist_rel_height", type=float, default=def_hist_rel_height, help="Height of the histogram plots.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_hist_rel_height)
+
+optional.add_argument("-hrg", "--hist_rel_gap", type=float, default=def_hist_rel_gap, help="Gap between histogram and the eventmap.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_hist_rel_gap)
+
+optional.add_argument("-hlv", "--hist_label_vis", type=SHOWHIDE, default=def_hist_label_vis, choices=list(SHOWHIDE), help="Controls whether histogram labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -hlv \"show\").  Default: \"%s\".\n\n" % def_hist_label_vis)
+
+optional.add_argument("-hls", "--hist_label_size", type=int, default=def_hist_label_size, help="Font size of histogram labels.  Default: \"%.1f\".\n\n" % def_hist_label_size)
+
+optional.add_argument("-hlc", "--hist_label_colour", type=str, default=def_hist_label_colour, help="Colour of the rendered histogram labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_label_colour)
+
+optional.add_argument("-hli", "--hist_label_interval", type=int, default=def_hist_label_interval, help="Interval between labels shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_label_interval)
+
+optional.add_argument("-hlrg", "--hist_label_rel_gap", type=float, default=def_hist_label_rel_gap, help="Gap between histogram labels and side of the histogram.  Specified as a fraction of the image width.  Default: \"%i\".\n\n" % def_hist_label_rel_gap)
+
+optional.add_argument("-hlp", "--hist_label_position", type=emw.POSITION, default=def_hist_label_position, choices=list(emw.POSITION), help="Controls whether histograms labels are rendered to the left or right of the histogram.  Must be either \"left\" or \"right\" (e.g. -hlp \"left\").  Default: \"%s\".\n\n" % def_hist_label_position)
+
+
+optional.add_argument("-hgv", "--hist_grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether horizontal histogram grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -hgv \"show\").  Default: \"%s\".\n\n" % def_hist_grid_vis)
+
+optional.add_argument("-hgs", "--hist_grid_size", type=int, default=def_hist_grid_size, help="Width of histogram grid lines.  Default: \"%.1f\".\n\n" % def_hist_grid_size)
+
+optional.add_argument("-hgc", "--hist_grid_colour", type=str, default=def_hist_grid_colour, help="Colour of the rendered histogram grid lines.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_grid_colour)
+
+optional.add_argument("-hgi", "--hist_grid_interval", type=int, default=def_hist_grid_interval, help="Interval between horizontal grid lines shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_grid_interval)
+
 args = parser.parse_args()
 
 end_label_show = args.end_label_vis is SHOWHIDE.SHOW
@@ -157,6 +210,9 @@ grid_show = args.grid_vis is SHOWHIDE.SHOW
 grid_label_show = args.grid_label_vis is SHOWHIDE.SHOW
 cbar_show = args.cbar_vis is SHOWHIDE.SHOW
 cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
+hist_show = args.hist_vis is SHOWHIDE.SHOW
+hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
+hist_grid_show = args.hist_grid_vis is SHOWHIDE.SHOW
 
 # Required arguments
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
@@ -169,6 +225,9 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
+hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap)
+hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position)
+hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 
-writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts)
+writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
