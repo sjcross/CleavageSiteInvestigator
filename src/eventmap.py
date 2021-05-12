@@ -18,6 +18,8 @@ class SHOWHIDE(Enum):
 def_im_w = 800
 def_im_h = 300
 
+def_font = "Arial"
+
 def_map_rel_top = 0.42
 def_map_rel_height = 0.3
 def_map_rel_left = 0.075
@@ -31,6 +33,7 @@ def_end_label_vis = SHOWHIDE.SHOW
 def_end_label_size = 20
 def_end_label_colour = "black"
 def_end_label_rel_gap = 0.01
+def_end_label_position = emw.VPOS.CENTRE
 
 def_grid_vis = SHOWHIDE.SHOW
 def_grid_size = 1
@@ -65,17 +68,18 @@ def_event_stack_order = 1
 def_hist_vis = SHOWHIDE.SHOW
 def_hist_min_range = 0
 def_hist_max_range = 50
-def_hist_bin_width = 2
+def_hist_bin_width = 1
 def_hist_colour = "darkgray"
 def_hist_rel_height = 0.16
-def_hist_rel_gap = 0.07
+def_hist_rel_gap = 0.04
 
 def_hist_label_vis = SHOWHIDE.SHOW
 def_hist_label_size = 12
 def_hist_label_colour = "gray"
 def_hist_label_interval = 25
 def_hist_label_rel_gap = 0.01
-def_hist_label_position = emw.POSITION.LEFT
+def_hist_label_position = emw.HPOS.LEFT
+def_hist_label_zero_vis = SHOWHIDE.SHOW
 
 def_hist_grid_vis = SHOWHIDE.SHOW
 def_hist_grid_size = 1
@@ -108,6 +112,8 @@ optional.add_argument("-pr", "--pos_range", type=int, default=[0,0], nargs=2, he
 
 optional.add_argument("-id", "--im_dims", type=int, default=[def_im_w, def_im_h], nargs=2, help="Pixel dimensions of the output .svg image.  Specified as a pair of integer numbers in the order width height (e.g. -id 800 200).  Default: \"%i %i\".\n\n" % (def_im_w, def_im_h))
 
+optional.add_argument("-f", "--font", type=str, default=def_font, help="Font to use for all text.  Can be any font currently installed on this computer.  Default: \"%s\".\n\n" % def_font)
+
 optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width], nargs=4, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 4 floating-point numbers in the order top height left width (e.g. -mrp 0.3 0.6 0.05 0.9).  Default: \"%.2f %.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_height, def_map_rel_left, def_map_rel_width))
 
 optional.add_argument("-dm", "--dna_mode", type=emw.DNA_MODE, default=def_dna_mode, choices=list(emw.DNA_MODE), help="Rendering mode for DNA strands.  \"line\" displays DNA as a pair of solid lines with width controlled by --dna_size.  \"seq\" displays DNA as a pair of letter sequences with font size controlled by --dna_size (Note: position range must be sufficiently narrow in sequence mode to prevent text overlap).  \"none\" displays nothing.  Default: \"%s\".\n\n" % def_dna_mode)
@@ -123,6 +129,8 @@ optional.add_argument("-els", "--end_label_size", type=int, default=def_end_labe
 optional.add_argument("-elc", "--end_label_colour", type=str, default=def_end_label_colour, help="Colour of the rendered DNA end labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_end_label_colour)
 
 optional.add_argument("-elrg", "--end_label_rel_gap", type=float, default=def_end_label_rel_gap, help="Gap between end labels and the rendered DNA strands.  Specified as a fraction of the image width.  Default: \"%i\".\n\n" % def_end_label_rel_gap)
+
+optional.add_argument("-elp", "--end_label_position", type=emw.VPOS, default=def_end_label_position, choices=list(emw.VPOS), help="Controls whether end labels are vertically centre-aligned with the DNA or aligned inside (top strand top-aligned with DNA and bottom strand bottom-aligned).  Must be either \"centre\" or \"inside\" (e.g. -elp \"centre\").  Default: \"%s\".\n\n" % def_end_label_position)
 
 optional.add_argument("-gv", "--grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -gv \"show\").  Default: \"%s\".\n\n" % def_grid_vis)
 
@@ -192,8 +200,9 @@ optional.add_argument("-hli", "--hist_label_interval", type=int, default=def_his
 
 optional.add_argument("-hlrg", "--hist_label_rel_gap", type=float, default=def_hist_label_rel_gap, help="Gap between histogram labels and side of the histogram.  Specified as a fraction of the image width.  Default: \"%i\".\n\n" % def_hist_label_rel_gap)
 
-optional.add_argument("-hlp", "--hist_label_position", type=emw.POSITION, default=def_hist_label_position, choices=list(emw.POSITION), help="Controls whether histograms labels are rendered to the left or right of the histogram.  Must be either \"left\" or \"right\" (e.g. -hlp \"left\").  Default: \"%s\".\n\n" % def_hist_label_position)
+optional.add_argument("-hlp", "--hist_label_position", type=emw.HPOS, default=def_hist_label_position, choices=list(emw.HPOS), help="Controls whether histograms labels are rendered to the left or right of the histogram.  Must be either \"left\" or \"right\" (e.g. -hlp \"left\").  Default: \"%s\".\n\n" % def_hist_label_position)
 
+optional.add_argument("-hlzv", "--hist_label_zero_vis", type=SHOWHIDE, default=def_hist_label_zero_vis, choices=list(SHOWHIDE), help="Controls whether the 0%% histogram label is rendered (having this hidden allows the histogram to be closer to the DNA sequence).  Must be either \"show\" or \"hide\" (e.g. -hlzv \"show\").  Default: \"%s\".\n\n" % def_hist_label_zero_vis)
 
 optional.add_argument("-hgv", "--hist_grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether horizontal histogram grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -hgv \"show\").  Default: \"%s\".\n\n" % def_hist_grid_vis)
 
@@ -212,6 +221,7 @@ cbar_show = args.cbar_vis is SHOWHIDE.SHOW
 cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
 hist_show = args.hist_vis is SHOWHIDE.SHOW
 hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
+hist_label_zero_show = args.hist_label_zero_vis is SHOWHIDE.SHOW
 hist_grid_show = args.hist_grid_vis is SHOWHIDE.SHOW
 
 # Required arguments
@@ -219,15 +229,15 @@ pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
 im_dims = tuple(args.im_dims)
 rel_pos = tuple(args.map_rel_pos)
 dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
-end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_rel_gap)
+end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_rel_gap,args.end_label_position)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
 hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap)
-hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position)
+hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 
-writer = emw.EventMapWriter(im_dims=im_dims, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts)
+writer = emw.EventMapWriter(im_dims=im_dims, font=args.font, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)

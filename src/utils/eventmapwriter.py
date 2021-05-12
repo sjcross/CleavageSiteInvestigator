@@ -22,9 +22,17 @@ class DNA_MODE(Enum):
         return str(self.value)
 
 
-class POSITION(Enum):
+class HPOS(Enum):
     LEFT = 'left'
     RIGHT = 'right'
+
+    def __str__(self):
+        return str(self.value)
+
+
+class VPOS(Enum):
+    CENTRE = 'centre'
+    INSIDE = 'inside'
 
     def __str__(self):
         return str(self.value)
@@ -35,20 +43,23 @@ class EventMapWriter(amw.AbstractMapWriter):
 
     def __init__(self,
                  im_dims=(800, 300),
+                 font="Arial",
                  rel_pos=(0.42, 0.3, 0.07, 0.78),
                  dna_opts=(DNA_MODE.LINE, 2.5, "black"),
-                 end_label_opts=(True, 20, "black", 0.01),
+                 end_label_opts=(True, 20, "black", 0.01, VPOS.CENTRE),
                  grid_opts=(True, 1, "lightgray", 100),
                  grid_label_opts=(True, 12, "gray", 500, 0.04),
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
                  event_opts=(0.5, 2, "cool", 0, 100, 0.4, 1),
                  hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07),
-                 hist_label_opts=(True, 12, "gray", 25, 0.01, POSITION.LEFT),
+                 hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25)):
 
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
+
+        self._font = font
 
         self._map_rel_top = rel_pos[0]
         self._map_rel_height = rel_pos[1]
@@ -63,6 +74,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._end_label_size = end_label_opts[1]
         self._end_label_colour = end_label_opts[2]
         self._end_label_rel_gap = end_label_opts[3]
+        self._end_label_position = end_label_opts[4]
 
         self._grid_show = grid_opts[0]
         self._grid_size = grid_opts[1]
@@ -108,6 +120,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._hist_label_interval = hist_label_opts[3]
         self._hist_label_rel_gap = hist_label_opts[4]
         self._hist_label_position = hist_label_opts[5]
+        self._hist_label_zero_show = hist_label_opts[6]
 
         self._hist_grid_show = hist_grid_opts[0]
         self._hist_grid_size = hist_grid_opts[1]
@@ -236,16 +249,17 @@ class EventMapWriter(amw.AbstractMapWriter):
                                     self._grid_label_interval):
             grid_label_x = map_x1 + (map_x2 - map_x1) * (
                 (grid_label_pos - pos_min) /
-                (pos_max - pos_min)) + self._grid_label_size * 0.375
+                (pos_max - pos_min))
             grid_label_y = map_y1 - self._dna_size / 2 - grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90, grid_label_x, grid_label_y)
             dwg.add(
-                svg.text.Text(str(grid_label_pos),
-                              insert=(grid_label_x, grid_label_y),
-                              transform=rot,
-                              style="text-anchor:start",
-                              font_size=self._grid_label_size,
-                              fill=self._grid_label_colour))
+                svg.text.Text(
+                    str(grid_label_pos),
+                    insert=(grid_label_x, grid_label_y),
+                    transform=rot,
+                    style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    font_size=self._grid_label_size,
+                    fill=self._grid_label_colour))
 
     def _add_dna(self, dwg, pos_min, pos_max, map_xy, ref=None):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
@@ -262,20 +276,24 @@ class EventMapWriter(amw.AbstractMapWriter):
             ref_c = ref.complement()
             for dna_pos in range(pos_min, pos_max + 1):
                 dna_seq_x = map_x1 + dna_pos_interval * (dna_pos - pos_min)
-                dna_seq_y1 = map_y1 + self._dna_size * 0.375
-                dna_seq_y2 = map_y2 + self._dna_size * 0.375
+                dna_seq_y1 = map_y1
+                dna_seq_y2 = map_y2
                 dwg.add(
-                    svg.text.Text(str(ref[dna_pos - 1]),
-                                  insert=(dna_seq_x, dna_seq_y1),
-                                  style="text-anchor:middle",
-                                  font_size=self._dna_size,
-                                  fill=self._dna_colour))
+                    svg.text.Text(
+                        str(ref[dna_pos - 1]),
+                        insert=(dna_seq_x, dna_seq_y1),
+                        style=
+                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:central",
+                        font_size=self._dna_size,
+                        fill=self._dna_colour))
                 dwg.add(
-                    svg.text.Text(str(ref_c[dna_pos - 1]),
-                                  insert=(dna_seq_x, dna_seq_y2),
-                                  style="text-anchor:middle",
-                                  font_size=self._dna_size,
-                                  fill=self._dna_colour))
+                    svg.text.Text(
+                        str(ref_c[dna_pos - 1]),
+                        insert=(dna_seq_x, dna_seq_y2),
+                        style=
+                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:central",
+                        font_size=self._dna_size,
+                        fill=self._dna_colour))
 
         elif self._dna_mode is DNA_MODE.LINE:
             # Draw DNA as lines
@@ -295,35 +313,50 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         end_label_x1 = map_x1 - (self._end_label_rel_gap * self._im_w)
         end_label_x2 = map_x2 + (self._end_label_rel_gap * self._im_w)
-        end_label_y1 = map_y1 + self._end_label_size * 0.75 - self._dna_size / 2
-        end_label_y2 = map_y2 + self._dna_size / 2
-        # end_label_y1 = map_y1+self._end_label_size*0.375
-        # end_label_y2 = map_y2+self._end_label_size*0.375
+
+        if self._end_label_position == VPOS.INSIDE:
+            end_label_y1 = map_y1 - self._dna_size * 0.4  # + self._end_label_size * 0.75 - self._dna_size / 2
+            end_label_y2 = map_y2 + self._dna_size * 0.4  # + self._dna_size / 2
+            top_baseline = "hanging"
+            bottom_baseline = ""
+        elif self._end_label_position == VPOS.CENTRE:
+            end_label_y1 = map_y1
+            end_label_y2 = map_y2
+            top_baseline = "central"
+            bottom_baseline = "central"
 
         dwg.add(
-            svg.text.Text("5'",
-                          insert=(end_label_x1, end_label_y1),
-                          style="text-anchor:end",
-                          font_size=self._end_label_size,
-                          fill=self._end_label_colour))
+            svg.text.Text(
+                "5'",
+                insert=(end_label_x1, end_label_y1),
+                style=
+                f"text-anchor:end;font-family:{self._font};dominant-baseline:{top_baseline}",
+                font_size=self._end_label_size,
+                fill=self._end_label_colour))
         dwg.add(
-            svg.text.Text("3'",
-                          insert=(end_label_x2, end_label_y1),
-                          style="text-anchor:start",
-                          font_size=self._end_label_size,
-                          fill=self._end_label_colour))
+            svg.text.Text(
+                "3'",
+                insert=(end_label_x2, end_label_y1),
+                style=
+                f"text-anchor:start;font-family:{self._font};dominant-baseline:{top_baseline}",
+                font_size=self._end_label_size,
+                fill=self._end_label_colour))
         dwg.add(
-            svg.text.Text("3'",
-                          insert=(end_label_x1, end_label_y2),
-                          style="text-anchor:end",
-                          font_size=self._end_label_size,
-                          fill=self._end_label_colour))
+            svg.text.Text(
+                "3'",
+                insert=(end_label_x1, end_label_y2),
+                style=
+                f"text-anchor:end;font-family:{self._font};dominant-baseline:{bottom_baseline}",
+                font_size=self._end_label_size,
+                fill=self._end_label_colour))
         dwg.add(
-            svg.text.Text("5'",
-                          insert=(end_label_x2, end_label_y2),
-                          style="text-anchor:start",
-                          font_size=self._end_label_size,
-                          fill=self._end_label_colour))
+            svg.text.Text(
+                "5'",
+                insert=(end_label_x2, end_label_y2),
+                style=
+                f"text-anchor:start;font-family:{self._font};dominant-baseline:{bottom_baseline}",
+                font_size=self._end_label_size,
+                fill=self._end_label_colour))
 
     def _add_cbar(self, dwg, map_xy, freq):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
@@ -389,25 +422,26 @@ class EventMapWriter(amw.AbstractMapWriter):
             for label_value in range(event_min_range, event_max_range,
                                      self._cbar_label_interval):
                 end_label_y = cbar_y2 - cbar_h * (
-                    label_value - event_min_range
-                ) / event_range + self._cbar_label_size * 0.375
+                    label_value - event_min_range) / event_range
                 dwg.add(
-                    svg.text.Text("%i%%" % label_value,
-                                  insert=(end_label_x, end_label_y),
-                                  style="text-anchor:start",
-                                  font_size=self._cbar_label_size,
-                                  fill=self._cbar_label_colour))
+                    svg.text.Text(
+                        "%i%%" % label_value,
+                        insert=(end_label_x, end_label_y),
+                        style=
+                        f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                        font_size=self._cbar_label_size,
+                        fill=self._cbar_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the interval)
-            end_label_y = cbar_y2 - cbar_h * (
-                event_max_range -
-                event_min_range) / event_range + self._cbar_label_size * 0.375
+            end_label_y = cbar_y2 - cbar_h * (event_max_range -
+                                              event_min_range) / event_range
             dwg.add(
-                svg.text.Text("%i%%" % event_max_range,
-                              insert=(end_label_x, end_label_y),
-                              style="text-anchor:start",
-                              font_size=self._cbar_label_size,
-                              fill=self._cbar_label_colour))
+                svg.text.Text(
+                    "%i%%" % event_max_range,
+                    insert=(end_label_x, end_label_y),
+                    style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    font_size=self._cbar_label_size,
+                    fill=self._cbar_label_colour))
 
     def _add_hist(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
         if len(freq) == 0:
@@ -440,7 +474,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         if self._hist_grid_show:
             for grid_value in range(hist_min_range, hist_max_range,
                                     self._hist_grid_interval):
-                
+
                 grid_y = hist_y2 + sign * hist_h * (
                     grid_value -
                     hist_min_range) / hist_range + self._hist_grid_size / 2
@@ -492,35 +526,38 @@ class EventMapWriter(amw.AbstractMapWriter):
                                 stroke_width=bar_width * self._hist_bin_width))
 
         if self._hist_label_show:
-            if self._hist_label_position == POSITION.LEFT:
+            if self._hist_label_position == HPOS.LEFT:
                 anchor = "end"
                 label_x = map_x1 - (self._hist_label_rel_gap * self._im_w)
             else:
                 anchor = "start"
                 label_x = map_x2 + (self._hist_label_rel_gap * self._im_w)
 
-            for label_value in range(hist_min_range, hist_max_range,
+            hist_range_start = hist_min_range if self._hist_label_zero_show else self._hist_label_interval
+            for label_value in range(hist_range_start, hist_max_range,
                                      self._hist_label_interval):
                 end_label_y = hist_y2 + sign * hist_h * (
                     label_value - hist_min_range
-                ) / hist_range + self._hist_label_size * 0.375
+                ) / hist_range
                 dwg.add(
-                    svg.text.Text("%i%%" % label_value,
-                                  insert=(label_x, end_label_y),
-                                  style=f"text-anchor:{anchor}",
-                                  font_size=self._hist_label_size,
-                                  fill=self._hist_label_colour))
+                    svg.text.Text(
+                        "%i%%" % label_value,
+                        insert=(label_x, end_label_y),
+                        style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                        font_size=self._hist_label_size,
+                        fill=self._hist_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the interval)
             end_label_y = hist_y2 + sign * hist_h * (
                 hist_max_range -
-                hist_min_range) / hist_range + self._hist_label_size * 0.375
+                hist_min_range) / hist_range
             dwg.add(
-                svg.text.Text("%i%%" % hist_max_range,
-                              insert=(label_x, end_label_y),
-                              style=f"text-anchor:{anchor}",
-                              font_size=self._hist_label_size,
-                              fill=self._hist_label_colour))
+                svg.text.Text(
+                    "%i%%" % hist_max_range,
+                    insert=(label_x, end_label_y),
+                    style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                    font_size=self._hist_label_size,
+                    fill=self._hist_label_colour))
 
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref):
         if len(freq) == 0:
