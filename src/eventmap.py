@@ -205,7 +205,7 @@ optional.add_argument("-hlrg", "--hist_label_rel_gap", type=float, default=def_h
 
 optional.add_argument("-hlp", "--hist_label_position", type=emw.HPOS, default=def_hist_label_position, choices=list(emw.HPOS), help="Controls whether histograms labels are rendered to the left or right of the histogram.  Must be either \"left\" or \"right\" (e.g. -hlp \"left\").  Default: \"%s\".\n\n" % def_hist_label_position)
 
-optional.add_argument("-hlzv", "--hist_label_zero_vis", type=SHOWHIDE, default=def_hist_label_zero_vis, choices=list(SHOWHIDE), help="Controls whether the 0%% histogram label is rendered (having this hidden allows the histogram to be closer to the DNA sequence).  Must be either \"show\" or \"hide\" (e.g. -hlzv \"show\").  Default: \"%s\".\n\n" % def_hist_label_zero_vis)
+optional.add_argument("-hlzv", "--hist_label_zero_vis", type=SHOWHIDE, default=def_hist_label_zero_vis, choices=list(SHOWHIDE), help="Controls whether the 0 histogram label is rendered (having this hidden allows the histogram to be closer to the DNA sequence).  Must be either \"show\" or \"hide\" (e.g. -hlzv \"show\").  Default: \"%s\".\n\n" % def_hist_label_zero_vis)
 
 optional.add_argument("-hgv", "--hist_grid_vis", type=SHOWHIDE, default=def_grid_vis, choices=list(SHOWHIDE), help="Controls whether horizontal histogram grid lines are rendered.  Must be either \"show\" or \"hide\" (e.g. -hgv \"show\").  Default: \"%s\".\n\n" % def_hist_grid_vis)
 
