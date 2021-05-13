@@ -24,4 +24,4 @@ $data_path = "C:\Users\steph\Desktop\Oscar\McrBC63_5min_summary.csv"
 $ref_path = "C:\Users\steph\Desktop\Oscar\pUC19.fa" # Can be "" (default), but won't allow sequence to be rendered
 $out_path = "C:\Users\steph\Desktop\Oscar\McrBC63_5min_summary_eventmap.svg"
 
-python .\src\eventmap.py -d $data_path -o $out_path -r $ref_path -pr 2000 2050 -gi 10 -dm 'seq' -ds 14 -hlzv 'hide'
+python .\src\eventmap.py -d $data_path -o $out_path -r $ref_path -pr 2000 2050 -gi 10 -dm 'seq' -ds 14 -hlzv 'hide' -hpbg 20

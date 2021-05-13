@@ -72,6 +72,7 @@ def_hist_bin_width = 1
 def_hist_colour = "darkgray"
 def_hist_rel_height = 0.16
 def_hist_rel_gap = 0.04
+def_hist_pc_bar_gap = 0
 
 def_hist_label_vis = SHOWHIDE.SHOW
 def_hist_label_size = 12
@@ -190,6 +191,8 @@ optional.add_argument("-hrh", "--hist_rel_height", type=float, default=def_hist_
 
 optional.add_argument("-hrg", "--hist_rel_gap", type=float, default=def_hist_rel_gap, help="Gap between histogram and the eventmap.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_hist_rel_gap)
 
+optional.add_argument("-hpbg", "--hist_pc_bar_gap", type=float, default=def_hist_pc_bar_gap, help="Gap between adjacent histogram bars.  Specified as a percentage of the total bar width (e.g. \"0\" will have no gap and \"50\" will have half-width bars).  Default: \"%i\".\n\n" % def_hist_pc_bar_gap)
+
 optional.add_argument("-hlv", "--hist_label_vis", type=SHOWHIDE, default=def_hist_label_vis, choices=list(SHOWHIDE), help="Controls whether histogram labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -hlv \"show\").  Default: \"%s\".\n\n" % def_hist_label_vis)
 
 optional.add_argument("-hls", "--hist_label_size", type=int, default=def_hist_label_size, help="Font size of histogram labels.  Default: \"%.1f\".\n\n" % def_hist_label_size)
@@ -235,7 +238,7 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
-hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap)
+hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 

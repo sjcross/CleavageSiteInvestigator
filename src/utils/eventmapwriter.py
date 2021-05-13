@@ -52,7 +52,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
                  event_opts=(0.5, 2, "cool", 0, 100, 0.4, 1),
-                 hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07),
+                 hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07, 20),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25)):
 
@@ -113,6 +113,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._hist_colour = hist_opts[4]
         self._hist_rel_height = hist_opts[5]
         self._hist_rel_gap = hist_opts[6]
+        self._hist_pc_bar_gap = hist_opts[7]
 
         self._hist_label_show = hist_label_opts[0]
         self._hist_label_size = hist_label_opts[1]
@@ -248,8 +249,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         for grid_label_pos in range(grid_label_min, grid_label_max,
                                     self._grid_label_interval):
             grid_label_x = map_x1 + (map_x2 - map_x1) * (
-                (grid_label_pos - pos_min) /
-                (pos_max - pos_min))
+                (grid_label_pos - pos_min) / (pos_max - pos_min))
             grid_label_y = map_y1 - self._dna_size / 2 - grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90, grid_label_x, grid_label_y)
             dwg.add(
@@ -257,7 +257,8 @@ class EventMapWriter(amw.AbstractMapWriter):
                     str(grid_label_pos),
                     insert=(grid_label_x, grid_label_y),
                     transform=rot,
-                    style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    style=
+                    f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
                     font_size=self._grid_label_size,
                     fill=self._grid_label_colour))
 
@@ -439,7 +440,8 @@ class EventMapWriter(amw.AbstractMapWriter):
                 svg.text.Text(
                     "%i%%" % event_max_range,
                     insert=(end_label_x, end_label_y),
-                    style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    style=
+                    f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
                     font_size=self._cbar_label_size,
                     fill=self._cbar_label_colour))
 
@@ -470,6 +472,20 @@ class EventMapWriter(amw.AbstractMapWriter):
         hist_y2 = (map_y1 if is_top else
                    map_y2) + sign * (self._hist_rel_gap * self._im_h)
 
+        # Adding the y-axis
+        line_x = map_x1 if self._hist_label_position == HPOS.LEFT else map_x2
+        if is_top:
+            line_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+            line_y2 = map_y1 - (self._hist_rel_gap * self._im_h)
+        else:
+            line_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+            line_y2 = map_y2 + (self._hist_rel_gap * self._im_h)
+        
+        dwg.add(
+            svg.shapes.Line((line_x, line_y1), (line_x, line_y2),
+                            stroke=self._hist_grid_colour,
+                            stroke_width=self._hist_grid_size))
+
         # Adding the grid first, so it's at the bottom of the stack
         if self._hist_grid_show:
             for grid_value in range(hist_min_range, hist_max_range,
@@ -492,15 +508,11 @@ class EventMapWriter(amw.AbstractMapWriter):
                                 stroke_width=self._hist_grid_size))
 
         # Iterating over each position, adding the histogram bar
-        for pos in range(pos_min, pos_max + 1):
-            # Checking this event is within the rendered range
-            if pos < pos_min or pos >= pos_max:
-                continue
-
+        for pos in range(pos_min-self._hist_bin_width, pos_max + 1):
             # Only do the plotting once per bin
             if pos % self._hist_bin_width != 0:
                 continue
-
+            
             bin_total = 0
             for curr_pos in range(pos, pos + self._hist_bin_width):
                 bin_total = bin_total + (0 if freq.get(curr_pos) is None else
@@ -509,22 +521,25 @@ class EventMapWriter(amw.AbstractMapWriter):
             event_pc = (bin_total / total) * 100
             norm_count = (event_pc - hist_min_range) / hist_range
 
-            bar_x = map_x1 + bar_width * (pos + (0.5 * self._hist_bin_width) -
-                                          pos_min)
+            bar_offset = bar_width * self._hist_bin_width * self._hist_pc_bar_gap * 0.5 / 100
+            bar_x1 = max(map_x1, map_x1 + bar_width * (pos - pos_min)) + bar_offset
+            bar_x2 = min(map_x2, map_x1 + bar_width * (pos - pos_min + self._hist_bin_width)) - bar_offset
+            
             if is_top:
                 bar_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height *
                                    norm_count) * self._im_h
                 bar_y2 = map_y1 - (self._hist_rel_gap * self._im_h)
             else:
-                bar_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height *
+                bar_y1 = map_y2 + (self._hist_rel_gap * self._im_h)
+                bar_y2 = map_y2 + (self._hist_rel_gap + self._hist_rel_height *
                                    norm_count) * self._im_h
-                bar_y2 = map_y2 + (self._hist_rel_gap * self._im_h)
-
+                
             dwg.add(
-                svg.shapes.Line((bar_x, bar_y1), (bar_x, bar_y2),
-                                stroke=self._hist_colour,
-                                stroke_width=bar_width * self._hist_bin_width))
-
+                svg.shapes.Rect(insert=(bar_x1, bar_y1),
+                                size=(bar_x2-bar_x1, bar_y2 - bar_y1),
+                                stroke="none",
+                                fill=self._hist_colour))
+        
         if self._hist_label_show:
             if self._hist_label_position == HPOS.LEFT:
                 anchor = "end"
@@ -537,25 +552,25 @@ class EventMapWriter(amw.AbstractMapWriter):
             for label_value in range(hist_range_start, hist_max_range,
                                      self._hist_label_interval):
                 end_label_y = hist_y2 + sign * hist_h * (
-                    label_value - hist_min_range
-                ) / hist_range
+                    label_value - hist_min_range) / hist_range
                 dwg.add(
                     svg.text.Text(
                         "%i%%" % label_value,
                         insert=(label_x, end_label_y),
-                        style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                        style=
+                        f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
                         font_size=self._hist_label_size,
                         fill=self._hist_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the interval)
             end_label_y = hist_y2 + sign * hist_h * (
-                hist_max_range -
-                hist_min_range) / hist_range
+                hist_max_range - hist_min_range) / hist_range
             dwg.add(
                 svg.text.Text(
                     "%i%%" % hist_max_range,
                     insert=(label_x, end_label_y),
-                    style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                    style=
+                    f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
                     font_size=self._hist_label_size,
                     fill=self._hist_label_colour))
 
