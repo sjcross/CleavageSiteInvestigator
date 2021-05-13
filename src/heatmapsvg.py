@@ -17,6 +17,8 @@ class SHOWHIDE(Enum):
 ### DEFAULT PARAMETER VALUES ###
 def_im_dim = 800
 
+def_font = "Arial"
+
 def_map_rel_top = 0.1
 def_map_rel_left = 0.1
 def_map_rel_size = 0.8
@@ -76,6 +78,8 @@ optional.add_argument("-ad", "--append_datetime", action='store_true', help="App
 optional.add_argument("-pr", "--pos_range", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as a pair of integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
 
 optional.add_argument("-id", "--im_dim", type=int, default=def_im_dim, help="Pixel dimensions of the output .svg image.  Event map image is square, so specified as a single integer number.  Default: \"%i\".\n\n" % def_im_dim)
+
+optional.add_argument("-f", "--font", type=str, default=def_font, help="Font to use for all text.  Can be any font currently installed on this computer.  Default: \"%s\".\n\n" % def_font)
 
 optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_left, def_map_rel_size], nargs=3, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 3 floating-point numbers in the order top height size (e.g. -drp 0.3 0.3 0.6).  Default: \"%.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_left, def_map_rel_size))
 
@@ -145,5 +149,5 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 event_colourmap = args.event_colourmap
 event_label_opts = (event_label_show,args.event_label_size,args.event_label_colour,args.event_label_decimal_places,args.event_label_zeros_vis)
 
-writer = hmw.HeatMapWriterSVG(im_dim=im_dim, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts, sum_show=sum_show)
+writer = hmw.HeatMapWriterSVG(im_dim=im_dim, font=args.font, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts, sum_show=sum_show)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
