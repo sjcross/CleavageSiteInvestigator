@@ -62,6 +62,7 @@ def_event_max_size = 2
 def_event_colourmap = "cool"
 def_event_min_range = 0
 def_event_max_range = 100
+def_event_outside_range_vis = SHOWHIDE.SHOW
 def_event_opacity = 0.4
 def_event_stack_order = 1
 
@@ -173,9 +174,11 @@ optional.add_argument("-emas", "--event_max_size", type=float, default=def_event
 
 optional.add_argument("-ec", "--event_colourmap", type=str, default=def_event_colourmap, help="Matplotlib colourmap to use for event plotting.  Must be a Matplotlib colourmap.  Default: \"%s\".\n\n" % def_event_colourmap)
 
-optional.add_argument("-eo", "--event_opacity", type=float, default=def_event_opacity, help="Opacity of each event line.  Values in the range 0-1.  Default: \"%.1f\".\n\n" % def_event_opacity)
-
 optional.add_argument("-er", "--event_range", type=int, default=[def_event_min_range,def_event_max_range], nargs=2, help="Range of values colourscale will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_event_min_range,def_event_max_range))
+
+optional.add_argument("-eorv", "--event_outside_range_vis", type=SHOWHIDE, default=def_event_outside_range_vis, choices=list(SHOWHIDE), help="Controls whether events not entirely within the displayed range are included in the eventmap.  Must be either \"show\" or \"hide\" (e.g. -hv \"show\").  Default: \"%s\".\n\n" % def_event_outside_range_vis)
+
+optional.add_argument("-eo", "--event_opacity", type=float, default=def_event_opacity, help="Opacity of each event line.  Values in the range 0-1.  Default: \"%.1f\".\n\n" % def_event_opacity)
 
 optional.add_argument("-eso", "--event_stack_order", type=int, default=def_event_stack_order, help="Mode for ordering events.  Options: 1 (most frequent at back), 2 (most frequent at front).  Default: \"%.1f\".\n\n" % def_event_stack_order)
 
@@ -222,6 +225,7 @@ grid_show = args.grid_vis is SHOWHIDE.SHOW
 grid_label_show = args.grid_label_vis is SHOWHIDE.SHOW
 cbar_show = args.cbar_vis is SHOWHIDE.SHOW
 cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
+event_outside_range_vis = args.event_outside_range_vis is SHOWHIDE.SHOW
 hist_show = args.hist_vis is SHOWHIDE.SHOW
 hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
 hist_label_zero_show = args.hist_label_zero_vis is SHOWHIDE.SHOW
@@ -237,7 +241,7 @@ grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
-event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_opacity,args.event_stack_order)
+event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],event_outside_range_vis,args.event_opacity,args.event_stack_order)
 hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)

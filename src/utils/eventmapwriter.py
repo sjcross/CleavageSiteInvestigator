@@ -51,7 +51,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                  grid_label_opts=(True, 12, "gray", 500, 0.04),
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
-                 event_opts=(0.5, 2, "cool", 0, 100, 0.4, 1),
+                 event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
                  hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07, 20),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25)):
@@ -103,8 +103,9 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._event_colourmap = event_opts[2]
         self._event_min_range = event_opts[3]
         self._event_max_range = event_opts[4]
-        self._event_opacity = event_opts[5]
-        self._event_stack_order = event_opts[6]
+        self._event_outside_range_show = event_opts[5]
+        self._event_opacity = event_opts[6]
+        self._event_stack_order = event_opts[7]
 
         self._hist_show = hist_opts[0]
         self._hist_min_range = hist_opts[1]
@@ -472,6 +473,13 @@ class EventMapWriter(amw.AbstractMapWriter):
         hist_y2 = (map_y1 if is_top else
                    map_y2) + sign * (self._hist_rel_gap * self._im_h)
 
+        # Adding the x-axis
+        grid_y = hist_y2 + self._hist_grid_size / 2
+        dwg.add(
+            svg.shapes.Line((map_x1, grid_y), (map_x2, grid_y),
+                            stroke=self._hist_grid_colour,
+                            stroke_width=self._hist_grid_size))
+
         # Adding the y-axis
         line_x = map_x1 if self._hist_label_position == HPOS.LEFT else map_x2
         if is_top:
@@ -488,7 +496,7 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         # Adding the grid first, so it's at the bottom of the stack
         if self._hist_grid_show:
-            for grid_value in range(hist_min_range, hist_max_range,
+            for grid_value in range(self._hist_grid_interval, hist_max_range,
                                     self._hist_grid_interval):
 
                 grid_y = hist_y2 + sign * hist_h * (
@@ -600,8 +608,19 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         for (cleavage_site_t, cleavage_site_b, split) in freq.keys():
             # Checking this event is within the rendered range
-            if cleavage_site_t < pos_min or cleavage_site_t >= pos_max or cleavage_site_b < pos_min or cleavage_site_b >= pos_max:
-                continue
+            if self._event_outside_range_show:
+                if split:
+                    # Skipping any split events which don't span the displayed range
+                    if (cleavage_site_t < pos_min or cleavage_site_t >= pos_max) and (cleavage_site_b < pos_min or cleavage_site_b >= pos_max):
+                        continue
+                else:
+                    # Skipping any non-split events which don't span the displayed range
+                    if (cleavage_site_t < pos_min and cleavage_site_b < pos_min) or (cleavage_site_t >= pos_max and cleavage_site_b >= pos_max):
+                        continue
+            else:
+                # Skipping any events which don't start or end in the displayed range
+                if (cleavage_site_t < pos_min or cleavage_site_t >= pos_max) or (cleavage_site_b < pos_min or cleavage_site_b >= pos_max):
+                    continue
 
             event_pc = (freq.get(
                 (cleavage_site_t, cleavage_site_b, split)) / total) * 100
@@ -632,6 +651,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         event_b_x = map_x1 + (map_x2 - map_x1) * (
             (cleavage_site_b + 0.5 - pos_min) / (pos_max - pos_min))
         event_b_y = map_y2 - self._dna_size / 2
+
+        (event_t_x, event_t_y, event_b_x, event_b_y) = self._crop_events_to_range(event_t_x, event_t_y, event_b_x, event_b_y, map_xy)
 
         rgba = cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0] * 255, rgba[1] * 255, rgba[2] * 255)
@@ -702,3 +723,29 @@ class EventMapWriter(amw.AbstractMapWriter):
                             stroke_width=event_width,
                             style="stroke-linecap:square;stroke-opacity:%f" %
                             self._event_opacity))
+
+    def _crop_events_to_range(self, t_x_in, t_y_in, b_x_in, b_y_in, map_xy):
+        (map_x1, map_y1, map_x2, map_y2) = map_xy
+
+        t_x_out = t_x_in
+        t_y_out = t_y_in
+        b_x_out = b_x_in
+        b_y_out = b_y_in
+
+        if t_x_in < map_x1:
+            t_x_out = map_x1
+            t_y_out = ((map_x1-t_x_in)/abs(b_x_in-t_x_in))*(b_y_in-t_y_in) + t_y_in
+            
+        if t_x_in > map_x2:
+            t_x_out = map_x2
+            t_y_out = ((t_x_in-map_x2)/abs(b_x_in-t_x_in))*(b_y_in-t_y_in) + t_y_in
+
+        if b_x_in < map_x1:
+            b_x_out = map_x1
+            b_y_out = ((t_x_in-map_x1)/abs(b_x_in-t_x_in))*(b_y_in-t_y_in) + t_y_in
+            
+        if b_x_in > map_x2:
+            b_x_out = map_x2
+            b_y_out = ((map_x2-t_x_in)/abs(b_x_in-t_x_in))*(b_y_in-t_y_in) + t_y_in
+
+        return (t_x_out, t_y_out, b_x_out, b_y_out)
