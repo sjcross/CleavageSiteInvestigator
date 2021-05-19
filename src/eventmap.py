@@ -62,7 +62,7 @@ def_event_max_size = 2
 def_event_colourmap = "cool"
 def_event_min_range = 0
 def_event_max_range = 100
-def_event_outside_range_vis = SHOWHIDE.SHOW
+def_event_outside_range_vis = SHOWHIDE.HIDE
 def_event_opacity = 0.4
 def_event_stack_order = 1
 
