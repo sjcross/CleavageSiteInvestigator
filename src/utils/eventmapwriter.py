@@ -45,14 +45,14 @@ class EventMapWriter(amw.AbstractMapWriter):
                  im_dims=(800, 300),
                  font="Arial",
                  rel_pos=(0.42, 0.3, 0.07, 0.78),
-                 dna_opts=(DNA_MODE.LINE, 2.5, "black"),
+                 dna_opts=(DNA_MODE.LINE, 2.5, "black", 0.04),
                  end_label_opts=(True, 20, "black", 0.01, VPOS.CENTRE),
                  grid_opts=(True, 1, "lightgray", 100),
                  grid_label_opts=(True, 12, "gray", 500, 0.04),
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
                  event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
-                 hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07, 20),
+                 hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07, 20, 0),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25)):
 
@@ -69,6 +69,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._dna_mode = dna_opts[0]
         self._dna_size = dna_opts[1]
         self._dna_colour = dna_opts[2]
+        self._dna_rel_gap = dna_opts[3]
 
         self._end_label_show = end_label_opts[0]
         self._end_label_size = end_label_opts[1]
@@ -115,6 +116,7 @@ class EventMapWriter(amw.AbstractMapWriter):
         self._hist_rel_height = hist_opts[5]
         self._hist_rel_gap = hist_opts[6]
         self._hist_pc_bar_gap = hist_opts[7]
+        self._hist_overhang = hist_opts[8]
 
         self._hist_label_show = hist_label_opts[0]
         self._hist_label_size = hist_label_opts[1]
@@ -207,8 +209,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         for grid_pos in range(grid_pos_min, grid_pos_max, self._grid_interval):
             grid_x = map_x1 + (map_x2 - map_x1) * ((grid_pos - pos_min) /
                                                    (pos_max - pos_min))
-            grid_y1 = map_y1 + self._dna_size / 2
-            grid_y2 = map_y2 - self._dna_size / 2
+            grid_y1 = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
+            grid_y2 = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
             dwg.add(
                 svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2),
                                 stroke=self._grid_colour,
@@ -259,7 +261,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                     insert=(grid_label_x, grid_label_y),
                     transform=rot,
                     style=
-                    f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    f"text-anchor:start;font-family:{self._font};dominant-baseline:mathematical",
                     font_size=self._grid_label_size,
                     fill=self._grid_label_colour))
 
@@ -278,22 +280,20 @@ class EventMapWriter(amw.AbstractMapWriter):
             ref_c = ref.complement()
             for dna_pos in range(pos_min, pos_max + 1):
                 dna_seq_x = map_x1 + dna_pos_interval * (dna_pos - pos_min)
-                dna_seq_y1 = map_y1
-                dna_seq_y2 = map_y2
                 dwg.add(
                     svg.text.Text(
                         str(ref[dna_pos - 1]),
-                        insert=(dna_seq_x, dna_seq_y1),
+                        insert=(dna_seq_x, map_y1),
                         style=
-                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:central",
+                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:mathematical",
                         font_size=self._dna_size,
                         fill=self._dna_colour))
                 dwg.add(
                     svg.text.Text(
                         str(ref_c[dna_pos - 1]),
-                        insert=(dna_seq_x, dna_seq_y2),
+                        insert=(dna_seq_x, map_y2),
                         style=
-                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:central",
+                        f"text-anchor:middle;font-family:{self._font};dominant-baseline:mathematical",
                         font_size=self._dna_size,
                         fill=self._dna_colour))
 
@@ -324,8 +324,8 @@ class EventMapWriter(amw.AbstractMapWriter):
         elif self._end_label_position == VPOS.CENTRE:
             end_label_y1 = map_y1
             end_label_y2 = map_y2
-            top_baseline = "central"
-            bottom_baseline = "central"
+            top_baseline = "mathematical"
+            bottom_baseline = "mathematical"
 
         dwg.add(
             svg.text.Text(
@@ -363,18 +363,18 @@ class EventMapWriter(amw.AbstractMapWriter):
     def _add_cbar(self, dwg, map_xy, freq):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
 
-        cbar_x1 = self._im_w * self._cbar_rel_left
-        cbar_x2 = cbar_x1 + self._im_w * self._cbar_rel_width
+        cbar_x1 = self._im_w * self._cbar_rel_left + self._cbar_border_size/2
+        cbar_x2 = cbar_x1 + self._im_w * self._cbar_rel_width + self._cbar_border_size/2
         cbar_w = self._im_w * self._cbar_rel_width
 
         if self._hist_show:
             cbar_y1 = map_y1 - (self._hist_rel_gap +
-                                self._hist_rel_height) * self._im_h
+                                self._hist_rel_height) * self._im_h + self._cbar_border_size/2
             cbar_y2 = map_y2 + (self._hist_rel_gap +
-                                self._hist_rel_height) * self._im_h
+                                self._hist_rel_height) * self._im_h + self._cbar_border_size/2
         else:
-            cbar_y1 = self._im_h * self._map_rel_top
-            cbar_y2 = cbar_y1 + self._im_h * self._map_rel_height
+            cbar_y1 = self._im_h * self._map_rel_top + self._cbar_border_size/2
+            cbar_y2 = cbar_y1 + self._im_h * self._map_rel_height + self._cbar_border_size/2
         cbar_h = cbar_y2 - cbar_y1
 
         # Adding cbar lines
@@ -388,7 +388,6 @@ class EventMapWriter(amw.AbstractMapWriter):
             rgba = cmap(i / 256)
             col = "rgb(%i,%i,%i)" % (rgba[0] * 255, rgba[1] * 255,
                                      rgba[2] * 255)
-            # dwg.add(svg.shapes.Line((cbar_x1, y), (cbar_x2, y), stroke=col, stroke_width=line_w, style="stroke-linecap:square"))
             dwg.add(
                 svg.shapes.Rect(insert=(cbar_x1, y1),
                                 size=(cbar_w, y2 - y1),
@@ -430,7 +429,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                         "%i%%" % label_value,
                         insert=(end_label_x, end_label_y),
                         style=
-                        f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                        f"text-anchor:start;font-family:{self._font};dominant-baseline:mathematical",
                         font_size=self._cbar_label_size,
                         fill=self._cbar_label_colour))
 
@@ -442,7 +441,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                     "%i%%" % event_max_range,
                     insert=(end_label_x, end_label_y),
                     style=
-                    f"text-anchor:start;font-family:{self._font};dominant-baseline:central",
+                    f"text-anchor:start;font-family:{self._font};dominant-baseline:mathematical",
                     font_size=self._cbar_label_size,
                     fill=self._cbar_label_colour))
 
@@ -474,20 +473,22 @@ class EventMapWriter(amw.AbstractMapWriter):
                    map_y2) + sign * (self._hist_rel_gap * self._im_h)
 
         # Adding the x-axis
-        grid_y = hist_y2 + self._hist_grid_size / 2
+        grid_x1 = map_x1 - self._hist_overhang - self._grid_size/2
+        grid_x2 = map_x2 + self._hist_overhang - self._grid_size/2
+        grid_y = hist_y2 + self._hist_grid_size / 2 - self._grid_size/2
         dwg.add(
-            svg.shapes.Line((map_x1, grid_y), (map_x2, grid_y),
+            svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                             stroke=self._hist_grid_colour,
                             stroke_width=self._hist_grid_size))
 
         # Adding the y-axis
-        line_x = map_x1 if self._hist_label_position == HPOS.LEFT else map_x2
+        line_x = ((map_x1 - self._hist_overhang) if self._hist_label_position == HPOS.LEFT else (map_x2 + self._hist_overhang)) - self._grid_size/2
         if is_top:
-            line_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h
-            line_y2 = map_y1 - (self._hist_rel_gap * self._im_h)
+            line_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h - self._grid_size/2
+            line_y2 = map_y1 - (self._hist_rel_gap * self._im_h) - self._grid_size/2
         else:
-            line_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
-            line_y2 = map_y2 + (self._hist_rel_gap * self._im_h)
+            line_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h - self._grid_size/2
+            line_y2 = map_y2 + (self._hist_rel_gap * self._im_h) - self._grid_size/2
         
         dwg.add(
             svg.shapes.Line((line_x, line_y1), (line_x, line_y2),
@@ -501,9 +502,9 @@ class EventMapWriter(amw.AbstractMapWriter):
 
                 grid_y = hist_y2 + sign * hist_h * (
                     grid_value -
-                    hist_min_range) / hist_range + self._hist_grid_size / 2
+                    hist_min_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
                 dwg.add(
-                    svg.shapes.Line((map_x1, grid_y), (map_x2, grid_y),
+                    svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                                     stroke=self._hist_grid_colour,
                                     stroke_width=self._hist_grid_size))
 
@@ -511,7 +512,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                 hist_max_range -
                 hist_min_range) / hist_range + self._hist_grid_size / 2
             dwg.add(
-                svg.shapes.Line((map_x1, grid_y), (map_x2, grid_y),
+                svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                                 stroke=self._hist_grid_colour,
                                 stroke_width=self._hist_grid_size))
 
@@ -566,7 +567,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                         "%i%%" % label_value,
                         insert=(label_x, end_label_y),
                         style=
-                        f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                        f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
                         font_size=self._hist_label_size,
                         fill=self._hist_label_colour))
 
@@ -578,7 +579,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                     "%i%%" % hist_max_range,
                     insert=(label_x, end_label_y),
                     style=
-                    f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:central",
+                    f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
                     font_size=self._hist_label_size,
                     fill=self._hist_label_colour))
 
@@ -646,11 +647,11 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         event_t_x = map_x1 + (map_x2 - map_x1) * (
             (cleavage_site_t + 0.5 - pos_min) / (pos_max - pos_min))
-        event_t_y = map_y1 + self._dna_size / 2
+        event_t_y = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
 
         event_b_x = map_x1 + (map_x2 - map_x1) * (
             (cleavage_site_b + 0.5 - pos_min) / (pos_max - pos_min))
-        event_b_y = map_y2 - self._dna_size / 2
+        event_b_y = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
 
         (event_t_x, event_t_y, event_b_x, event_b_y) = self._crop_events_to_range(event_t_x, event_t_y, event_b_x, event_b_y, map_xy)
 
@@ -678,17 +679,17 @@ class EventMapWriter(amw.AbstractMapWriter):
             site_sep = ref_len - (cleavage_site_b - cleavage_site_t)
 
             event_t_x1 = map_x1
-            event_t_y1 = map_y1 + (map_y2 - map_y1) * (
+            event_t_y1 = map_y1 + (map_y2 - map_y1 - self._dna_rel_gap*self._im_h*2) * (
                 (cleavage_site_t + 0.5 - pos_min) / site_sep)
             event_t_x2 = map_x1 + (map_x2 - map_x1) * (
                 (cleavage_site_t + 0.5 - pos_min) / (pos_max - pos_min))
-            event_t_y2 = map_y1 + self._dna_size / 2
+            event_t_y2 = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
 
             event_b_x1 = map_x1 + (map_x2 - map_x1) * (
                 (cleavage_site_b + 0.5 - pos_min) / (pos_max - pos_min))
-            event_b_y1 = map_y2 - self._dna_size / 2
+            event_b_y1 = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
             event_b_x2 = map_x2
-            event_b_y2 = map_y2 - (map_y2 - map_y1) * (
+            event_b_y2 = map_y2 - (map_y2 - map_y1 - self._dna_rel_gap*self._im_h*2) * (
                 (pos_max - (cleavage_site_b + 0.5)) / site_sep)
 
         else:
@@ -696,17 +697,17 @@ class EventMapWriter(amw.AbstractMapWriter):
 
             event_t_x1 = map_x1 + (map_x2 - map_x1) * (
                 (cleavage_site_t + 0.5 - pos_min) / (pos_max - pos_min))
-            event_t_y1 = map_y1 + self._dna_size / 2
+            event_t_y1 = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
             event_t_x2 = map_x2
-            event_t_y2 = map_y1 + (map_y2 - map_y1) * (
+            event_t_y2 = map_y1 + (map_y2 - map_y1 - self._dna_rel_gap*self._im_h*2) * (
                 (pos_max - (cleavage_site_t + 0.5)) / site_sep)
 
             event_b_x1 = map_x1
-            event_b_y1 = map_y2 - (map_y2 - map_y1) * (
+            event_b_y1 = map_y2 - (map_y2 - map_y1 - self._dna_rel_gap*self._im_h*2) * (
                 (cleavage_site_b + 0.5 - pos_min) / site_sep)
             event_b_x2 = map_x1 + (map_x2 - map_x1) * (
                 (cleavage_site_b + 0.5 - pos_min) / (pos_max - pos_min))
-            event_b_y2 = map_y2 - self._dna_size / 2
+            event_b_y2 = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
 
         rgba = cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0] * 255, rgba[1] * 255, rgba[2] * 255)

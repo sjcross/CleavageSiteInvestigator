@@ -28,6 +28,7 @@ def_map_rel_width = 0.78
 def_dna_mode = emw.DNA_MODE.LINE
 def_dna_size = 2.5
 def_dna_colour = "black"
+def_dna_rel_gap = 0.01
 
 def_end_label_vis = SHOWHIDE.SHOW
 def_end_label_size = 20
@@ -74,6 +75,7 @@ def_hist_colour = "darkgray"
 def_hist_rel_height = 0.16
 def_hist_rel_gap = 0.04
 def_hist_pc_bar_gap = 0
+def_hist_overhang = 0
 
 def_hist_label_vis = SHOWHIDE.SHOW
 def_hist_label_size = 12
@@ -123,6 +125,8 @@ optional.add_argument("-dm", "--dna_mode", type=emw.DNA_MODE, default=def_dna_mo
 optional.add_argument("-ds", "--dna_size", type=int, default=def_dna_size, help="Width of rendered DNA lines (when in --dna_mode \"line\") or font size of DNA sequence letters (when in --dna_mode \"seq\").  Default: \"%.1f\".\n\n" % def_dna_size)
 
 optional.add_argument("-dc", "--dna_colour", type=str, default=def_dna_colour, help="Colour of rendered DNA lines or text sequences.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_dna_colour)
+
+optional.add_argument("-drg", "--dna_rel_gap", type=float, default=def_dna_rel_gap, help="Gap between DNA sequence/line and eventmap.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_dna_rel_gap)
 
 optional.add_argument("-elv", "--end_label_vis", type=SHOWHIDE, default=def_end_label_vis, choices=list(SHOWHIDE), help="Controls whether the DNA end labels (\"5'\" and \"3'\") are rendered.  Must be either \"show\" or \"hide\" (e.g. -elv \"show\").  Default: \"%s\".\n\n" % def_end_label_vis)
 
@@ -196,6 +200,8 @@ optional.add_argument("-hrg", "--hist_rel_gap", type=float, default=def_hist_rel
 
 optional.add_argument("-hpbg", "--hist_pc_bar_gap", type=float, default=def_hist_pc_bar_gap, help="Gap between adjacent histogram bars.  Specified as a percentage of the total bar width (e.g. \"0\" will have no gap and \"50\" will have half-width bars).  Default: \"%i\".\n\n" % def_hist_pc_bar_gap)
 
+optional.add_argument("-ho", "--hist_overhang", type=float, default=def_hist_overhang, help="Additional width of histogram plot area along x-axis.  This allows the histogram to be aligned with the outer edges of the DNA sequence text.  Specified in pixel units..  Default: \"%i\".\n\n" % def_hist_overhang)
+
 optional.add_argument("-hlv", "--hist_label_vis", type=SHOWHIDE, default=def_hist_label_vis, choices=list(SHOWHIDE), help="Controls whether histogram labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -hlv \"show\").  Default: \"%s\".\n\n" % def_hist_label_vis)
 
 optional.add_argument("-hls", "--hist_label_size", type=int, default=def_hist_label_size, help="Font size of histogram labels.  Default: \"%.1f\".\n\n" % def_hist_label_size)
@@ -235,14 +241,14 @@ hist_grid_show = args.hist_grid_vis is SHOWHIDE.SHOW
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
 im_dims = tuple(args.im_dims)
 rel_pos = tuple(args.map_rel_pos)
-dna_opts = (args.dna_mode,args.dna_size,args.dna_colour)
+dna_opts = (args.dna_mode,args.dna_size,args.dna_colour,args.dna_rel_gap)
 end_label_opts = (end_label_show,args.end_label_size,args.end_label_colour,args.end_label_rel_gap,args.end_label_position)
 grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],event_outside_range_vis,args.event_opacity,args.event_stack_order)
-hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap)
+hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap,args.hist_overhang)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 
