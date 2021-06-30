@@ -57,8 +57,6 @@ parser._action_groups.append(optional)
 
 optional.add_argument("-rf", "--repeat_filter", type=str, default=def_repeat_filter, help="Expression defining filter for accepted number of repeats.  Uses standard Python math notation, where 'x' is the number of repeats (e.g. 'x>=3' will process all sequences with at least 3 repeats).\n\n")
 
-optional.add_argument("-en", "--extra_nt", type=int, default=def_extra_nt, help="Number of additional nucleotides to be displayed either side of the cleavage site.\n\n")
-
 optional.add_argument("-lr", "--local_r", type=int, default=def_local_r, help="Half width of the local sequences to be extracted at restriction sites.\n\n")
 
 optional.add_argument("-mg", "--max_gap", type=int, default=def_max_gap, help="Maximum number of bp between 3' and 5' restriction sites.\n\n")
@@ -69,17 +67,19 @@ optional.add_argument("-nb", "--num_bases", type=int, default=def_num_bases, hel
 
 optional.add_argument("-pr", "--print_results", action='store_true',  help="Prints results in terminal as they are generated.\n\n")
 
+optional.add_argument("-en", "--extra_nt", type=int, default=def_extra_nt, help="Number of additional nucleotides to be displayed either side of the cleavage site.\n\n")
+
 optional.add_argument("-sp", "--show_plots", action='store_true', help="Display plots in pyplot windows as they are generated.\n\n")
 
 optional.add_argument("-we", "--write_eventmap", action='store_true', help="Write event map image to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_eventmap'.\n\n")
 
-optional.add_argument("-whsa", "--write_heatmap_svg_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsa", "--write_heatmap_svg_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions) to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
-optional.add_argument("-whsf", "--write_heatmap_svg_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whsf", "--write_heatmap_svg_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence) to SVG file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
-optional.add_argument("-whca", "--write_heatmap_csv_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whca", "--write_heatmap_csv_auto", action='store_true', help="Write heatmap image (only spanning range of identified event positions) to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
-optional.add_argument("-whcf", "--write_heatmap_csv_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence)  to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
+optional.add_argument("-whcf", "--write_heatmap_csv_full", action='store_true', help="Write heatmap image (spanning full range of reference sequence) to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_heatmap'.\n\n")
 
 optional.add_argument("-wi", "--write_individual", action='store_true', help="Write individual cleavage results to CSV file.  Output file will be stored in test file folder with same name as the test file, but with the suffix '_individual'.\n\n")
 
@@ -193,27 +193,32 @@ freq_local = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.Loc
 freq_5p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.FIVE_P, local_r)
 freq_3p = ru.get_local_sequence_frequency(results, ru.StrandMode.BOTH, ru.LocalMode.THREE_P, local_r)
 
+# Keeping track of whether any output was created
+output = False
+
 if print_results:
+    output = True
     print("\rRESULTS:")
     print("    Full sequence frequency:\n")
-    ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, offset="")
+    ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, include_seqs=True, offset="    ")
 
     print("    Local dinucleotide frequencies:\n")
-    ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="")
+    ru.print_local_sequence_frequency(freq_local, nonzero_only=False, offset="    ")
 
     print("    Local 5' nucleotide frequencies:\n")
-    ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="")
+    ru.print_local_sequence_frequency(freq_5p, nonzero_only=False, offset="    ")
 
     print("    Local 3' nucleotide frequencies:\n")
-    ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="")
+    ru.print_local_sequence_frequency(freq_3p, nonzero_only=False, offset="    ")
 
     # Reporting number of errors
     print("    Summary of errors:\n")
-    error_store.print_counts(offset="    ")
-    ru.print_error_rate(error_count, len(tests), offset="    ")
+    error_store.print_counts(offset="        ")
+    ru.print_error_rate(error_count, len(tests), offset="        ")
 
 # Plotting sequence distributions
 if show_plots and len(results) > 0:
+    output = True
     pu.plotFrequency1D(freq_local, freq_5p, freq_3p, show_percentages=True)
 
     # Reporting top and bottom sequence co-occurrence
@@ -221,26 +226,31 @@ if show_plots and len(results) > 0:
     pu.plotFrequency2D(labels, freq2D, show_percentages=True)
 
 if write_eventmap:
+    output = True
     # Showing cleavage event distribution
     eventmap_writer = emw.EventMapWriter()
     eventmap_writer.write_map(root_name+'_eventmap.svg', freq_full, ref=ref, append_dt=append_dt)
 
 if write_heatmap_svg_auto:
+    output = True
     # Showing events as heatmap
     heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
     heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, None, None, append_dt)
 
 if write_heatmap_svg_full:
+    output = True
     # Showing events as heatmap
     heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
     heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, ref, None, append_dt)
 
 if write_heatmap_csv_auto:
+    output = True
     # Showing events as heatmap
     heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
     heatmap_writer.write_map(root_name+'_autoheatmap.csv', freq_full, None, None, append_dt)
 
 if write_heatmap_csv_full:
+    output = True
     # Showing events as heatmap
     heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
     heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, ref, None, append_dt=append_dt)
@@ -248,12 +258,18 @@ if write_heatmap_csv_full:
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)
 if write_individual:
+    output = True
     csv_writer.write_individual(root_name, results, ref)
 
 if write_summary:
+    output = True
     csv_writer.write_summary(root_name, freq_full, ref, error_count)
 
-print("\r")
+# If no other output is generated by the code (i.e. only three arguments were provided) the full sequence frequencies are shown
+if not output:
+    print("\rRESULTS:")
+    print("    Full sequence frequency:\n")
+    ru.print_full_sequence_frequency(ref, freq_full, extra_nt=extra_nt, include_seqs=False, offset="    ")
 
 # If writing output, shut down file and print redirection
 if write_output:
