@@ -22,7 +22,7 @@ def_count_vis = SHOWHIDE.SHOW
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
-parser = argparse.ArgumentParser(description= "Event map CSV exporter for Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier\n\n", add_help=True, formatter_class=RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description= "Strand linkage plot CSV exporter for Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier\n\n", add_help=True, formatter_class=RawTextHelpFormatter)
 
 # We want required arguments above optional ones in the help documentation, so removing optional argument descriptions for now
 optional = parser._action_groups.pop()
@@ -30,7 +30,7 @@ optional = parser._action_groups.pop()
 # Defining required arguments
 required = parser.add_argument_group('required arguments')
 
-required.add_argument("-d", "--data_path", type=str, required=True, help= "Path to .csv results file.  This file contains details of each sequence to be included in the event map.\n\n")
+required.add_argument("-d", "--data_path", type=str, required=True, help= "Path to .csv results file.  This file contains details of each sequence to be included in the strand linkage plot.\n\n")
 
 required.add_argument("-o", "--out_path", type=str, help="Path to location where .svg file will be written.  This should be a complete path including the filename and extension.\n\n")
 

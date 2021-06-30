@@ -56,7 +56,7 @@ def_sum_vis = SHOWHIDE.SHOW
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
-parser = argparse.ArgumentParser(description= "Event map SVG renderer for Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier\n\n", add_help=True, formatter_class=RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description= "Strand linkage plot SVG renderer for Cleavage Site Identifier (CSI)\nFor detailed information please visit https://github.com/sjcross/CleavageSiteIdentifier\n\n", add_help=True, formatter_class=RawTextHelpFormatter)
 
 # We want required arguments above optional ones in the help documentation, so removing optional argument descriptions for now
 optional = parser._action_groups.pop()
@@ -64,7 +64,7 @@ optional = parser._action_groups.pop()
 # Defining required arguments
 required = parser.add_argument_group('required arguments')
 
-required.add_argument("-d", "--data_path", type=str, required=True, help= "Path to .csv results file.  This file contains details of each sequence to be included in the event map.\n\n")
+required.add_argument("-d", "--data_path", type=str, required=True, help= "Path to .csv results file.  This file contains details of each sequence to be included in the strand linkage plot.\n\n")
 
 required.add_argument("-o", "--out_path", type=str, help="Path to location where .svg file will be written.  This should be a complete path including the filename and extension.\n\n")
 
@@ -77,11 +77,11 @@ optional.add_argument("-ad", "--append_datetime", action='store_true', help="App
 
 optional.add_argument("-pr", "--pos_range", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as a pair of integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
 
-optional.add_argument("-id", "--im_dim", type=int, default=def_im_dim, help="Pixel dimensions of the output .svg image.  Event map image is square, so specified as a single integer number.  Default: \"%i\".\n\n" % def_im_dim)
+optional.add_argument("-id", "--im_dim", type=int, default=def_im_dim, help="Pixel dimensions of the output .svg image.  Strand linkage plot image is square, so specified as a single integer number.  Default: \"%i\".\n\n" % def_im_dim)
 
 optional.add_argument("-f", "--font", type=str, default=def_font, help="Font to use for all text.  Can be any font currently installed on this computer.  Default: \"%s\".\n\n" % def_font)
 
-optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_left, def_map_rel_size], nargs=3, help="Position and size of event map in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 3 floating-point numbers in the order top height size (e.g. -drp 0.3 0.3 0.6).  Default: \"%.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_left, def_map_rel_size))
+optional.add_argument("-mrp", "--map_rel_pos", type=float, default=[def_map_rel_top, def_map_rel_left, def_map_rel_size], nargs=3, help="Position and size of strand linkage plot in output image, relative to the top-left corner.  Positions correspond directly to map, so allowances must be made for labels.  Specified as a list of 3 floating-point numbers in the order top height size (e.g. -drp 0.3 0.3 0.6).  Default: \"%.2f %.2f %.2f\".\n\n" % (def_map_rel_top, def_map_rel_left, def_map_rel_size))
 
 optional.add_argument("-bv", "--border_vis", type=SHOWHIDE, default=def_border_vis, choices=list(SHOWHIDE), help="Controls whether the border of the map is rendered as a line.  Must be either \"show\" or \"hide\" (e.g. -bv \"show\").  Default: \"%s\".\n\n" % def_border_vis)
 

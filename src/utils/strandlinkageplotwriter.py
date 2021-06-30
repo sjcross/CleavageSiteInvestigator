@@ -1,7 +1,3 @@
-# TODO: Have colour normalisation to visible position range only
-
-import random
-
 import datetime as dt
 import math
 import os
@@ -38,7 +34,7 @@ class VPOS(Enum):
         return str(self.value)
 
 
-class EventMapWriter(amw.AbstractMapWriter):
+class StrandLinkagePlotWriter(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
     def __init__(self,
@@ -52,7 +48,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
                  event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
-                 hist_opts=(True, 0, 50, 2, "darkgray", 0.16, 0.07, 20, 0),
+                 hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25)):
 
@@ -329,7 +325,7 @@ class EventMapWriter(amw.AbstractMapWriter):
 
         dwg.add(
             svg.text.Text(
-                "5'",
+                "5′",
                 insert=(end_label_x1, end_label_y1),
                 style=
                 f"text-anchor:end;font-family:{self._font};dominant-baseline:{top_baseline}",
@@ -337,7 +333,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                 fill=self._end_label_colour))
         dwg.add(
             svg.text.Text(
-                "3'",
+                "3′",
                 insert=(end_label_x2, end_label_y1),
                 style=
                 f"text-anchor:start;font-family:{self._font};dominant-baseline:{top_baseline}",
@@ -345,7 +341,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                 fill=self._end_label_colour))
         dwg.add(
             svg.text.Text(
-                "3'",
+                "3′",
                 insert=(end_label_x1, end_label_y2),
                 style=
                 f"text-anchor:end;font-family:{self._font};dominant-baseline:{bottom_baseline}",
@@ -353,7 +349,7 @@ class EventMapWriter(amw.AbstractMapWriter):
                 fill=self._end_label_colour))
         dwg.add(
             svg.text.Text(
-                "5'",
+                "5′",
                 insert=(end_label_x2, end_label_y2),
                 style=
                 f"text-anchor:start;font-family:{self._font};dominant-baseline:{bottom_baseline}",

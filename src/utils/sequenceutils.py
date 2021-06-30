@@ -3,8 +3,6 @@ from matplotlib.pyplot import minorticks_off
 from enums.ends import Ends
 from enums.orientation import Orientation
 
-import math
-
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):
         self._aligner = aligner
@@ -43,20 +41,15 @@ class SequenceSearcher():
     def set_verbose(self, verbose):
         self._verbose = verbose
 
-    # Returns:
-    #     cleavage_site_b = index of nucleotide immediately 5' of cleavage site on top strand
-    #     cleavage_site_t = index of nucleotide immediately 3' of cleavage site on bottom strand
-    #     local_seq_1 = local sequence at top strand cleavage site (local_r nucleotides either side of cleavage site)
-    #     local_seq_2 = local sequence at bottom strand cleavage site (local_r nucleotides either side of cleavage site)
-    def get_cleavage_positions(self, ref, cass, test, error_store=None):
+    def get_cleavage_positions(self, ref, cass, consensus, error_store=None):
         if self._verbose:
-            print("        Finding first cassette end in test sequence:")
-        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_START, Orientation.BOTH)
+            print("        Finding first cassette end in consensus sequence:")
+        (cass_pos_1, cass1_isRC) = self._find_best_cassette_end(cass, consensus, Ends.CASS_START, Orientation.BOTH)
                 
         if self._verbose:
-            print("        Finding second cassette end in test sequence:")
+            print("        Finding second cassette end in consensus sequence:")
         orientation = Orientation.RC if cass1_isRC else Orientation.SENSE
-        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, test, Ends.CASS_END, orientation)
+        (cass_pos_2, cass2_isRC) = self._find_best_cassette_end(cass, consensus, Ends.CASS_END, orientation)
 
         # Both should be RC or normal.
         if cass1_isRC != cass2_isRC:
@@ -71,23 +64,23 @@ class SequenceSearcher():
             if self._verbose:
                 print("ERROR: Cassette ends not found\n")
             if error_store is not None:
-                error_store.cassette_not_found_in_test()
+                error_store.cassette_not_found_in_consensus()
             return (None, None, False)  
 
-        # Finding cassette-adjacent test sequence in reference
+        # Finding cassette-adjacent consensus sequence in reference
         if self._verbose:
-            print("        Finding first cassette-adjacent test sequence in reference sequence:")
-        (alignment1, isRC1, cass_start) = self._find_best_target_in_ref(ref, test, cass_pos_1.path[0:-1], self._num_bases, self._num_bases, self._min_quality)
+            print("        Finding first cassette-adjacent consensus sequence in reference sequence:")
+        (alignment1, isRC1, cass_start) = self._find_best_target_in_ref(ref, consensus, cass_pos_1.path[0:-1], self._num_bases, self._num_bases, self._min_quality)
                 
         if self._verbose:
-            print("        Finding second cassette-adjacent test sequence in reference sequence:")
-        (alignment2, isRC2, cass_end) = self._find_best_target_in_ref(ref, test, cass_pos_2.path[1:], self._num_bases, 0, self._min_quality)
+            print("        Finding second cassette-adjacent consensus sequence in reference sequence:")
+        (alignment2, isRC2, cass_end) = self._find_best_target_in_ref(ref, consensus, cass_pos_2.path[1:], self._num_bases, 0, self._min_quality)
         
         if alignment1 is None or alignment2 is None:
             if self._verbose:
-                print("ERROR: Test sequence not found in reference\n")
+                print("ERROR: Consensus sequence not found in reference\n")
             if error_store is not None:
-                error_store.test_not_found_in_reference()
+                error_store.consensus_not_found_in_reference()
             return (None, None, False)
 
         # Both should be RC or normal
@@ -95,7 +88,7 @@ class SequenceSearcher():
             if self._verbose:
                 print("ERROR: RC mismatch\n")
             if error_store is not None:
-                error_store.test_ends_mismatch()
+                error_store.consensus_ends_mismatch()
             return (None, None, False)
 
         if isRC1:            
@@ -114,7 +107,7 @@ class SequenceSearcher():
             
         if self._verbose:
             print("        Testing for sequence splitting:")
-        midpoint_site = self.get_midpoint_position(ref, test, cass_start, cass_end)     
+        midpoint_site = self.get_midpoint_position(ref, consensus, cass_start, cass_end)     
         if midpoint_site is None:
             if self._verbose:
                 print("ERROR: Midpoint sequence not found\n")
@@ -126,14 +119,14 @@ class SequenceSearcher():
 
         return (cleavage_site_t, cleavage_site_b, split)
 
-    def get_midpoint_position(self, ref, test, cass_start, cass_end):
+    def get_midpoint_position(self, ref, consensus, cass_start, cass_end):
         if cass_start < cass_end:
-            test_mid_pos = int((len(test)+cass_end+cass_start)/2 % len(test))
+            consensus_mid_pos = int((len(consensus)+cass_end+cass_start)/2 % len(consensus))
         else:
-            test_mid_pos = int((cass_start-cass_end)/2 + cass_end)
+            consensus_mid_pos = int((cass_start-cass_end)/2 + cass_end)
 
-        # Finding position of midpoint sequence in reference (this is the midpoint position)
-        (midpoint, isRC) = self._find_target_in_ref(ref, test, test_mid_pos, self._num_bases, 0.75)
+        # Finding position of midpoint consensus sequence in reference (this is the midpoint position)
+        (midpoint, isRC) = self._find_target_in_ref(ref, consensus, consensus_mid_pos, self._num_bases, 0.75)
         if midpoint is None:
             return None  
 
@@ -142,16 +135,16 @@ class SequenceSearcher():
 
         return midpoint.path[0][0]
 
-    def _find_best_cassette_end(self, cass, test, end, orientation=Orientation.BOTH):
+    def _find_best_cassette_end(self, cass, consensus, end, orientation=Orientation.BOTH):
         # Testing cassette in sense orientation
         if orientation is Orientation.SENSE or orientation is Orientation.BOTH:
-            cass_pos = self._find_cassette_end(cass, test, end)     
+            cass_pos = self._find_cassette_end(cass, consensus, end)     
         else:
             cass_pos = None
         
         # Testing cassette in reverse complement orientation
         if orientation is Orientation.RC or orientation is Orientation.BOTH:
-            cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), test, end)
+            cass_pos_rc = self._find_cassette_end(cass.reverse_complement(), consensus, end)
         else:
             cass_pos_rc = None
 
@@ -177,39 +170,39 @@ class SequenceSearcher():
                 print("            Best score = %.2f (sense)" % cass_pos.score)
             return (cass_pos, False)
         
-    def _find_cassette_end(self, cass, test, end):
+    def _find_cassette_end(self, cass, consensus, end):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
 
         # Adding a repetition to the end of the sequence, incase the target sequence spans the ends
-        len_test = len(test)
-        test = test + get_seq(test, 0, self._num_bases)
+        len_consensus = len(consensus)
+        consensus = consensus + get_seq(consensus, 0, self._num_bases)
         
         if end is Ends.CASS_START:
             # Checking for "full" cassette end
-            alignments = self._aligner.align(test, cass[0: self._num_bases])
+            alignments = self._aligner.align(consensus, cass[0: self._num_bases])
             max_alignment = self._get_max_alignment(alignments,self._min_quality)
 
         elif end is Ends.CASS_END:
             # Checking for "full" cassette end
-            alignments = self._aligner.align(test, cass[-self._num_bases ::])
+            alignments = self._aligner.align(consensus, cass[-self._num_bases ::])
             max_alignment = self._get_max_alignment(alignments,self._min_quality)
 
         if max_alignment is None:
             return None
                   
-        max_alignment.path = remove_path_rollover(max_alignment.path,len_test)
+        max_alignment.path = remove_path_rollover(max_alignment.path,len_consensus)
 
         return max_alignment
 
-    def _find_best_target_in_ref(self, ref, test, path, search_length, search_offset, min_quality):
+    def _find_best_target_in_ref(self, ref, consensus, path, search_length, search_offset, min_quality):
         max_alignment = Align.PairwiseAlignment(
             target="", query="", path=((0, 0), (0, 0)), score=0.0)
 
         max_isRC = False
         max_en = 0
         for en in range(len(path)): # The last position in the path is definitely the end
-            (alignment, isRC) = self._find_target_in_ref(ref, test, path[en][0]-search_offset, search_length, min_quality)
+            (alignment, isRC) = self._find_target_in_ref(ref, consensus, path[en][0]-search_offset, search_length, min_quality)
 
             if alignment is None:
                 continue
@@ -230,25 +223,24 @@ class SequenceSearcher():
 
         return (max_alignment, max_isRC, path[max_en][0])
 
-    def _find_target_in_ref(self, ref, test, pos, search_length, min_quality):
-        test_target = get_seq(test, pos, pos+search_length)
-        # print(test_target)
+    def _find_target_in_ref(self, ref, consensus, pos, search_length, min_quality):
+        consensus_target = get_seq(consensus, pos, pos+search_length)
         
         # Adding a repetition to the end of the sequence, incase the target sequence spans the ends
         len_ref = len(ref)
         ref = ref + get_seq(ref, 0, search_length)
         
-        if test_target is None:
+        if consensus_target is None:
             if self._verbose:
-                print("            No test sequence found")
+                print("            No consensus sequence found")
             return (None, False)
 
-        # Finding test target in reference sequence
-        alignments = self._aligner.align(ref, test_target)
+        # Finding consensus target in reference sequence
+        alignments = self._aligner.align(ref, consensus_target)
         max_alignment = self._get_max_alignment(alignments,min_quality)
 
-        # If no matches were found, try the reverse complement of the test target
-        alignments_rc = self._aligner.align(ref, test_target.reverse_complement())
+        # If no matches were found, try the reverse complement of the consensus target
+        alignments_rc = self._aligner.align(ref, consensus_target.reverse_complement())
         max_alignment_rc = self._get_max_alignment(alignments_rc,min_quality)
 
         if max_alignment is None and max_alignment_rc is not None:

@@ -47,8 +47,8 @@ def plotFrequency1D(freq, freq_5p, freq_3p, show_percentages=True):
     
     # Setting axis labels
     axbig.set_title("Dinucleotide frequency")
-    axs[0, 1].set_title("5' site frequency")
-    axs[1,1].set_title("3' site frequency")
+    axs[0, 1].set_title("5′ site frequency")
+    axs[1,1].set_title("3′ site frequency")
 
     plt.show()
 

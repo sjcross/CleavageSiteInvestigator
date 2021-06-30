@@ -22,13 +22,13 @@ class AbstractMapWriter():
             freq = cr.read_summary(csv_path)
 
         # Loading reference sequence if path provided
-        if ref_path == "":
+        if ref_path == "" or ref_path is None:
             ref = None
         else:
             filereader = fu.FileReader(verbose=False)
             ref = filereader.read_sequence(ref_path)[0][0][0]
-            
-            self.write_map(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
+        
+        self.write_map(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
 
     @abstractmethod
     def write_map(self, out_path, freq, ref=None, pos_range=None, append_dt=False):
