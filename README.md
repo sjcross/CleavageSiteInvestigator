@@ -1,6 +1,15 @@
 <img src="./resources/logo.png">
 
-## Instructions
+
+## Features
+- Run straight from command line
+- Compatible with FASTA file format (.fa and .fasta)
+- Determine top and bottom strand cleavage events
+- Export results to .csv files
+- Create visual event distributions as heatmaps and strand linkage plots
+
+
+## Installation
 1. Install Python (tested with Python 3.7 via [Anaconda](https://www.anaconda.com/))
 2. Install Microsoft Visual C++ 14.0 (Get it with [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/))
 3. Install required libraries from command line
