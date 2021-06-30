@@ -10,8 +10,10 @@ import svgwrite as svg
 class HeatMapWriterSVG(amw.AbstractMapWriter):
     ## CONSTRUCTOR
 
-    def __init__(self, im_dim=800, rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",1,True), sum_show=True):
+    def __init__(self, im_dim=800, font="Arial", rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",1,True), sum_show=True):
         self._im_dim = im_dim
+
+        self._font = font
         
         self._map_rel_top = rel_pos[0]
         self._map_rel_left = rel_pos[1]
@@ -97,13 +99,13 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         # Adding top-strand label
         axis_label_x = (map_x2-map_x1)/2 + map_x1
         axis_label_y = map_y1 - self._axis_label_gap
-        dwg.add(svg.text.Text("Top strand", insert=(axis_label_x,axis_label_y), style="text-anchor:middle", font_size=self._axis_label_size, fill=self._axis_label_colour))
+        dwg.add(svg.text.Text("Top strand", insert=(axis_label_x,axis_label_y), style=f"text-anchor:middle;font-family:{self._font}", font_size=self._axis_label_size, fill=self._axis_label_colour))
 
         # Adding bottom-strand label
         axis_label_x = map_x1 - self._axis_label_gap
         axis_label_y = (map_y2-map_y1)/2 + map_y1
         rot = "rotate(%i,%i,%i)" % (-90,axis_label_x,axis_label_y)
-        dwg.add(svg.text.Text("Bottom strand", insert=(axis_label_x,axis_label_y), transform=rot, style="text-anchor:middle", font_size=self._axis_label_size, fill=self._axis_label_colour))
+        dwg.add(svg.text.Text("Bottom strand", insert=(axis_label_x,axis_label_y), transform=rot, style=f"text-anchor:middle;font-family:{self._font}", font_size=self._axis_label_size, fill=self._axis_label_colour))
 
     def _add_border(self, dwg, pos_range, map_xy):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_range
@@ -166,10 +168,10 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
 
         # Adding vertical line grid labels
         for grid_label_pos_t in range(grid_label_pos_t_min, grid_label_pos_t_max, self._grid_label_interval):
-            grid_label_x = map_x1 + (map_x2-map_x1)*(((grid_label_pos_t+0.5)-pos_t_min)/(pos_t_max-pos_t_min+1)) + self._grid_label_size*0.375
+            grid_label_x = map_x1 + (map_x2-map_x1)*(((grid_label_pos_t+0.5)-pos_t_min)/(pos_t_max-pos_t_min+1))
             grid_label_y = map_y1-self._border_size/2-self._grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
-            dwg.add(svg.text.Text(str(grid_label_pos_t), insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            dwg.add(svg.text.Text(str(grid_label_pos_t), insert=(grid_label_x,grid_label_y), transform=rot, style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
         # Getting range of horizontal grid label positions
         grid_label_pos_b_min = self._grid_label_interval*math.ceil(pos_b_min/self._grid_label_interval)
@@ -180,21 +182,21 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         # Adding horizontal line grid labels
         for grid_label_pos_b in range(grid_label_pos_b_min, grid_label_pos_b_max, self._grid_label_interval):
             grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
-            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1)) + self._grid_label_size*0.375
-            dwg.add(svg.text.Text(str(grid_label_pos_b), insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            grid_label_y = map_y1 + (map_y2-map_y1)*(((grid_label_pos_b+0.5)-pos_b_min)/(pos_b_max-pos_b_min+1))
+            dwg.add(svg.text.Text(str(grid_label_pos_b), insert=(grid_label_x,grid_label_y), style=f"text-anchor:end;font-family:{self._font};dominant-baseline:central", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
         # Adding sum labels if sum column and row are to be shown
         if self._sum_show:
             # Adding top strand sum label
-            grid_label_x = map_x2 + event_dim/2 + self._grid_label_size*0.375
+            grid_label_x = map_x2 + event_dim/2
             grid_label_y = map_y1-self._border_size/2-self._grid_label_gap
             rot = "rotate(%i,%i,%i)" % (-90,grid_label_x,grid_label_y)
-            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), transform=rot, style="text-anchor:start", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), transform=rot, style=f"text-anchor:start;font-family:{self._font};dominant-baseline:central", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
             # Adding bottom strand sum label
             grid_label_x = map_x1-self._border_size/2-self._grid_label_gap
-            grid_label_y = map_y2 + event_dim/2 + self._grid_label_size*0.375
-            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), style="text-anchor:end", font_size=self._grid_label_size, fill=self._grid_label_colour))
+            grid_label_y = map_y2 + event_dim/2
+            dwg.add(svg.text.Text("Sum", insert=(grid_label_x,grid_label_y), style=f"text-anchor:end;font-family:{self._font};dominant-baseline:central", font_size=self._grid_label_size, fill=self._grid_label_colour))
 
     def _add_events(self, dwg, pos_range, map_xy, freq):
         (pos_t_min, pos_t_max, pos_b_min, pos_b_max) = pos_range
@@ -274,7 +276,7 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
 
     def _add_event_label(self, dwg, event_x1, event_y1, event_dim, norm_count, event_pc):
         event_label_x = event_x1 + event_dim/2
-        event_label_y = event_y1 + event_dim/2 + self._event_label_size*0.375 
+        event_label_y = event_y1 + event_dim/2
         
         if self._event_label_colour == "invert":
             rgba = self._cmap(norm_count)
@@ -282,5 +284,5 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         else:
             col = self._event_label_colour
 
-        dwg.add(svg.text.Text(self._event_label_number_format % event_pc, insert=(event_label_x,event_label_y), style="text-anchor:middle", font_size=self._event_label_size, fill=col))
+        dwg.add(svg.text.Text(self._event_label_number_format % event_pc, insert=(event_label_x,event_label_y), style=f"text-anchor:middle;font-family:{self._font};dominant-baseline:central", font_size=self._event_label_size, fill=col))
     
