@@ -1,4 +1,4 @@
-# CSI (Cleavage Site Identifier)
+<img src="./resources/logo.png">
 
 ## Instructions
 1. Install Python (tested with Python 3.7 via [Anaconda](https://www.anaconda.com/))
