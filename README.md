@@ -17,9 +17,9 @@
   - [Notes](#notes)
   - [Running CSI (basic)](#running-csi-basic)
   - [Running CSI (advanced)](#running-csi-advanced)
-  - [Generating strand linkage plots directly (SVG)](#generating-strand-linkage-plots-directly-(svg))
-  - [Generating heatmap plots directly (CSV)](#generating-heatmap-plots-directly-(csv))
-  - [Generating heatmap plots directly (SVG)](#generating-heatmap-plots-directly-(svg))
+  - [Generating strand linkage plots directly to SVG](#generating-strand-linkage-plots-directly-to-svg)
+  - [Generating heatmap plots directly to CSV](#generating-heatmap-plots-directly-to-csv)
+  - [Generating heatmap plots directly to SVG](#generating-heatmap-plots-directly-to-svg)
 - [Outputs](#outputs)
   - [CSI summary file](#csi-summary-file)
   - [CSI individual results file](#csi-individual-results-file)
@@ -107,11 +107,11 @@ Optional argument|Description|Default
 `-pr`, `--print_results`|Prints results to the terminal once a complete file has been processed.|NA
 `-en`, `--extra_nt`|Number of additional nucleotides to be displayed either side of the cleavage site (when `-pr` or `--print_results` is specified).|0
 `-sp`, `--show_plots`|Display plots showing local sequence distributions as a heatmap and pie-chart.|NA
-`-wslp`, `--write_strandlinkageplot`|Write strand linkage plot image to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_strandlinkageplot'.  To generate strand linkage plots with greater control over rendering, see [Generating strand linkage plots directly](#generating-strand-linkage-plots-directly)|NA
-`-whsa`, `--write_heatmap_svg_auto`|Write heatmap image (only spanning range of identified event positions) to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly](#generating-heatmap-plots-directly).|NA
-`-whsf`, `--write_heatmap_svg_full`|Write heatmap image (spanning full range of reference sequence) to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly](#generating-heatmap-plots-directly).|NA
-`-whca`, `--write_heatmap_csv_auto`|Write heatmap image (only spanning range of identified event positions) to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly](#generating-heatmap-plots-directly).|NA
-`-whcf`, `--write_heatmap_csv_full`|Write heatmap image (spanning full range of reference sequence) to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly](#generating-heatmap-plots-directly).|NA
+`-wslp`, `--write_strandlinkageplot`|Write strand linkage plot image to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_strandlinkageplot'.  To generate strand linkage plots with greater control over rendering, see [Generating strand linkage plots directly to SVG](#generating-strand-linkage-plots-directly-to-svg)|NA
+`-whsa`, `--write_heatmap_svg_auto`|Write heatmap image (only spanning range of identified event positions) to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly to SVG](#generating-heatmap-plots-directly-to-svg).|NA
+`-whsf`, `--write_heatmap_svg_full`|Write heatmap image (spanning full range of reference sequence) to SVG file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly to SVG](#generating-heatmap-plots-directly-to-svg).|NA
+`-whca`, `--write_heatmap_csv_auto`|Write heatmap image (only spanning range of identified event positions) to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly to CSV](#generating-heatmap-plots-directly-to-csv).|NA
+`-whcf`, `--write_heatmap_csv_full`|Write heatmap image (spanning full range of reference sequence) to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_heatmap'.  To generate heatmaps with greater control over rendering, see [Generating heatmap plots directly to CSV](#generating-heatmap-plots-directly-to-csv).|NA
 `-wi`,`--write_individual`|Write individual cleavage results to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_individual'.  For more information on the individual results file format, see [CSI individual results file](#csi-individual-results-file).|NA
 `-ws`, `--write_summary`|Write summary of results to CSV file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_summary'.  For more information on the summary results file format, see [CSI summary file](#csi-summary-file).|NA
 `-wo`, `--write_output`|Write all content displayed in console to a text file.  Output file will be stored in consensus file folder with same name as the consensus file, but with the suffix '_output'.|NA
@@ -119,7 +119,7 @@ Optional argument|Description|Default
 `-v`, `--verbose`|Display detailed messages during execution.|NA
 
 
-## Generating strand linkage plots directly (SVG)
+## Generating strand linkage plots directly to SVG
 ### Basic plotting
 - Strand linkage plots can be exported to SVG directly from CSI [summary](#csi-summary-file) and [individual](#csi-individual-results-file) results files using strandlinkageplot[]().py.  
 - At a minimum, strandlinkageplot[]().py requires arguments specifying the path to a CSI summary or individual results file (`-d` or `--data_file` argument) and the output SVG path (`-o` or `--out_path` argument).
@@ -162,12 +162,12 @@ Argument ending|Description|Accepted values
 `i`, `interval`|Spacing between numeric features (e.g. grid lines)|Non-negative integers
 `rg`, `rel_gap`|Gap between the feature and the main strand linkage plot.  Specified as a proportion of the width or height of the image.|Floating-point value in the range 0-1
 
-## Generating heatmap plots directly (CSV)
+## Generating heatmap plots directly to CSV
 ### Basic plotting
 
 ### Advanced control (optional arguments)
 
-## Generating heatmap plots directly (SVG)
+## Generating heatmap plots directly to SVG
 
 # Outputs
 ## CSI summary file
