@@ -124,7 +124,7 @@ optional.add_argument("-d_m", "--dna_mode", type=slpw.DNA_MODE, default=def_dna_
 
 optional.add_argument("-d_s", "--dna_size", type=int, default=def_dna_size, help="Width of rendered DNA lines (when in --dna_mode \"line\") or font size of DNA sequence letters (when in --dna_mode \"seq\").  Default: \"%.1f\".\n\n" % def_dna_size)
 
-optional.add_argument("-d_c", "--dna_colour", type=str, default=def_dna_colour, help="Colour of rendered DNA lines or text sequences.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_dna_colour)
+optional.add_argument("-d_c", "--dna_colour", type=str, default=def_dna_colour, help="Colour of rendered DNA lines or text sequences.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_dna_colour)
 
 optional.add_argument("-d_rg", "--dna_rel_gap", type=float, default=def_dna_rel_gap, help="Gap between DNA sequence/line and strandlinkageplot.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_dna_rel_gap)
 
@@ -132,7 +132,7 @@ optional.add_argument("-el_v", "--end_label_vis", type=SHOWHIDE, default=def_end
 
 optional.add_argument("-el_s", "--end_label_size", type=int, default=def_end_label_size, help="Font size of DNA end labels.  Default: \"%.1f\".\n\n" % def_end_label_size)
 
-optional.add_argument("-el_c", "--end_label_colour", type=str, default=def_end_label_colour, help="Colour of the rendered DNA end labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_end_label_colour)
+optional.add_argument("-el_c", "--end_label_colour", type=str, default=def_end_label_colour, help="Colour of the rendered DNA end labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_end_label_colour)
 
 optional.add_argument("-el_rg", "--end_label_rel_gap", type=float, default=def_end_label_rel_gap, help="Gap between end labels and the rendered DNA strands.  Specified as a fraction of the image width.  Default: \"%i\".\n\n" % def_end_label_rel_gap)
 
@@ -142,7 +142,7 @@ optional.add_argument("-g_v", "--grid_vis", type=SHOWHIDE, default=def_grid_vis,
 
 optional.add_argument("-g_s", "--grid_size", type=int, default=def_grid_size, help="Width of grid lines.  Default: \"%.1f\".\n\n" % def_grid_size)
 
-optional.add_argument("-g_c", "--grid_colour", type=str, default=def_grid_colour, help="Colour of the rendered grid lines.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_grid_colour)
+optional.add_argument("-g_c", "--grid_colour", type=str, default=def_grid_colour, help="Colour of the rendered grid lines.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_grid_colour)
 
 optional.add_argument("-g_i", "--grid_interval", type=int, default=def_grid_interval, help="Interval between adjacent grid lines.  Default: \"%i\".\n\n" % def_grid_interval)
 
@@ -150,7 +150,7 @@ optional.add_argument("-gl_v", "--grid_label_vis", type=SHOWHIDE, default=def_gr
 
 optional.add_argument("-gl_s", "--grid_label_size", type=int, default=def_grid_label_size, help="Font size of grid labels.  Default: \"%.1f\".\n\n" % def_grid_label_size)
 
-optional.add_argument("-gl_c", "--grid_label_colour", type=str, default=def_grid_label_colour, help="Colour of the rendered grid labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_grid_label_colour)
+optional.add_argument("-gl_c", "--grid_label_colour", type=str, default=def_grid_label_colour, help="Colour of the rendered grid labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_grid_label_colour)
 
 optional.add_argument("-gl_i", "--grid_label_interval", type=int, default=def_grid_label_interval, help="Interval between adjacent grid labels.  Default: \"%i\".\n\n" % def_grid_label_interval)
 
@@ -166,7 +166,7 @@ optional.add_argument("-cl_v", "--cbar_label_vis", type=SHOWHIDE, default=def_cb
 
 optional.add_argument("-cl_s", "--cbar_label_size", type=int, default=def_cbar_label_size, help="Font size of colourbar labels.  Default: \"%.1f\".\n\n" % def_cbar_label_size)
 
-optional.add_argument("-cl_c", "--cbar_label_colour", type=str, default=def_cbar_label_colour, help="Colour of the rendered colourbar labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_cbar_label_colour)
+optional.add_argument("-cl_c", "--cbar_label_colour", type=str, default=def_cbar_label_colour, help="Colour of the rendered colourbar labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_cbar_label_colour)
 
 optional.add_argument("-cl_i", "--cbar_label_interval", type=int, default=def_cbar_label_interval, help="Interval between labels shown in colourbar.  Default: \"%.1f\".\n\n" % def_cbar_label_interval)
 
@@ -192,7 +192,7 @@ optional.add_argument("-h_r", "--hist_range", type=int, default=[def_hist_min_ra
 
 optional.add_argument("-h_bw", "--hist_bin_width", type=int, default=def_hist_bin_width, help="Number of positions that will be binned into a single bar on the histogram.  Default: \"%.1f\".\n\n" % def_hist_bin_width)
 
-optional.add_argument("-h_c", "--hist_colour", type=str, default=def_hist_colour, help="Colour of the rendered histogram bars.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_colour)
+optional.add_argument("-h_c", "--hist_colour", type=str, default=def_hist_colour, help="Colour of the rendered histogram bars.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_colour)
 
 optional.add_argument("-h_rh", "--hist_rel_height", type=float, default=def_hist_rel_height, help="Height of the histogram plots.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_hist_rel_height)
 
@@ -206,7 +206,7 @@ optional.add_argument("-hl_v", "--hist_label_vis", type=SHOWHIDE, default=def_hi
 
 optional.add_argument("-hl_s", "--hist_label_size", type=int, default=def_hist_label_size, help="Font size of histogram labels.  Default: \"%.1f\".\n\n" % def_hist_label_size)
 
-optional.add_argument("-hl_c", "--hist_label_colour", type=str, default=def_hist_label_colour, help="Colour of the rendered histogram labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_label_colour)
+optional.add_argument("-hl_c", "--hist_label_colour", type=str, default=def_hist_label_colour, help="Colour of the rendered histogram labels.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_label_colour)
 
 optional.add_argument("-hl_i", "--hist_label_interval", type=int, default=def_hist_label_interval, help="Interval between labels shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_label_interval)
 
@@ -220,7 +220,7 @@ optional.add_argument("-hg_v", "--hist_grid_vis", type=SHOWHIDE, default=def_gri
 
 optional.add_argument("-hg_s", "--hist_grid_size", type=int, default=def_hist_grid_size, help="Width of histogram grid lines.  Default: \"%.1f\".\n\n" % def_hist_grid_size)
 
-optional.add_argument("-hg_c", "--hist_grid_colour", type=str, default=def_hist_grid_colour, help="Colour of the rendered histogram grid lines.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as rgb values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_grid_colour)
+optional.add_argument("-hg_c", "--hist_grid_colour", type=str, default=def_hist_grid_colour, help="Colour of the rendered histogram grid lines.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_hist_grid_colour)
 
 optional.add_argument("-hg_i", "--hist_grid_interval", type=int, default=def_hist_grid_interval, help="Interval between horizontal grid lines shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_grid_interval)
 

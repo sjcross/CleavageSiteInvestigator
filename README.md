@@ -17,8 +17,9 @@
   - [Notes](#notes)
   - [Running CSI (basic)](#running-csi-basic)
   - [Running CSI (advanced)](#running-csi-advanced)
-  - [Generating strand linkage plots directly](#generating-strand-linkage-plots-directly)
-  - [Generating heatmap plots directly](#generating-heatmap-plots-directly)
+  - [Generating strand linkage plots directly (SVG)](#generating-strand-linkage-plots-directly-(svg))
+  - [Generating heatmap plots directly (CSV)](#generating-heatmap-plots-directly-(csv))
+  - [Generating heatmap plots directly (SVG)](#generating-heatmap-plots-directly-(svg))
 - [Outputs](#outputs)
   - [CSI summary file](#csi-summary-file)
   - [CSI individual results file](#csi-individual-results-file)
@@ -118,7 +119,7 @@ Optional argument|Description|Default
 `-v`, `--verbose`|Display detailed messages during execution.|NA
 
 
-## Generating strand linkage plots directly
+## Generating strand linkage plots directly (SVG)
 ### Basic plotting
 - Strand linkage plots can be exported to SVG directly from CSI [summary](#csi-summary-file) and [individual](#csi-individual-results-file) results files using strandlinkageplot[]().py.  
 - At a minimum, strandlinkageplot[]().py requires arguments specifying the path to a CSI summary or individual results file (`-d` or `--data_file` argument) and the output SVG path (`-o` or `--out_path` argument).
@@ -126,19 +127,47 @@ Optional argument|Description|Default
 ```Powershell
 python .\src\strandlinkageplot.py -d .\data\ex_consensus_summary.csv -o .\data\output_strandlinkageplot.svg
 ```
-### Advanced control (optional arguments)
+<img src=".\resources\strandlinkageplot_default.png"/>
+
+### Advanced control (using optional arguments)
 - To afford greater control over various aspects of plot rendering, strandlinkageplot[]().py accepts over 50 different command line arguments.  Full descriptions for these arguments can be viewed using the `-h` or `--help` flag.
-- Optional arguments are grouped by the plot feature they act upon.  For example, `-gl_i` controls the grid label increment.
-- The following figure and table summarise these regions and arguments:
+- The following figure uses optional arguments to zoom in on a specific sequence region (`-pr 1260 1320`), applies closer grid spacings (`-g_i 10 -gl_i 10`), uses a different colourmap (`-e_c plasma`) and displays the DNA as a letter sequence (`-d_m seq`; Note: this requires the reference sequence to be provided via `-r`):
+```Powershell
+python .\src\strandlinkageplot.py -d .\data\ex_consensus_summary.csv -o .\data\output_modified_plot.svg -e_c plasma -pr 1260 1320 -g_i 10 -gl_i 10 -d_m seq -r .\data\ex_reference.fa -d_s 12
+```
 <img src=".\resources\strandlinkageplot_regions.png"/>
+
+- As shown in the figure above, optional arguments are grouped by the plot feature they act upon.  For example, `-gl_i` controls the grid label increment.  The following table shows all the optional arguments by feature group:
 
   Root argument|Feature|Instances
   -------------|-------|---------
   `-d`, `--dna`|DNA sequence|`-d_m`, `--dna_mode`<br>`-d_s`, `--dna_size`<br>`-d_c`, `--dna_colour`<br>`-d_rg`, `--dna_rel_gap`
   `-el`, `--end_label`|End label (i.e. 5′ and 3′)|`-el_v`, `--end_label_vis`<br>`-el_s`, `--end_label_size`<br>`-el_c`, `--end_label_colour`<br>`-el_rg`, `--end_label_rel_gap`<br>`-el_p`,  `--end_label_position`
+  `-g`, `--grid`|Grid (sequence position)|`-g_v`, `--grid_vis`<br>`-g_s`, `--grid_size`<br>`-g_c`, `--grid_colour`<br>`-g_i`, `--grid_interval`
+  `-gl`, `--grid_label`|Grid label (sequence position)|`-gl_v`, `--grid_label_vis`<br>`-gl_s`, `--grid_label_size`<br>`-gl_c`, `--grid_label_colour`<br>`-gl_i`, `--grid_label_interval`<br>`-gl_rg`, `--grid_label_rel_gap`
+  `-c`, `--cbar`|Colourbar|`-c_v`, `--cbar_vis`<br>`-c_rp`, `--cbar_rel_pos`<br>`-c_s`, `--cbar_size`
+  `-cl`, `--cbar`|Colourbar label|`-cl_v`, `--cbar_label_vis`<br>`-cl_s`, `--cbar_label_size`<br>`-cl_c`, `--cbar_label_colour`<br>`-cl_i`, `--cbar_label_interval`<br>`-cl_rg`, `--cbar_label_rel_gap`
+  `-e`, `--event`|Event (linkage lines)|`-e_mis`, `--event_min_size`<br>`-e_mas`, `--event_max_size`<br>`-e_c`, `--event_colourmap`<br>`-e_r`, `--event_range`<br>`-e_orv`, `--event_outside_range_vis`<br>`-e_o`, `--event_opacity`<br>`-e_so`, `--event_stack_order`
+  `-h`, `--hist`|Histogram|`-h_v`, `--hist_vis`<br>`-h_r`, `--hist_range`<br>`-h_bw`, `--hist_bin_width`<br>`-h_c`, `--hist_colour`<br>`-h_rh`, `--hist_rel_height`<br>`-h_rg`, `--hist_rel_gap`<br>`-h_pbg`, `--hist_pc_bar_gap`<br>`-h_o`, `--hist_overhang`
+  `-hl`, `--hist_label`|Histogram label|`-hl_v`, `--hist_label_vis`<br>`-hl_s`, `--hist_label_size`<br>`-hl_c`, `--hist_label_colour`<br>`-hl_i`, `--hist_label_interval`<br>`-hl_rg`, `--hist_label_rel_gap`<br>`-hl_p`, `--hist_label_position`<br>`-hl_zv`, `--hist_label_zero_vis`<br>
+  `-hg`, `--hist_grid`|Histogram grid|`-hg_v`, `--hist_grid_vis`<br>`-hg_s`, `--hist_grid_size`<br>`-hg_c`, `--hist_grid_colour`<br>`-hg_i`, `--hist_grid_interval`
 
+- Many optional arguments share the same form, the most common of these are listed below (for a full list with descriptions use the `-h` or `--help` flag):
 
-## Generating heatmap plots directly
+Argument ending|Description|Accepted values
+---------------|-----------|---------------
+`v`, `_vis`|Controls whether the feature should be displayed|'show', 'hide'
+`s`, `size`|Line widths (in pixel units) for lines or font sizes for text|Non-negative integers
+`c`, `colour`|Colour of the feature|Colour names (e.g. \"black\"), hex values (e.g. \"#16C3D6\") or RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\")
+`i`, `interval`|Spacing between numeric features (e.g. grid lines)|Non-negative integers
+`rg`, `rel_gap`|Gap between the feature and the main strand linkage plot.  Specified as a proportion of the width or height of the image.|Floating-point value in the range 0-1
+
+## Generating heatmap plots directly (CSV)
+### Basic plotting
+
+### Advanced control (optional arguments)
+
+## Generating heatmap plots directly (SVG)
 
 # Outputs
 ## CSI summary file
