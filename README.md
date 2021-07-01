@@ -1,5 +1,6 @@
 <img src="./resources/logo.png">
 
+[![DOI](https://zenodo.org/badge/256204417.svg)](https://zenodo.org/badge/latestdoi/256204417)
 
 # Features
 - Run straight from command line
