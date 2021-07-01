@@ -110,7 +110,7 @@ def get_position_frequency(freq):
 
     return (freq_t, freq_b)
 
-def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
+def print_full_sequence_frequency(ref, freq, extra_nt = 0, include_seqs=True, offset=""):
     total = sum(list(freq.values()))
     
     # Displaying sequence frequency results
@@ -123,14 +123,16 @@ def print_full_sequence_frequency(ref, freq, extra_nt = 0, offset=""):
         print_position(cleavage_site_t, cleavage_site_b, split, offset=offset)
         print_count(count, total, offset=offset)
         print_type(cleavage_site_t, cleavage_site_b, split, offset=offset)
-        print_sequence(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=extra_nt, offset=offset)
-        
+        if include_seqs:
+            print_sequence(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=extra_nt, offset=offset)
+        print("\r")
+
     print("\n")
 
 def print_local_sequence_frequency(freq, nonzero_only=False, offset=""):   
     for local_seq in freq.keys():
         if not nonzero_only or freq.get(local_seq) > 0:
-            print("    %s: %i" % (local_seq, freq.get(local_seq)))
+            print("%s    %s: %i" % (offset,local_seq, freq.get(local_seq)))
 
     print("\n")
 
@@ -158,7 +160,7 @@ def print_sequence(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=0, off
 
     (seq1, seq2) = su.get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=extra_nt)
 
-    print("%s    Sequence:    %s\r\n                 %s%s\r\n" % (offset, seq1, offset, seq2))
+    print("%s    Sequence:    %s\r\n                 %s%s" % (offset, seq1, offset, seq2))
         
 def print_error_rate(error_count, sample_count, offset=""):
     error_rate = 100*error_count/sample_count
