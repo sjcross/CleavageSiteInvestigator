@@ -202,6 +202,7 @@ Argument|Description|Default value
 python .\src\heatmapsvg.py -d .\data\ex_consensus_summary.csv -o .\data\output_heatmap.svg
 ```
 <img src=".\resources\heatmap_default.png"/>
+
 - Note: In this example, the identified events span a large region; however, the vast majority of events are confined to a small position range, so are difficult to see.  To zoom in on a region, we can use the optional arguments (see "Advanced control" below).
 
 ### Advanced control
