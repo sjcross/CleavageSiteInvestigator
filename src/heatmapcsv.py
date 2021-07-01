@@ -32,7 +32,7 @@ required = parser.add_argument_group('required arguments')
 
 required.add_argument("-d", "--data_path", type=str, required=True, help= "Path to .csv results file.  This file contains details of each sequence to be included in the strand linkage plot.\n\n")
 
-required.add_argument("-o", "--out_path", type=str, help="Path to location where .svg file will be written.  This should be a complete path including the filename and extension.\n\n")
+required.add_argument("-o", "--out_path", type=str, help="Path to location where .csv file will be written.  This should be a complete path including the filename and extension.\n\n")
 
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
@@ -41,11 +41,11 @@ optional.add_argument("-r", "--ref_path", type=str, help="Path to reference sequ
 
 optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)\n\n")
 
-optional.add_argument("-pr", "--pos_range", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as a pair of integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
+optional.add_argument("-pr", "--pos_range", type=int, default=[0,0,0,0], nargs=4, help="Minimum and maximum top and bottom strand positions within the reference sequence to display.  Specified as four integer numbers in the order minimum_top maximum_top minimum_bottom maximum_bottom (e.g. -pr 100 200 400 500).  If unspecified, the full reference range will be used.\n\n")
 
 optional.add_argument("-eldp", "--event_label_decimal_places", type=int, default=def_event_label_decimal_places, help="Number of decimal places to use when displaying event frequencies.")
 
-optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, choices=list(SHOWHIDE), help="Controls whether the sum row and columns are displayed.  These event cells are rendered using the same settings as for standard events (e.g. font size, colour and zeros visibility).  Must be either \"show\" or \"hide\" (e.g. -sv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
+optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, choices=list(SHOWHIDE), help="Controls whether the sum row and columns are displayed.  Must be either \"show\" or \"hide\" (e.g. -sv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
 
 optional.add_argument("-cv", "--count_vis", type=SHOWHIDE, default=def_count_vis, choices=list(SHOWHIDE), help="Controls whether the total number of events is displayed underneath the map.  Must be either \"show\" or \"hide\" (e.g. -cv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
 
