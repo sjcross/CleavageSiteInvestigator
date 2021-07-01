@@ -47,12 +47,12 @@
   - "ex_consensus.fa" - Consensus sequence(s) (can contain multiple sequences).  Example file is a subset of sequences from "Cas12a_17.fa" sample.
   - "ex_reference.fa" - Reference sequence (must contain one sequence).  Example file is for "CrisprplasR".
 - The above files are used throughout the following code demos.
-- Each program (csi[]().py, heatmap[]().py and strandlinkageplot[]().py) can be run entirely from command line.  Full argument documentation is accessible using the `-h` (or `--help`) flag (e.g. `python csi.py -h`).
+- Each program ([csi.py](#running-csi), [heatmapcsv.py](#generating-heatmap-plots-csv), [heatmapsvg.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg)) can be run entirely from command line.  Full argument documentation is accessible using the `-h` (or `--help`) flag (e.g. `python csi.py -h`).
 
 
 ## Running CSI
 ### Basic use
-- The main CSI program is run using csi[]().py.  This will analyse the specified consensus sequences and optionally output event distributions, summary statistics and plots (advanced plotting options available by running [heatmap.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg) directly).
+- The main CSI program is run using csi[]().py.  This will analyse the specified consensus sequences and optionally output event distributions, summary statistics and plots (advanced plotting options available by running [heatmapsvg.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg) directly).
 - CSI requires a minimum of three arguments, specifying paths to the cassette (`-ca` or `--cassette_path`), reference (`-r` or `--reference_path`) and consensus (`-co` or `--consensus_path`) files.
 - The following command is an example
 ```Powershell
