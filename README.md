@@ -25,8 +25,9 @@
 
 
 # Installation
-1. Install Python (tested with Python 3.9.1)
-2. Install required libraries ([BioPython](https://biopython.org/), [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite) and [TQDM](https://github.com/tqdm/tqdm))
+1. Download CSI source code from [GitHub](https://github.com/sjcross/CleavageSiteInvestigator)
+2. Install Python (tested with Python 3.9.1)
+3. Install required libraries ([BioPython](https://biopython.org/), [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite) and [TQDM](https://github.com/tqdm/tqdm))
     - Either using Pip
     ```Powershell
     pip install biopython==1.79
@@ -39,10 +40,9 @@
     conda env create -f csi.yml
     ```
 
-
 # Usage
 ## Notes
-- Example files for testing CSI are included in the "data" folder of this repository.  The files are from the full data set found [here](TODO - RDSF link).  These files are:
+- Example files for testing CSI are included in the "data" folder of this repository.  The files are from the full data set found [here](https://doi.org/10.5523/bris.367vrebu1ee2a23ro8gy6ggfpv).  These files are:
   - "ex_cassette.fa" - Cassette sequence (must contain one sequence).  Example file is for "Splint1TA".
   - "ex_consensus.fa" - Consensus sequence(s) (can contain multiple sequences).  Example file is a subset of sequences from "Cas12a_17.fa" sample.
   - "ex_reference.fa" - Reference sequence (must contain one sequence).  Example file is for "CrisprplasR".
