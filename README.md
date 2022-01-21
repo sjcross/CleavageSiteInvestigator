@@ -1,5 +1,6 @@
 <img src="./resources/logo.png">
 
+[![DOI](https://zenodo.org/badge/256204417.svg)](https://zenodo.org/badge/latestdoi/256204417)
 
 # Features
 - Run straight from command line
@@ -25,8 +26,9 @@
 
 
 # Installation
-1. Install Python (tested with Python 3.9.1)
-2. Install required libraries ([BioPython](https://biopython.org/), [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite) and [TQDM](https://github.com/tqdm/tqdm))
+1. Download CSI source code from [GitHub](https://github.com/sjcross/CleavageSiteInvestigator)
+2. Install Python (tested with Python 3.9.1)
+3. Install required libraries ([BioPython](https://biopython.org/), [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite) and [TQDM](https://github.com/tqdm/tqdm))
     - Either using Pip
     ```Powershell
     pip install biopython==1.79
@@ -39,20 +41,19 @@
     conda env create -f csi.yml
     ```
 
-
 # Usage
 ## Notes
-- Example files for testing CSI are included in the "data" folder of this repository.  The files are from the full data set found [here](TODO - RDSF link).  These files are:
+- Example files for testing CSI are included in the "data" folder of this repository.  The files are from the full data set found [here](https://doi.org/10.5523/bris.367vrebu1ee2a23ro8gy6ggfpv).  These files are:
   - "ex_cassette.fa" - Cassette sequence (must contain one sequence).  Example file is for "Splint1TA".
   - "ex_consensus.fa" - Consensus sequence(s) (can contain multiple sequences).  Example file is a subset of sequences from "Cas12a_17.fa" sample.
   - "ex_reference.fa" - Reference sequence (must contain one sequence).  Example file is for "CrisprplasR".
 - The above files are used throughout the following code demos.
-- Each program (csi[]().py, heatmap[]().py and strandlinkageplot[]().py) can be run entirely from command line.  Full argument documentation is accessible using the `-h` (or `--help`) flag (e.g. `python csi.py -h`).
+- Each program ([csi.py](#running-csi), [heatmapcsv.py](#generating-heatmap-plots-csv), [heatmapsvg.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg)) can be run entirely from command line.  Full argument documentation is accessible using the `-h` (or `--help`) flag (e.g. `python csi.py -h`).
 
 
 ## Running CSI
 ### Basic use
-- The main CSI program is run using csi[]().py.  This will analyse the specified consensus sequences and optionally output event distributions, summary statistics and plots (advanced plotting options available by running [heatmap.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg) directly).
+- The main CSI program is run using csi[]().py.  This will analyse the specified consensus sequences and optionally output event distributions, summary statistics and plots (advanced plotting options available by running [heatmapsvg.py](#generating-heatmap-plots-svg) and [strandlinkageplot.py](#generating-strand-linkage-plots-svg) directly).
 - CSI requires a minimum of three arguments, specifying paths to the cassette (`-ca` or `--cassette_path`), reference (`-r` or `--reference_path`) and consensus (`-co` or `--consensus_path`) files.
 - The following command is an example
 ```Powershell
@@ -202,6 +203,7 @@ Argument|Description|Default value
 python .\src\heatmapsvg.py -d .\data\ex_consensus_summary.csv -o .\data\output_heatmap.svg
 ```
 <img src=".\resources\heatmap_default.png"/>
+
 - Note: In this example, the identified events span a large region; however, the vast majority of events are confined to a small position range, so are difficult to see.  To zoom in on a region, we can use the optional arguments (see "Advanced control" below).
 
 ### Advanced control
