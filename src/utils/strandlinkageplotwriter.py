@@ -50,7 +50,8 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                  event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
                  hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
-                 hist_grid_opts=(True, 1, "lightgray", 25)):
+                 hist_grid_opts=(True, 1, "lightgray", 25),
+                 splithist_opts=(False, 0, 100, "darkgray", 0.16)):
 
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
@@ -127,6 +128,12 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         self._hist_grid_colour = hist_grid_opts[2]
         self._hist_grid_interval = hist_grid_opts[3]
 
+        self._splithist_show = splithist_opts[0]
+        self._splithist_min_range = splithist_opts[1]
+        self._splithist_max_range = splithist_opts[2]
+        self._splithist_colour = splithist_opts[3]
+        self._splithist_rel_height = splithist_opts[4]
+
     ## GETTERS AND SETTERS
 
     def set_dna_mode(self, dna_mode):
@@ -178,6 +185,9 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
             (freq_t, freq_b) = ru.get_position_frequency(freq)
             self._add_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
             self._add_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
+
+        if self._splithist_show:
+            self._add_splithist()
 
         self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref)
 
@@ -578,6 +588,9 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                     f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
                     font_size=self._hist_label_size,
                     fill=self._hist_label_colour))
+
+    def _add_splithist():
+        print("TO ADD - SPLITHIST (could just re-use main _add_hist function")
 
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref):
         if len(freq) == 0:

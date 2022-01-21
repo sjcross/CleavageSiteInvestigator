@@ -13,6 +13,12 @@ class SHOWHIDE(Enum):
     def __str__(self):
         return str(self.value)
 
+class HISTSPLIT(Enum):
+    COMBI = 'combi'
+    SPLIT = 'split'
+
+    def __str__(self):
+        return str(self.value)
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
@@ -90,6 +96,11 @@ def_hist_grid_size = 1
 def_hist_grid_colour = "lightgray"
 def_hist_grid_interval = 25
 
+def_splithist_vis = SHOWHIDE.HIDE
+def_splithist_min_range = 0
+def_splithist_max_range = 100
+def_splithist_colour = "darkgray"
+def_splithist_rel_height = 0.16
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
@@ -224,6 +235,15 @@ optional.add_argument("-hg_c", "--hist_grid_colour", type=str, default=def_hist_
 
 optional.add_argument("-hg_i", "--hist_grid_interval", type=int, default=def_hist_grid_interval, help="Interval between horizontal grid lines shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_grid_interval)
 
+optional.add_argument("-sh_v", "--splithist_vis", type=SHOWHIDE, default=def_splithist_vis, choices=list(SHOWHIDE), help="Controls whether split histograms (one each for 3', 5' and blunt events) are rendered above and below the strandlinkageplot.  Must be either \"show\" or \"hide\" (e.g. -hv \"show\").  Default: \"%s\".\n\n" % def_splithist_vis)
+
+optional.add_argument("-sh_r", "--splithist_range", type=int, default=[def_splithist_min_range,def_splithist_max_range], nargs=2, help="Range of values split histograms will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_splithist_min_range,def_splithist_max_range))
+
+optional.add_argument("-sh_c", "--splithist_colour", type=str, default=def_splithist_colour, help="Colour of the rendered split histogram bars.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_splithist_colour)
+
+optional.add_argument("-sh_rh", "--splithist_rel_height", type=float, default=def_splithist_rel_height, help="Height of the split histogram plots.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_splithist_rel_height)
+
+
 args = parser.parse_args()
 
 end_label_show = args.end_label_vis is SHOWHIDE.SHOW
@@ -236,6 +256,7 @@ hist_show = args.hist_vis is SHOWHIDE.SHOW
 hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
 hist_label_zero_show = args.hist_label_zero_vis is SHOWHIDE.SHOW
 hist_grid_show = args.hist_grid_vis is SHOWHIDE.SHOW
+splithist_show = args.splithist_vis is SHOWHIDE.SHOW
 
 # Required arguments
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
@@ -251,6 +272,7 @@ event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.
 hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap,args.hist_overhang)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
+splithist_opts = (splithist_show,args.splithist_range[0],args.splithist_range[1],args.splithist_colour,args.splithist_rel_height)
 
-writer = slpw.StrandLinkagePlotWriter(im_dims=im_dims, font=args.font, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts)
+writer = slpw.StrandLinkagePlotWriter(im_dims=im_dims, font=args.font, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts, splithist_opts=splithist_opts)
 writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
