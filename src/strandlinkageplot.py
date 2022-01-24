@@ -22,11 +22,11 @@ class HISTSPLIT(Enum):
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
-def_im_h = 300
+def_im_h = 600
 
 def_font = "Arial"
 
-def_map_rel_top = 0.42
+def_map_rel_top = 0.36
 def_map_rel_height = 0.3
 def_map_rel_left = 0.075
 def_map_rel_width = 0.78
@@ -51,7 +51,7 @@ def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
 def_grid_label_colour = "gray"
 def_grid_label_interval = 500
-def_grid_label_rel_gap = 0.04
+def_grid_label_rel_gap = 0.02
 
 def_cbar_vis = SHOWHIDE.SHOW
 def_cbar_rel_left = 0.91
@@ -78,8 +78,8 @@ def_hist_min_range = 0
 def_hist_max_range = 100
 def_hist_bin_width = 1
 def_hist_colour = "darkgray"
-def_hist_rel_height = 0.16
-def_hist_rel_gap = 0.06
+def_hist_rel_height = 0.05
+def_hist_rel_gap = 0.02
 def_hist_pc_bar_gap = 0
 def_hist_overhang = 0
 
@@ -96,11 +96,11 @@ def_hist_grid_size = 1
 def_hist_grid_colour = "lightgray"
 def_hist_grid_interval = 25
 
-def_splithist_vis = SHOWHIDE.HIDE
+def_splithist_vis = SHOWHIDE.SHOW
 def_splithist_min_range = 0
 def_splithist_max_range = 100
 def_splithist_colour = "darkgray"
-def_splithist_rel_height = 0.16
+def_splithist_rel_height = 0.05
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
