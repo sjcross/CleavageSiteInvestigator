@@ -88,7 +88,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         self._cbar_show = cbar_opts[0]
         self._cbar_rel_left = cbar_opts[1]
         self._cbar_rel_width = cbar_opts[2]
-        self._cbar_border_size = cbar_opts[3]
+        self._cbar_border_size = float(cbar_opts[3])
 
         self._cbar_label_show = cbar_label_opts[0]
         self._cbar_label_size = cbar_label_opts[1]
@@ -170,7 +170,10 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         map_xy = (map_x1, map_y1, map_x2, map_y2)
 
         if self._grid_show:
-            self._add_grid_lines(dwg, pos_min, pos_max, map_xy)
+            grid_y1 = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
+            grid_y2 = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
+            grid_xy = (map_x1,grid_y1,map_x2,grid_y2)
+            self._add_grid_lines(dwg, pos_min, pos_max, grid_xy)
 
         if self._grid_label_show:
             self._add_grid_labels(dwg, pos_min, pos_max, map_xy)
@@ -183,16 +186,15 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         if self._hist_show:
             (freq_t, freq_b) = ru.get_position_frequency(freq)
-            self._add_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
-            self._add_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
+            # self._add_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
+            # self._add_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
         
-        self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, True)
-        self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
-        self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b, True)
-        self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b, False)
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
 
-        # if self._splithist_show:
-        #     self._add_splithist()
+        if self._splithist_show:
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_t, True)
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b, False)
 
         self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref)
 
@@ -201,47 +203,21 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         # Writing SVG to file
         dwg.save()
 
-    def _add_grid_lines(self, dwg, pos_min, pos_max, map_xy):
-        (map_x1, map_y1, map_x2, map_y2) = map_xy
-
-        # Adding horizontal grid line
-        # grid_yc = (map_y1+map_y2)/2
-        # dwg.add(svg.shapes.Line((map_x1, grid_yc), (map_x2, grid_yc), stroke=self._grid_colour, stroke_width=self._grid_size))
+    def _add_grid_lines(self, dwg, pos_min, pos_max, grid_xy):
+        (grid_x1, grid_y1, grid_x2, grid_y2) = grid_xy
 
         # Getting range of vertical grid lines
-        grid_pos_min = self._grid_interval * math.ceil(
-            pos_min / self._grid_interval)
-        grid_pos_max = self._grid_interval * math.floor(
-            pos_max / self._grid_interval)
+        grid_pos_min = self._grid_interval * math.ceil(pos_min / self._grid_interval)
+        grid_pos_max = self._grid_interval * math.floor(pos_max / self._grid_interval)
         if grid_pos_max % self._grid_interval == 0:
             grid_pos_max += 1
 
         # Adding vertical grid lines
         for grid_pos in range(grid_pos_min, grid_pos_max, self._grid_interval):
-            grid_x = map_x1 + (map_x2 - map_x1) * ((grid_pos - pos_min) /
-                                                   (pos_max - pos_min))
-            grid_y1 = map_y1 + self._dna_size / 2 + self._dna_rel_gap*self._im_h
-            grid_y2 = map_y2 - self._dna_size / 2 - self._dna_rel_gap*self._im_h
-            dwg.add(
-                svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2),
+            grid_x = grid_x1 + (grid_x2 - grid_x1) * ((grid_pos - pos_min) / (pos_max - pos_min))
+            dwg.add(svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2),
                                 stroke=self._grid_colour,
                                 stroke_width=self._grid_size))
-
-            if self._hist_show:
-                grid_y1 = map_y1 - (self._hist_rel_gap +
-                                    self._hist_rel_height) * self._im_h
-                grid_y2 = map_y1 - (self._hist_rel_gap * self._im_h)
-                dwg.add(
-                    svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2),
-                                    stroke=self._hist_grid_colour,
-                                    stroke_width=self._hist_grid_size))
-                grid_y1 = map_y2 + (self._hist_rel_gap +
-                                    self._hist_rel_height) * self._im_h
-                grid_y2 = map_y2 + (self._hist_rel_gap * self._im_h)
-                dwg.add(
-                    svg.shapes.Line((grid_x, grid_y1), (grid_x, grid_y2),
-                                    stroke=self._hist_grid_colour,
-                                    stroke_width=self._hist_grid_size))
 
     def _add_grid_labels(self, dwg, pos_min, pos_max, map_xy):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
@@ -256,9 +232,11 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         grid_label_gap = self._grid_label_rel_gap * self._im_h
         if self._hist_show:
-            grid_label_gap = grid_label_gap + (
-                self._hist_rel_gap + self._hist_rel_height) * self._im_h
-
+            grid_label_gap = grid_label_gap + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+                    
+        if self._splithist_show:
+            grid_label_gap = grid_label_gap + 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
+            
         # Adding grid labels
         for grid_label_pos in range(grid_label_min, grid_label_max,
                                     self._grid_label_interval):
@@ -378,14 +356,18 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         cbar_x2 = cbar_x1 + self._im_w * self._cbar_rel_width + self._cbar_border_size/2
         cbar_w = self._im_w * self._cbar_rel_width
 
-        if self._hist_show:
-            cbar_y1 = map_y1 - (self._hist_rel_gap +
-                                self._hist_rel_height) * self._im_h + self._cbar_border_size/2
-            cbar_y2 = map_y2 + (self._hist_rel_gap +
-                                self._hist_rel_height) * self._im_h + self._cbar_border_size/2
-        else:
-            cbar_y1 = self._im_h * self._map_rel_top + self._cbar_border_size/2
-            cbar_y2 = cbar_y1 + self._im_h * self._map_rel_height + self._cbar_border_size/2
+        cbar_y1 = map_y1 + self._cbar_border_size/2
+        cbar_y2 = map_y2 - self._cbar_border_size/2
+
+        # If we're going to have the histogram labels to the side of the plots, we don't want the colourbar extending all the way
+        # if self._hist_show:
+        #     cbar_y1 = cbar_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
+        #     cbar_y2 = cbar_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+        
+        # if self._splithist_show:
+        #     cbar_y1 = cbar_y1 - 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
+        #     cbar_y2 = cbar_y2 + 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+            
         cbar_h = cbar_y2 - cbar_y1
 
         # Adding cbar lines
@@ -458,7 +440,6 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
     def _add_sum_hist(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
-        bar_width = (map_x2 - map_x1) / (pos_max - pos_min)
         
         hist_x1 = map_x1
         hist_x2 = map_x2
@@ -471,15 +452,12 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
 
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x2, hist_y1), stroke="#ff00ff"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y2), (hist_x2, hist_y2), stroke="#ff00ff"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x1, hist_y2), stroke="#ff00ff"))
-        dwg.add(svg.shapes.Line((hist_x2, hist_y1), (hist_x2, hist_y2), stroke="#ff00ff"))
+        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
 
 
     def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
-        bar_width = (map_x2 - map_x1) / (pos_max - pos_min)
         
         hist_x1 = map_x1
         hist_x2 = map_x2
@@ -489,38 +467,30 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         # Split hist 1
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
-
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x2, hist_y1), stroke="#ff0000"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y2), (hist_x2, hist_y2), stroke="#ff0000"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x1, hist_y2), stroke="#ff0000"))
-        dwg.add(svg.shapes.Line((hist_x2, hist_y1), (hist_x2, hist_y2), stroke="#ff0000"))
+        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
-
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x2, hist_y1), stroke="#00ff00"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y2), (hist_x2, hist_y2), stroke="#00ff00"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x1, hist_y2), stroke="#00ff00"))
-        dwg.add(svg.shapes.Line((hist_x2, hist_y1), (hist_x2, hist_y2), stroke="#00ff00"))
+        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
+        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
 
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x2, hist_y1), stroke="#0000ff"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y2), (hist_x2, hist_y2), stroke="#0000ff"))
-        dwg.add(svg.shapes.Line((hist_x1, hist_y1), (hist_x1, hist_y2), stroke="#0000ff"))
-        dwg.add(svg.shapes.Line((hist_x2, hist_y1), (hist_x2, hist_y2), stroke="#0000ff"))
 
-    def _add_hist(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
+    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, is_top):
         if len(freq) == 0:
             return
 
-        (map_x1, map_y1, map_x2, map_y2) = map_xy
-        bar_width = (map_x2 - map_x1) / (pos_max - pos_min)
+        (hist_x1, hist_y1, hist_x2, hist_y2) = hist_xy
+        bar_width = (hist_x2 - hist_x1) / (pos_max - pos_min)
         hist_h = self._im_h * self._hist_rel_height
 
         # Getting the total number of events
@@ -539,30 +509,25 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         # Used for positioning labels and grid lines
         sign = -1 if is_top else 1
-        hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        if (self._splithist_show):
-            hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
             
+        # Adding optional grid lines
+        if self._grid_show:
+            self._add_grid_lines(dwg, pos_min, pos_max, hist_xy)
+
         # Adding the x-axis
-        grid_x1 = map_x1 - self._hist_overhang - self._grid_size/2
-        grid_x2 = map_x2 + self._hist_overhang - self._grid_size/2
+        grid_x1 = hist_x1 - self._hist_overhang - self._grid_size/2
+        grid_x2 = hist_x2 + self._hist_overhang - self._grid_size/2
         grid_y = hist_y2 + self._hist_grid_size / 2 - self._grid_size/2
         dwg.add(
             svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                             stroke=self._hist_grid_colour,
                             stroke_width=self._hist_grid_size))
 
-        # Adding the y-axis
-        line_x = ((map_x1 - self._hist_overhang) if self._hist_label_position == HPOS.LEFT else (map_x2 + self._hist_overhang)) - self._grid_size/2
-        if is_top:
-            line_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h - self._grid_size/2
-            line_y2 = map_y1 - (self._hist_rel_gap * self._im_h) - self._grid_size/2
-        else:
-            line_y1 = map_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h - self._grid_size/2
-            line_y2 = map_y2 + (self._hist_rel_gap * self._im_h) - self._grid_size/2
-        
+        # # Adding the y-axis
+        line_x = ((hist_x1 - self._hist_overhang) if self._hist_label_position == HPOS.LEFT else (hist_x2 + self._hist_overhang)) - self._grid_size/2
+                
         dwg.add(
-            svg.shapes.Line((line_x, line_y1), (line_x, line_y2),
+            svg.shapes.Line((line_x, hist_y1), (line_x, hist_y2),
                             stroke=self._hist_grid_colour,
                             stroke_width=self._hist_grid_size))
 
@@ -598,21 +563,22 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                 bin_total = bin_total + (0 if freq.get(curr_pos) is None else
                                          freq.get(curr_pos))
 
+            if bin_total == 0:
+                continue
+
             event_pc = (bin_total / total) * 100
             norm_count = (event_pc - hist_min_range) / hist_range
-
+            
             bar_offset = bar_width * self._hist_bin_width * self._hist_pc_bar_gap * 0.5 / 100
-            bar_x1 = max(map_x1, map_x1 + bar_width * (pos - pos_min)) + bar_offset
-            bar_x2 = min(map_x2, map_x1 + bar_width * (pos - pos_min + self._hist_bin_width)) - bar_offset
+            bar_x1 = max(hist_x1, hist_x1 + bar_width * (pos - pos_min)) + bar_offset
+            bar_x2 = min(hist_x2, hist_x1 + bar_width * (pos - pos_min + self._hist_bin_width)) - bar_offset
             
             if is_top:
-                bar_y1 = map_y1 - (self._hist_rel_gap + self._hist_rel_height *
-                                   norm_count) * self._im_h
-                bar_y2 = map_y1 - (self._hist_rel_gap * self._im_h)
+                bar_y1 = hist_y2 - norm_count * self._hist_rel_height * self._im_h
+                bar_y2 = hist_y2
             else:
-                bar_y1 = map_y2 + (self._hist_rel_gap * self._im_h)
-                bar_y2 = map_y2 + (self._hist_rel_gap + self._hist_rel_height *
-                                   norm_count) * self._im_h
+                bar_y1 = hist_y2
+                bar_y2 = hist_y2 + norm_count * self._hist_rel_height * self._im_h
                 
             dwg.add(
                 svg.shapes.Rect(insert=(bar_x1, bar_y1),
@@ -623,10 +589,10 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         if self._hist_label_show:
             if self._hist_label_position == HPOS.LEFT:
                 anchor = "end"
-                label_x = map_x1 - (self._hist_label_rel_gap * self._im_w)
+                label_x = hist_x1 - (self._hist_label_rel_gap * self._im_w)
             else:
                 anchor = "start"
-                label_x = map_x2 + (self._hist_label_rel_gap * self._im_w)
+                label_x = hist_x2 + (self._hist_label_rel_gap * self._im_w)
 
             hist_range_start = hist_min_range if self._hist_label_zero_show else self._hist_label_interval
             for label_value in range(hist_range_start, hist_max_range,

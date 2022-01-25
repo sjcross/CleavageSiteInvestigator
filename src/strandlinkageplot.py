@@ -22,12 +22,12 @@ class HISTSPLIT(Enum):
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
-def_im_h = 600
+def_im_h = 820
 
 def_font = "Arial"
 
-def_map_rel_top = 0.36
-def_map_rel_height = 0.3
+def_map_rel_top = 0.38
+def_map_rel_height = 0.28
 def_map_rel_left = 0.075
 def_map_rel_width = 0.78
 
@@ -51,7 +51,7 @@ def_grid_label_vis = SHOWHIDE.SHOW
 def_grid_label_size = 12
 def_grid_label_colour = "gray"
 def_grid_label_interval = 500
-def_grid_label_rel_gap = 0.02
+def_grid_label_rel_gap = 0.015
 
 def_cbar_vis = SHOWHIDE.SHOW
 def_cbar_rel_left = 0.91
@@ -79,7 +79,7 @@ def_hist_max_range = 100
 def_hist_bin_width = 1
 def_hist_colour = "darkgray"
 def_hist_rel_height = 0.05
-def_hist_rel_gap = 0.02
+def_hist_rel_gap = 0.03
 def_hist_pc_bar_gap = 0
 def_hist_overhang = 0
 
