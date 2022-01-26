@@ -4,6 +4,7 @@ import os
 import svgwrite as svg
 
 from enum import Enum
+from enums.eventtype import Eventtype
 from matplotlib import cm
 from utils import abstractmapwriter as amw
 from utils import reportutils as ru
@@ -184,17 +185,19 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         if self._cbar_show:
             self._add_cbar(dwg, map_xy, freq)
 
+        n_events = sum(freq.values())
+
         if self._hist_show:
-            (freq_t, freq_b) = ru.get_position_frequency(freq)
-            # self._add_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
-            # self._add_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
-        
-            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_t, True)
-            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, False)
+            (freq_t, freq_b) = ru.get_position_frequency(freq)        
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_t, n_events, True)
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, n_events, False)
 
         if self._splithist_show:
-            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_t, True)
-            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b, False)
+            (freq_t_5, freq_b_5) = ru.get_position_frequency(freq, Eventtype.FIVE_P)
+            (freq_t_3, freq_b_3) = ru.get_position_frequency(freq, Eventtype.THREE_P)
+            (freq_t_b, freq_b_b) = ru.get_position_frequency(freq, Eventtype.BLUNT)        
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_t_5, freq_t_3, freq_t_b, n_events, True)
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b_5, freq_b_3, freq_b_b, n_events, False)
 
         self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref)
 
@@ -358,15 +361,6 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         cbar_y1 = map_y1 + self._cbar_border_size/2
         cbar_y2 = map_y2 - self._cbar_border_size/2
-
-        # If we're going to have the histogram labels to the side of the plots, we don't want the colourbar extending all the way
-        # if self._hist_show:
-        #     cbar_y1 = cbar_y1 - (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
-        #     cbar_y2 = cbar_y2 + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
-        
-        # if self._splithist_show:
-        #     cbar_y1 = cbar_y1 - 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
-        #     cbar_y2 = cbar_y2 + 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
             
         cbar_h = cbar_y2 - cbar_y1
 
@@ -438,7 +432,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                     font_size=self._cbar_label_size,
                     fill=self._cbar_label_colour))
 
-    def _add_sum_hist(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
+    def _add_sum_hist(self, dwg, pos_min, pos_max, map_xy, freq, n_events, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
         
         hist_x1 = map_x1
@@ -453,12 +447,12 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
 
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, is_top)
 
 
-    def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq, is_top):
+    def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq_5, freq_3, freq_b, n_events, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
-        
+                
         hist_x1 = map_x1
         hist_x2 = map_x2
         
@@ -468,24 +462,24 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, is_top)
 
 
-    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, is_top):
+    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, is_top):
         if len(freq) == 0:
             return
 
@@ -494,10 +488,9 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         hist_h = self._im_h * self._hist_rel_height
 
         # Getting the total number of events
-        total = sum(freq.values())
         if self._hist_min_range == -1 and self._hist_max_range == -1:
-            hist_min_range = math.floor((min(freq.values()) / total) * 100)
-            hist_max_range = math.ceil((max(freq.values()) / total) * 100)
+            hist_min_range = math.floor((min(freq.values()) / n_events) * 100)
+            hist_max_range = math.ceil((max(freq.values()) / n_events) * 100)
         else:
             hist_min_range = self._hist_min_range
             hist_max_range = self._hist_max_range
@@ -566,7 +559,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
             if bin_total == 0:
                 continue
 
-            event_pc = (bin_total / total) * 100
+            event_pc = (bin_total / n_events) * 100
             norm_count = (event_pc - hist_min_range) / hist_range
             
             bar_offset = bar_width * self._hist_bin_width * self._hist_pc_bar_gap * 0.5 / 100

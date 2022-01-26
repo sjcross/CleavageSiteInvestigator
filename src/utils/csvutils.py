@@ -61,6 +61,7 @@ class CSVReader():
         if contents[0] == "Error":
             return (None, None)
         
+        # The key is (top_pos, bottom_pos, split)
         key = (int(contents[3]), int(contents[4]), contents[5] == "True" or contents[5] == "TRUE")
         value = int(contents[1])
 

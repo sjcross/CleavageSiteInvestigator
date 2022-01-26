@@ -22,12 +22,12 @@ class HISTSPLIT(Enum):
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
-def_im_h = 820
+def_im_h = 1000
 
 def_font = "Arial"
 
-def_map_rel_top = 0.38
-def_map_rel_height = 0.28
+def_map_rel_top = 0.43
+def_map_rel_height = 0.16
 def_map_rel_left = 0.075
 def_map_rel_width = 0.78
 
@@ -78,7 +78,7 @@ def_hist_min_range = 0
 def_hist_max_range = 100
 def_hist_bin_width = 1
 def_hist_colour = "darkgray"
-def_hist_rel_height = 0.05
+def_hist_rel_height = 0.06
 def_hist_rel_gap = 0.03
 def_hist_pc_bar_gap = 0
 def_hist_overhang = 0
@@ -100,7 +100,7 @@ def_splithist_vis = SHOWHIDE.SHOW
 def_splithist_min_range = 0
 def_splithist_max_range = 100
 def_splithist_colour = "darkgray"
-def_splithist_rel_height = 0.05
+def_splithist_rel_height = 0.06
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
@@ -189,7 +189,7 @@ optional.add_argument("-e_mas", "--event_max_size", type=float, default=def_even
 
 optional.add_argument("-e_c", "--event_colourmap", type=str, default=def_event_colourmap, help="Matplotlib colourmap to use for event plotting.  Must be a Matplotlib colourmap.  Default: \"%s\".\n\n" % def_event_colourmap)
 
-optional.add_argument("-e_r", "--event_range", type=int, default=[def_event_min_range,def_event_max_range], nargs=2, help="Range of values colourscale will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_event_min_range,def_event_max_range))
+optional.add_argument("-e_r", "--event_range", type=int, default=[def_event_min_range,def_event_max_range], nargs=2, help="Range of values colourscale will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -e_r -1 -1).  Default: \"%i %i\".\n\n" % (def_event_min_range,def_event_max_range))
 
 optional.add_argument("-e_orv", "--event_outside_range_vis", type=SHOWHIDE, default=def_event_outside_range_vis, choices=list(SHOWHIDE), help="Controls whether events not entirely within the displayed range are included in the strandlinkageplot.  Must be either \"show\" or \"hide\" (e.g. -hv \"show\").  Default: \"%s\".\n\n" % def_event_outside_range_vis)
 

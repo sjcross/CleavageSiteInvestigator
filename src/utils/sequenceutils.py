@@ -1,6 +1,7 @@
 from Bio import Align
 from matplotlib.pyplot import minorticks_off
 from enums.ends import Ends
+from enums.eventtype import Eventtype
 from enums.orientation import Orientation
 
 class SequenceSearcher():
@@ -372,18 +373,34 @@ def get_sequence_str(ref, cleavage_site_t, cleavage_site_b, split, extra_nt=0):
 
         return (seq1, seq2)
 
-def get_type_str(cleavage_site_t, cleavage_site_b, split):
+def get_type(cleavage_site_t, cleavage_site_b, split):
     if cleavage_site_b is None or cleavage_site_t is None:
         return None
 
     # Identifying break type
     if (cleavage_site_b < cleavage_site_t and not split) or (cleavage_site_b > cleavage_site_t and split):
-        return "3' overhang"
+        return Eventtype.THREE_P
         
     elif cleavage_site_b == cleavage_site_t:
-        return "Blunt end"
+        return Eventtype.BLUNT
 
     elif (cleavage_site_b > cleavage_site_t and not split) or (cleavage_site_b < cleavage_site_t and split):
+        return Eventtype.FIVE_P
+
+def get_type_str(cleavage_site_t, cleavage_site_b, split):
+    type = get_type(cleavage_site_t, cleavage_site_b, split)
+
+    if type is None:
+        return None
+
+    # Identifying break type
+    if type is Eventtype.THREE_P:
+        return "3' overhang"
+        
+    elif type is Eventtype.BLUNT:
+        return "Blunt end"
+
+    elif type is Eventtype.FIVE_P:
         return "5' overhang"
 
 def sample_is_split(cleavage_site_t, cleavage_site_b, midpoint_site):
