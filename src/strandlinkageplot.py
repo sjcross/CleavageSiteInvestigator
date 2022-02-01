@@ -20,6 +20,8 @@ class HISTSPLIT(Enum):
     def __str__(self):
         return str(self.value)
 
+print("TO ADD: Split hists to have different line intervals to sum histograms")
+
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
 def_im_h = 1000

@@ -238,7 +238,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
             grid_label_gap = grid_label_gap + (self._hist_rel_gap + self._hist_rel_height) * self._im_h
                     
         if self._splithist_show:
-            grid_label_gap = grid_label_gap + 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h 
+            grid_label_gap = grid_label_gap + 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h 
             
         # Adding grid labels
         for grid_label_pos in range(grid_label_min, grid_label_max,
@@ -442,12 +442,12 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         if (self._splithist_show):
-            hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
+            hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
 
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
 
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, is_top)
 
 
     def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq_5, freq_3, freq_b, n_events, is_top):
@@ -460,40 +460,44 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         
         # Split hist 1
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
+        hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
-        hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
+        hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._hist_rel_height) * self._im_h
-        hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
+        hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
 
 
-    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, is_top):
+    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, is_top):
         if len(freq) == 0:
             return
 
         (hist_x1, hist_y1, hist_x2, hist_y2) = hist_xy
         bar_width = (hist_x2 - hist_x1) / (pos_max - pos_min)
-        hist_h = self._im_h * self._hist_rel_height
+        hist_h = abs(hist_y2-hist_y1)
 
         # Getting the total number of events
-        if self._hist_min_range == -1 and self._hist_max_range == -1:
+        if min_range == -1:
             hist_min_range = math.floor((min(freq.values()) / n_events) * 100)
+        else:
+            hist_min_range = min_range
+
+        if max_range == -1:
             hist_max_range = math.ceil((max(freq.values()) / n_events) * 100)
         else:
-            hist_min_range = self._hist_min_range
-            hist_max_range = self._hist_max_range
+            hist_max_range = max_range
+            
         hist_range = hist_max_range - hist_min_range
 
         # Preventing divide by zero errors
@@ -529,11 +533,8 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
             for grid_value in range(self._hist_grid_interval, hist_max_range,
                                     self._hist_grid_interval):
 
-                grid_y = hist_y2 + sign * hist_h * (
-                    grid_value -
-                    hist_min_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
-                dwg.add(
-                    svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
+                grid_y = hist_y2 + sign * hist_h * (grid_value - hist_min_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
+                dwg.add(svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                                     stroke=self._hist_grid_colour,
                                     stroke_width=self._hist_grid_size))
 
@@ -567,11 +568,11 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
             bar_x2 = min(hist_x2, hist_x1 + bar_width * (pos - pos_min + self._hist_bin_width)) - bar_offset
             
             if is_top:
-                bar_y1 = hist_y2 - norm_count * self._hist_rel_height * self._im_h
+                bar_y1 = hist_y2 - norm_count * hist_h
                 bar_y2 = hist_y2
             else:
                 bar_y1 = hist_y2
-                bar_y2 = hist_y2 + norm_count * self._hist_rel_height * self._im_h
+                bar_y2 = hist_y2 + norm_count * hist_h
                 
             dwg.add(
                 svg.shapes.Rect(insert=(bar_x1, bar_y1),
