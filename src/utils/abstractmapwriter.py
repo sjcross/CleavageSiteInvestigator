@@ -2,6 +2,7 @@ import math
 import sys
 
 from abc import abstractmethod
+from rich import print
 from utils import csvutils as cu  
 from utils import fileutils as fu
 from utils import reportutils as ru

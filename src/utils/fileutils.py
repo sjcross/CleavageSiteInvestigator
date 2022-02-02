@@ -3,6 +3,7 @@ import os
 import re
 
 from Bio.Seq import Seq
+from rich import print
 
 
 class FileReader():

@@ -3,6 +3,7 @@ from matplotlib.pyplot import minorticks_off
 from enums.ends import Ends
 from enums.eventtype import Eventtype
 from enums.orientation import Orientation
+from rich import print
 
 class SequenceSearcher():
     def __init__(self, aligner, max_gap=10, min_quality=1.0, num_bases=20, verbose=False):

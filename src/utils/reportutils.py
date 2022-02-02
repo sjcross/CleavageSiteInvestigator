@@ -4,6 +4,7 @@ import sys
 
 from enum import Enum
 from enums.eventtype import Eventtype
+from rich import print
 from utils import fileutils as fu
 from utils import sequenceutils as su
 

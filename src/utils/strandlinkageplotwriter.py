@@ -6,6 +6,7 @@ import svgwrite as svg
 from enum import Enum
 from enums.eventtype import Eventtype
 from matplotlib import cm
+from rich import print
 from utils import abstractmapwriter as amw
 from utils import reportutils as ru
 

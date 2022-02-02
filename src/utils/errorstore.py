@@ -1,3 +1,5 @@
+from rich import print
+
 class ErrorStore():
     def __init__(self):
         self._store = {'NO_CASS':0,'CASS_MISMATCH':0,'NO_CONSENSUS':0,'CONSENSUS_MISMATCH':0,'MAX_GAP':0,'NO_MIDPOINT':0}

@@ -28,11 +28,11 @@
 # Installation
 1. Download CSI source code from [GitHub](https://github.com/sjcross/CleavageSiteInvestigator)
 2. Install Python (tested with Python 3.9.1)
-3. Install required libraries ([BioPython](https://biopython.org/), [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite) and [TQDM](https://github.com/tqdm/tqdm))
+3. Install required libraries ([BioPython](https://biopython.org/), [Rich](https://github.com/Textualize/rich) [Seaborn](https://seaborn.pydata.org/), [SVGWrite](https://github.com/mozman/svgwrite))
     - Either using Pip
     ```Powershell
     pip install biopython==1.79
-    pip install tqdm==4.55.1
+    pip install rich==11.1.0
     pip install seaborn==0.11.1
     pip install svgwrite==1.4
     ```

@@ -5,7 +5,8 @@ import sys
 
 from argparse import RawTextHelpFormatter
 from Bio import Align
-from tqdm import tqdm
+from rich import print
+from rich.progress import track
 
 from utils import csvutils as cu
 from utils import errorstore as es
@@ -164,7 +165,7 @@ error_count = 0
 if verbose:
     print("PROCESSING: %i sequence(s)" % len(tests))
 
-for iteration, test in enumerate(tqdm(tests, disable=verbose, smoothing=0.1)):
+for iteration, test in enumerate(track(tests, disable=verbose,description="    ")):
     if verbose:
         if test[1] != "":
             print("    Processing consensus sequence %i (%s)" % (iteration + 1,test[1]))
