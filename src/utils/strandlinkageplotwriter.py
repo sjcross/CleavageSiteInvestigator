@@ -52,7 +52,10 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                  hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25),
-                 splithist_opts=(False, 0, 100, "darkgray", 0.16)):
+                 hist_name_opts=(True, 12, "gray", 0.01, HPOS.RIGHT),
+                 splithist_opts=(False, 0, 100, "darkgray", 0.16),
+                 splithist_label_opts=50,
+                 splithist_grid_opts=50):
 
         self._im_w = im_dims[0]
         self._im_h = im_dims[1]
@@ -129,11 +132,21 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         self._hist_grid_colour = hist_grid_opts[2]
         self._hist_grid_interval = hist_grid_opts[3]
 
+        self._hist_name_show = hist_name_opts[0]
+        self._hist_name_size = hist_name_opts[1]
+        self._hist_name_colour = hist_name_opts[2]
+        self._hist_name_rel_gap = hist_name_opts[3]
+        self._hist_name_position = hist_name_opts[4]
+
         self._splithist_show = splithist_opts[0]
         self._splithist_min_range = splithist_opts[1]
         self._splithist_max_range = splithist_opts[2]
         self._splithist_colour = splithist_opts[3]
         self._splithist_rel_height = splithist_opts[4]
+
+        self._splithist_label_interval = splithist_label_opts
+
+        self._splithist_grid_interval = splithist_grid_opts
 
     ## GETTERS AND SETTERS
 
@@ -447,7 +460,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
 
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, self._hist_label_interval, self._hist_grid_interval, "Sum", is_top)
 
 
     def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq_5, freq_3, freq_b, n_events, is_top):
@@ -457,29 +470,34 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         hist_x2 = map_x2
         
         sign = -1 if is_top else 1
+
+        min_range = self._splithist_min_range
+        max_range = self._splithist_max_range
+        label_interval = self._splithist_label_interval
+        grid_interval = self._splithist_grid_interval
         
         # Split hist 1
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ OH", is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ OH", is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, self._splithist_min_range, self._splithist_max_range, is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, min_range, max_range, label_interval, grid_interval, "Blunt", is_top)
 
 
-    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, is_top):
+    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, label_interval, grid_interval, name, is_top):
         if len(freq) == 0:
             return
 
@@ -530,8 +548,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         # Adding the grid first, so it's at the bottom of the stack
         if self._hist_grid_show:
-            for grid_value in range(self._hist_grid_interval, hist_max_range,
-                                    self._hist_grid_interval):
+            for grid_value in range(grid_interval, hist_max_range, grid_interval):
 
                 grid_y = hist_y2 + sign * hist_h * (grid_value - hist_min_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
                 dwg.add(svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
@@ -588,13 +605,10 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                 anchor = "start"
                 label_x = hist_x2 + (self._hist_label_rel_gap * self._im_w)
 
-            hist_range_start = hist_min_range if self._hist_label_zero_show else self._hist_label_interval
-            for label_value in range(hist_range_start, hist_max_range,
-                                     self._hist_label_interval):
-                end_label_y = hist_y2 + sign * hist_h * (
-                    label_value - hist_min_range) / hist_range
-                dwg.add(
-                    svg.text.Text(
+            hist_range_start = hist_min_range if self._hist_label_zero_show else self.label_interval
+            for label_value in range(hist_range_start, hist_max_range, label_interval):
+                end_label_y = hist_y2 + sign * hist_h * (label_value - hist_min_range) / hist_range
+                dwg.add(svg.text.Text(
                         "%i%%" % label_value,
                         insert=(label_x, end_label_y),
                         style=
@@ -603,16 +617,26 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
                         fill=self._hist_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the interval)
-            end_label_y = hist_y2 + sign * hist_h * (
-                hist_max_range - hist_min_range) / hist_range
-            dwg.add(
-                svg.text.Text(
+            end_label_y = hist_y2 + sign * hist_h * (hist_max_range - hist_min_range) / hist_range
+            dwg.add(svg.text.Text(
                     "%i%%" % hist_max_range,
                     insert=(label_x, end_label_y),
                     style=
                     f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
                     font_size=self._hist_label_size,
                     fill=self._hist_label_colour))
+
+        if self._hist_name_show:
+            if self._hist_name_position == HPOS.LEFT:
+                anchor = "end"
+                name_x = hist_x1 - (self._hist_name_rel_gap * self._im_w)
+            else:
+                anchor = "start"
+                name_x = hist_x2 + (self._hist_name_rel_gap * self._im_w)
+
+            name_y = hist_y2 + sign * hist_h * 0.5
+            dwg.add(svg.text.Text(name, insert=(name_x, name_y), style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
+                        font_size=self._hist_name_size, fill=self._hist_name_colour))
 
     def _add_splithist():
         print("TO ADD - SPLITHIST (could just re-use main _add_hist function")
