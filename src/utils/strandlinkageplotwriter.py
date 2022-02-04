@@ -142,8 +142,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         self._splithist_show = splithist_opts[0]
         self._splithist_min_range = splithist_opts[1]
         self._splithist_max_range = splithist_opts[2]
-        self._splithist_colour = splithist_opts[3]
-        self._splithist_rel_height = splithist_opts[4]
+        self._splithist_rel_height = splithist_opts[3]
 
         self._splithist_label_interval = splithist_label_opts
 

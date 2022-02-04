@@ -245,7 +245,6 @@ optional.add_argument("-hg_c", "--hist_grid_colour", type=str, default=def_hist_
 
 optional.add_argument("-hg_i", "--hist_grid_interval", type=int, default=def_hist_grid_interval, help="Interval between horizontal grid lines shown in histogram.  Default: \"%.1f\".\n\n" % def_hist_grid_interval)
 
-
 optional.add_argument("-hn_v", "--hist_name_vis", type=SHOWHIDE, default=def_hist_name_vis, choices=list(SHOWHIDE), help="Controls whether histogram names (e.g. \"Sum\", \"5′ OH\", etc.) are rendered to the side of each histogram.  Must be either \"show\" or \"hide\" (e.g. -hn_v \"show\").  Default: \"%s\".\n\n" % def_hist_name_vis)
 
 optional.add_argument("-hn_s", "--hist_name_size", type=int, default=def_hist_name_size, help="Font size of histogram names.  Default: \"%.1f\".\n\n" % def_hist_name_size)
@@ -259,8 +258,6 @@ optional.add_argument("-hn_p", "--hist_name_position", type=slpw.HPOS, default=d
 optional.add_argument("-sh_v", "--splithist_vis", type=SHOWHIDE, default=def_splithist_vis, choices=list(SHOWHIDE), help="Controls whether split histograms (one each for 3′, 5′ and blunt events) are rendered above and below the strandlinkageplot.  Must be either \"show\" or \"hide\" (e.g. -sh_v \"show\").  Default: \"%s\".\n\n" % def_splithist_vis)
 
 optional.add_argument("-sh_r", "--splithist_range", type=int, default=[def_splithist_min_range,def_splithist_max_range], nargs=2, help="Range of values split histograms will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -er -1 -1).  Default: \"%i %i\".\n\n" % (def_splithist_min_range,def_splithist_max_range))
-
-optional.add_argument("-sh_c", "--splithist_colour", type=str, default=def_splithist_colour, help="Colour of the rendered split histogram bars.  Can be specified as colour names (e.g. \"black\"), as hex values (e.g. \"#16C3D6\" for a light blue) or as RGB values in the range 0-255 (e.g. \"rgb(128,0,128)\" for purple).  Default: \"%s\".\n\n" % def_splithist_colour)
 
 optional.add_argument("-sh_rh", "--splithist_rel_height", type=float, default=def_splithist_rel_height, help="Height of the split histogram plots.  Specified as a fraction of the image height.  Default: \"%i\".\n\n" % def_splithist_rel_height)
 
@@ -298,7 +295,7 @@ hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 hist_name_opts = (hist_name_show,args.hist_name_size,args.hist_name_colour,args.hist_name_rel_gap,args.hist_name_position)
-splithist_opts = (splithist_show,args.splithist_range[0],args.splithist_range[1],args.splithist_colour,args.splithist_rel_height)
+splithist_opts = (splithist_show,args.splithist_range[0],args.splithist_range[1],args.splithist_rel_height)
 splithist_label_opts = args.splithist_label_interval
 splithist_grid_opts = args.splithist_grid_interval
 
