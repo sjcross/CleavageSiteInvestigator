@@ -1,10 +1,10 @@
-from utils import abstractmapwriter as amw
+from utils import abstractwriter as aw
 from utils import fileutils as fu
 
 import os
 
 
-class HeatMapWriterCSV(amw.AbstractMapWriter):
+class HeatMapWriterCSV(aw.AbstractWriter):
     ## CONSTRUCTOR
     
     def __init__(self, im_dim=800, event_label_decimal_places = 4, sum_show=True, count_show=True):
@@ -14,9 +14,9 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
         self._sum_show = sum_show
         self._count_show = count_show
 
-    def write_map(self, out_path, freq, ref, pos_range, append_dt):
+    def write(self, out_path, freq, ref, pos_range, append_dt):
         # Getting pos ranges to plot based on available information
-        pos_range = amw.get_double_pos_range(freq, ref, pos_range)
+        pos_range = aw.get_double_pos_range(freq, ref, pos_range)
         if pos_range is None:
             return
 
@@ -25,10 +25,10 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
         file = fu.open_file(root_name, '', 'csv', append_dt)
                 
         # Determining total events in the given position range
-        sum_events = amw.get_sum_events(pos_range, freq)
+        sum_events = aw.get_sum_events(pos_range, freq)
 
         # If showing sum, calculating relevant statistics
-        (freq_t, freq_b) = amw.get_full_sequence_summed_frequency(freq, pos_range)
+        (freq_t, freq_b) = aw.get_full_sequence_summed_frequency(freq, pos_range)
 
         # Initialising string
         str = self._get_header_row(pos_range[0],pos_range[1])
@@ -73,12 +73,12 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
 
         # Iterating over each top-strand position, adding as a new column
         for pos_t in range(pos_t_min, pos_t_max+1):
-            event_pc = amw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + amw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
+            event_pc = aw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + aw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
             row = row + "," + str(self._number_format % event_pc)
 
         # Adding sum if necessary
         if self._sum_show:
-            event_pc = amw.get_event_pc(pos_b, freq_b, sum_events)
+            event_pc = aw.get_event_pc(pos_b, freq_b, sum_events)
             row = row + "," + str(self._number_format % event_pc)
 
         return row + "\n"
@@ -89,7 +89,7 @@ class HeatMapWriterCSV(amw.AbstractMapWriter):
 
         # Adding the sum for each columns
         for pos_t in range(pos_t_min, pos_t_max+1):
-            event_pc = amw.get_event_pc(pos_t, freq_t, sum_events)
+            event_pc = aw.get_event_pc(pos_t, freq_t, sum_events)
             row = row + "," + str(self._number_format % event_pc)
 
         return row + "\n"

@@ -7,7 +7,7 @@ from enum import Enum
 from enums.eventtype import Eventtype
 from matplotlib import cm
 from rich import print
-from utils import abstractmapwriter as amw
+from utils import abstractwriter as aw
 from utils import reportutils as ru
 
 
@@ -36,7 +36,7 @@ class VPOS(Enum):
         return str(self.value)
 
 
-class StrandLinkagePlotWriter(amw.AbstractMapWriter):
+class StrandLinkagePlotWriter(aw.AbstractWriter):
     ## CONSTRUCTOR
 
     def __init__(self,
@@ -155,7 +155,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
     ## PUBLIC METHODS
 
-    def write_map(self,
+    def write(self,
                   out_path,
                   freq,
                   ref=None,
@@ -166,7 +166,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
         elif self._event_stack_order == 2:
             freq = ru.sort_results(freq, False)
 
-        (pos_min, pos_max) = amw.get_single_pos_range(freq, ref, pos_range)
+        (pos_min, pos_max) = aw.get_single_pos_range(freq, ref, pos_range)
 
         # Creating output SVG document
         root_name = os.path.splitext(out_path)[0]
@@ -660,7 +660,7 @@ class StrandLinkagePlotWriter(amw.AbstractMapWriter):
 
         # Getting reference length (or estimating)
         if ref is None:
-            pos_ranges = amw.get_event_pos_range(freq, round=1)
+            pos_ranges = aw.get_event_pos_range(freq, round=1)
             ref_len = max(pos_ranges[1], pos_ranges[3])
         else:
             ref_len = len(ref)

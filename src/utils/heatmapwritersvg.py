@@ -1,5 +1,5 @@
 from matplotlib import cm
-from utils import abstractmapwriter as amw
+from utils import abstractwriter as aw
 
 import datetime as dt
 import math
@@ -7,7 +7,7 @@ import os
 import svgwrite as svg
 
 
-class HeatMapWriterSVG(amw.AbstractMapWriter):
+class HeatMapWriterSVG(aw.AbstractWriter):
     ## CONSTRUCTOR
 
     def __init__(self, im_dim=800, font="Arial", rel_pos=(0.1,0.1,0.8), border_opts=(True,1,"black"), axis_label_opts=(True,16,"gray",50), grid_opts=(True,1,"gray",1), grid_label_opts=(True,12,"gray",10,10), event_colourmap="plasma", event_label_opts=(True,10,"invert",1,True), sum_show=True):
@@ -50,9 +50,9 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
 
         self._sum_show = sum_show
 
-    def write_map(self, out_path, freq, ref, pos_range, append_dt):
+    def write(self, out_path, freq, ref, pos_range, append_dt):
         # Getting pos ranges to plot based on available information
-        pos_range = amw.get_double_pos_range(freq, ref, pos_range)
+        pos_range = aw.get_double_pos_range(freq, ref, pos_range)
         if pos_range is None:
             return
 
@@ -204,8 +204,8 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
         event_dim = (map_x2-map_x1)/(pos_t_max-pos_t_min+1)
 
         # Determining total events and maximum number in a cell
-        max_events = amw.get_max_events(pos_range, freq, self._sum_show)
-        sum_events = amw.get_sum_events(pos_range, freq)
+        max_events = aw.get_max_events(pos_range, freq, self._sum_show)
+        sum_events = aw.get_sum_events(pos_range, freq)
 
         # Adding background
         self._add_background(dwg, pos_range, map_xy)
@@ -216,8 +216,8 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
                 event_x1 = map_x1 + (map_x2-map_x1)*((pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y1 + (map_y2-map_y1)*((pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
-                norm_count = amw.get_event_norm_count((pos_t,pos_b,True), freq, max_events) + amw.get_event_norm_count((pos_t,pos_b,False), freq, max_events)
-                event_pc = amw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + amw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
+                norm_count = aw.get_event_norm_count((pos_t,pos_b,True), freq, max_events) + aw.get_event_norm_count((pos_t,pos_b,False), freq, max_events)
+                event_pc = aw.get_event_pc((pos_t,pos_b,True), freq, sum_events) + aw.get_event_pc((pos_t,pos_b,False), freq, sum_events)
                 if (pos_t,pos_b,True) in freq.keys() or (pos_t,pos_b,False) in freq.keys():                    
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
 
@@ -226,14 +226,14 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
                     
         # If enabled, showing sum row and column
         if self._sum_show:
-            (freq_t, freq_b) = amw.get_full_sequence_summed_frequency(freq, pos_range)
+            (freq_t, freq_b) = aw.get_full_sequence_summed_frequency(freq, pos_range)
 
             for pos_t in range(pos_t_min,pos_t_max+1):
                 event_x1 = map_x1 + (map_x2-map_x1)*((pos_t-pos_t_min)/(pos_t_max-pos_t_min+1))
                 event_y1 = map_y2
 
-                norm_count = amw.get_event_norm_count(pos_t, freq_t, max_events)
-                event_pc = amw.get_event_pc(pos_t, freq_t, sum_events)
+                norm_count = aw.get_event_norm_count(pos_t, freq_t, max_events)
+                event_pc = aw.get_event_pc(pos_t, freq_t, sum_events)
                 if pos_t in freq_t or self._event_label_zeros_show:                    
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
 
@@ -244,8 +244,8 @@ class HeatMapWriterSVG(amw.AbstractMapWriter):
                 event_x1 = map_x2
                 event_y1 = map_y1 + (map_y2-map_y1)*((pos_b-pos_b_min)/(pos_b_max-pos_b_min+1))
 
-                norm_count = amw.get_event_norm_count(pos_b, freq_b, max_events)
-                event_pc = amw.get_event_pc(pos_b, freq_b, sum_events)
+                norm_count = aw.get_event_norm_count(pos_b, freq_b, max_events)
+                event_pc = aw.get_event_pc(pos_b, freq_b, sum_events)
                 if pos_b in freq_b or self._event_label_zeros_show:
                     self._add_event(dwg, event_x1, event_y1, event_dim, norm_count)
 

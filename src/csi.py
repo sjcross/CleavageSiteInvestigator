@@ -230,31 +230,31 @@ if write_strandlinkageplot:
     output = True
     # Showing cleavage event distribution
     strandlinkageplot_writer = slpw.StrandLinkagePlotWriter()
-    strandlinkageplot_writer.write_map(root_name+'_strandlinkageplot.svg', freq_full, ref=reference, append_dt=append_dt)
+    strandlinkageplot_writer.write(root_name+'_strandlinkageplot.svg', freq_full, ref=reference, append_dt=append_dt)
 
 if write_heatmap_svg_auto:
     output = True
     # Showing events as heatmap
     heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_autoheatmap.svg', freq_full, None, None, append_dt)
+    heatmap_writer.write(root_name+'_autoheatmap.svg', freq_full, None, None, append_dt)
 
 if write_heatmap_svg_full:
     output = True
     # Showing events as heatmap
     heatmap_writer = hmws.HeatMapWriterSVG(grid_opts=(False,1,"gray",1), grid_label_opts=(True,12,"gray",100,10), event_label_opts=(False,10,"invert",1,True), sum_show=False)
-    heatmap_writer.write_map(root_name+'_fullheatmap.svg', freq_full, reference, None, append_dt)
+    heatmap_writer.write(root_name+'_fullheatmap.svg', freq_full, reference, None, append_dt)
 
 if write_heatmap_csv_auto:
     output = True
     # Showing events as heatmap
     heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
-    heatmap_writer.write_map(root_name+'_autoheatmap.csv', freq_full, None, None, append_dt)
+    heatmap_writer.write(root_name+'_autoheatmap.csv', freq_full, None, None, append_dt)
 
 if write_heatmap_csv_full:
     output = True
     # Showing events as heatmap
     heatmap_writer = hmwc.HeatMapWriterCSV(sum_show=False)
-    heatmap_writer.write_map(root_name+'_fullheatmap.csv', freq_full, reference, None, append_dt=append_dt)
+    heatmap_writer.write(root_name+'_fullheatmap.csv', freq_full, reference, None, append_dt=append_dt)
 
 # Creating the CSVWriter object
 csv_writer = cu.CSVWriter(extra_nt=extra_nt,local_r=local_r,append_dt=append_dt,double_line_mode=csv_double_line_mode)

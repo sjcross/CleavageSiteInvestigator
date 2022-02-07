@@ -302,4 +302,4 @@ splithist_grid_opts = args.splithist_grid_interval
 
 writer = slpw.StrandLinkagePlotWriter(im_dims=im_dims, font=args.font, rel_pos=rel_pos, dna_opts=dna_opts, end_label_opts=end_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, cbar_opts=cbar_opts, cbar_label_opts=cbar_label_opts, event_opts=event_opts, hist_opts=hist_opts, hist_label_opts=hist_label_opts, hist_grid_opts=hist_grid_opts, hist_name_opts=hist_name_opts, splithist_opts=splithist_opts, splithist_label_opts=splithist_label_opts,splithist_grid_opts=splithist_grid_opts)
 
-writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)

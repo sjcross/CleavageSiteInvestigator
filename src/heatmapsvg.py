@@ -150,4 +150,4 @@ event_colourmap = args.event_colourmap
 event_label_opts = (event_label_show,args.event_label_size,args.event_label_colour,args.event_label_decimal_places,args.event_label_zeros_vis)
 
 writer = hmw.HeatMapWriterSVG(im_dim=im_dim, font=args.font, rel_pos=rel_pos, border_opts=border_opts, axis_label_opts=axis_label_opts, grid_opts=grid_opts, grid_label_opts=grid_label_opts, event_colourmap=event_colourmap,event_label_opts=event_label_opts, sum_show=sum_show)
-writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)

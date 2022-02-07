@@ -56,4 +56,4 @@ count_show = args.count_vis is SHOWHIDE.SHOW
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0,0,0] else None
 
 writer = hmw.HeatMapWriterCSV(event_label_decimal_places = args.event_label_decimal_places, sum_show=sum_show, count_show=count_show)
-writer.write_map_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
