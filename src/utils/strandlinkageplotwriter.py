@@ -454,12 +454,9 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         sign = -1 if is_top else 1
         
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        if (self._splithist_show):
-            hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
-
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
-
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+
         self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, self._hist_label_interval, self._hist_grid_interval, "Sum", is_top)
 
 
@@ -478,23 +475,24 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         
         # Split hist 1
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
-        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ OH", is_top)
-
-        # Split hist 2
-        hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ OH", is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ overhang", is_top)
 
-        # Split hist 3
+        # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
         self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, min_range, max_range, label_interval, grid_interval, "Blunt", is_top)
+
+        # Split hist 3
+        hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
+        hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
+        hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ overhang", is_top)
 
 
     def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, label_interval, grid_interval, name, is_top):

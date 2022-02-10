@@ -29,24 +29,24 @@ class HistogramWriterCSV(aw.AbstractWriter):
         (freq_t_b, freq_b_b) = ru.get_position_frequency(freq, Eventtype.BLUNT)  
                 
         # Initialising string
-        str = "Position, Freq. all (top), Freq. all (bottom), Freq. 5′ (top), Freq. 5′ (bottom), Freq. 3′ (top), Freq. 3′ (bottom), Freq. Blunt (top), Freq. Blunt (bottom)"
+        str = "Position, Freq. all (top), Freq. 5' (top), Freq. Blunt (top), Freq. 3' (top), Freq. all (bottom), Freq. 5' (bottom), Freq. Blunt (bottom), Freq. 3' (bottom)\n"
         file.write(str)
 
         # Iterating over each position, adding the histogram bar
-        for pos in range(pos_min-self._hist_bin_width, pos_max + 1):
+        for pos in range(pos_min-self._hist_bin_width+1, pos_max + 1):
             # Only do the plotting once per bin
             if pos % self._hist_bin_width != 0:
                 continue
             
             str = "%i," % pos
             str = str + "%i," % self._get_bin(freq_t, pos)
-            str = str + "%i," % self._get_bin(freq_b, pos)
             str = str + "%i," % self._get_bin(freq_t_5, pos)
-            str = str + "%i," % self._get_bin(freq_b_5, pos)
-            str = str + "%i," % self._get_bin(freq_t_3, pos)
-            str = str + "%i," % self._get_bin(freq_b_3, pos)
             str = str + "%i," % self._get_bin(freq_t_b, pos)
+            str = str + "%i," % self._get_bin(freq_t_3, pos)
+            str = str + "%i," % self._get_bin(freq_b, pos)
+            str = str + "%i," % self._get_bin(freq_b_5, pos)
             str = str + "%i," % self._get_bin(freq_b_b, pos)
+            str = str + "%i," % self._get_bin(freq_b_3, pos)
             str = str + "\n"
 
             file.write(str)
