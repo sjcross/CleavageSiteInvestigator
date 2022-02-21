@@ -22,12 +22,12 @@ class HISTSPLIT(Enum):
 
 ### DEFAULT PARAMETER VALUES ###
 def_im_w = 800
-def_im_h = 1000
+def_im_h = 700
 
 def_font = "Arial"
 
 def_map_rel_top = 0.43
-def_map_rel_height = 0.16
+def_map_rel_height = 0.14
 def_map_rel_left = 0.075
 def_map_rel_width = 0.78
 
