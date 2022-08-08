@@ -82,6 +82,7 @@ def_hist_rel_height = 0.06
 def_hist_rel_gap = 0.03
 def_hist_pc_bar_gap = 0
 def_hist_overhang = 0
+def_hist_log_vis = SHOWHIDE.HIDE
 
 def_hist_label_vis = SHOWHIDE.SHOW
 def_hist_label_size = 12
@@ -223,6 +224,8 @@ optional.add_argument("-h_pbg", "--hist_pc_bar_gap", type=float, default=def_his
 
 optional.add_argument("-h_o", "--hist_overhang", type=float, default=def_hist_overhang, help="Additional width of histogram plot area along x-axis.  This allows the histogram to be aligned with the outer edges of the DNA sequence text.  Specified in pixel units..  Default: \"%i\".\n\n" % def_hist_overhang)
 
+optional.add_argument("-h_lv", "--hist_log_vis", type=SHOWHIDE, default=def_hist_log_vis, choices=list(SHOWHIDE), help="Controls whether histogram y-axis is shown as logarithmic values.  Must be either \"show\" or \"hide\" (e.g. -hl_v \"show\").  Default: \"%s\".\n\n" % def_hist_log_vis)
+
 optional.add_argument("-hl_v", "--hist_label_vis", type=SHOWHIDE, default=def_hist_label_vis, choices=list(SHOWHIDE), help="Controls whether histogram labels are rendered.  Must be either \"show\" or \"hide\" (e.g. -hl_v \"show\").  Default: \"%s\".\n\n" % def_hist_label_vis)
 
 optional.add_argument("-hl_s", "--hist_label_size", type=int, default=def_hist_label_size, help="Font size of histogram labels.  Default: \"%.1f\".\n\n" % def_hist_label_size)
@@ -274,6 +277,7 @@ cbar_show = args.cbar_vis is SHOWHIDE.SHOW
 cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
 event_outside_range_vis = args.event_outside_range_vis is SHOWHIDE.SHOW
 hist_show = args.hist_vis is SHOWHIDE.SHOW
+hist_log_show = args.hist_log_vis is SHOWHIDE.SHOW
 hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
 hist_label_zero_show = args.hist_label_zero_vis is SHOWHIDE.SHOW
 hist_name_show = args.hist_name_vis is SHOWHIDE.SHOW
@@ -291,7 +295,7 @@ grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,a
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
 event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],event_outside_range_vis,args.event_opacity,args.event_stack_order)
-hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap,args.hist_overhang)
+hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap,args.hist_overhang,hist_log_show)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
 hist_name_opts = (hist_name_show,args.hist_name_size,args.hist_name_colour,args.hist_name_rel_gap,args.hist_name_position)

@@ -50,7 +50,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
                  event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
-                 hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0),
+                 hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0, False),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25),
                  hist_name_opts=(True, 12, "gray", 0.01, HPOS.RIGHT),
@@ -119,6 +119,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         self._hist_rel_gap = hist_opts[6]
         self._hist_pc_bar_gap = hist_opts[7]
         self._hist_overhang = hist_opts[8]
+        self._hist_log_show = hist_opts[9]
 
         self._hist_label_show = hist_label_opts[0]
         self._hist_label_size = hist_label_opts[1]
@@ -201,16 +202,20 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         n_events = sum(freq.values())
 
         if self._hist_show:
+            is_log = self._hist_log_show
+
             (freq_t, freq_b) = ru.get_position_frequency(freq)        
-            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_t, n_events, True)
-            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, n_events, False)
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_t, n_events, is_log, True)
+            self._add_sum_hist(dwg, pos_min, pos_max, map_xy, freq_b, n_events, is_log, False)
 
         if self._splithist_show:
+            is_log = self._hist_log_show
+
             (freq_t_5, freq_b_5) = ru.get_position_frequency(freq, Eventtype.FIVE_P)
             (freq_t_3, freq_b_3) = ru.get_position_frequency(freq, Eventtype.THREE_P)
             (freq_t_b, freq_b_b) = ru.get_position_frequency(freq, Eventtype.BLUNT)        
-            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_t_5, freq_t_3, freq_t_b, n_events, True)
-            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b_5, freq_b_3, freq_b_b, n_events, False)
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_t_5, freq_t_3, freq_t_b, n_events, is_log, True)
+            self._add_splithists(dwg, pos_min, pos_max, map_xy, freq_b_5, freq_b_3, freq_b_b, n_events, is_log, False)
 
         self._add_event_lines(dwg, pos_min, pos_max, map_xy, freq, ref)
 
@@ -445,7 +450,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                     font_size=self._cbar_label_size,
                     fill=self._cbar_label_colour))
 
-    def _add_sum_hist(self, dwg, pos_min, pos_max, map_xy, freq, n_events, is_top):
+    def _add_sum_hist(self, dwg, pos_min, pos_max, map_xy, freq, n_events, is_log, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
         
         hist_x1 = map_x1
@@ -457,10 +462,10 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         hist_y1 = hist_y2 + sign * self._im_h * self._hist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
 
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, self._hist_label_interval, self._hist_grid_interval, "Sum", is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq, n_events, self._hist_min_range, self._hist_max_range, self._hist_label_interval, self._hist_grid_interval, "Sum", is_log, is_top)
 
 
-    def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq_5, freq_3, freq_b, n_events, is_top):
+    def _add_splithists(self, dwg, pos_min, pos_max, map_xy, freq_5, freq_3, freq_b, n_events, is_log, is_top):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
                 
         hist_x1 = map_x1
@@ -478,24 +483,24 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ overhang", is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ overhang", is_log, is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, min_range, max_range, label_interval, grid_interval, "Blunt", is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, min_range, max_range, label_interval, grid_interval, "Blunt", is_log, is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
         hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
-        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ overhang", is_top)
+        self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ overhang", is_log, is_top)
 
 
-    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, label_interval, grid_interval, name, is_top):
+    def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, label_interval, grid_interval, name, is_log, is_top):
         if len(freq) == 0:
             return
 
@@ -513,8 +518,14 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
             hist_max_range = math.ceil((max(freq.values()) / n_events) * 100)
         else:
             hist_max_range = max_range
-            
-        hist_range = hist_max_range - hist_min_range
+
+        hist_min_final_range = hist_min_range
+        hist_max_final_range = hist_max_range
+        if is_log:
+            if hist_min_final_range > 0: hist_min_final_range = math.log(hist_min_final_range)
+            if hist_max_final_range > 0: hist_max_final_range = math.log(hist_max_final_range)
+                    
+        hist_range = hist_max_final_range - hist_min_final_range
 
         # Preventing divide by zero errors
         if hist_range == 0:
@@ -547,15 +558,15 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         # Adding the grid first, so it's at the bottom of the stack
         if self._hist_grid_show:
             for grid_value in range(grid_interval, hist_max_range, grid_interval):
+                if is_log and grid_value > 0: grid_value = math.log(grid_value)
 
-                grid_y = hist_y2 + sign * hist_h * (grid_value - hist_min_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
+                grid_y = hist_y2 + sign * hist_h * (grid_value - hist_min_final_range) / hist_range + self._hist_grid_size / 2 - self._grid_size/2
+
                 dwg.add(svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                                     stroke=self._hist_grid_colour,
                                     stroke_width=self._hist_grid_size))
 
-            grid_y = hist_y2 + sign * hist_h * (
-                hist_max_range -
-                hist_min_range) / hist_range + self._hist_grid_size / 2
+            grid_y = hist_y2 + sign * hist_h * (hist_max_final_range - hist_min_final_range) / hist_range + self._hist_grid_size / 2
             dwg.add(
                 svg.shapes.Line((grid_x1, grid_y), (grid_x2, grid_y),
                                 stroke=self._hist_grid_colour,
@@ -576,7 +587,8 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                 continue
 
             event_pc = (bin_total / n_events) * 100
-            norm_count = (event_pc - hist_min_range) / hist_range
+            if is_log and event_pc > 0: event_pc = math.log(event_pc)
+            norm_count = (event_pc - hist_min_final_range) / hist_range
             
             bar_offset = bar_width * self._hist_bin_width * self._hist_pc_bar_gap * 0.5 / 100
             bar_x1 = max(hist_x1, hist_x1 + bar_width * (pos - pos_min)) + bar_offset
@@ -603,9 +615,12 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                 anchor = "start"
                 label_x = hist_x2 + (self._hist_label_rel_gap * self._im_w)
 
-            hist_range_start = hist_min_range if self._hist_label_zero_show else self.label_interval
+            hist_range_start = hist_min_final_range if self._hist_label_zero_show else self.label_interval
             for label_value in range(hist_range_start, hist_max_range, label_interval):
-                end_label_y = hist_y2 + sign * hist_h * (label_value - hist_min_range) / hist_range
+                label_value_final = label_value
+                if is_log and label_value_final != 0: label_value_final = math.log(label_value_final)
+
+                end_label_y = hist_y2 + sign * hist_h * (label_value_final - hist_min_final_range) / hist_range
                 dwg.add(svg.text.Text(
                         "%i%%" % label_value,
                         insert=(label_x, end_label_y),
@@ -615,7 +630,8 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                         fill=self._hist_label_colour))
 
             # Adding final label (keeping this separate means we still get it, even if it's not on the interval)
-            end_label_y = hist_y2 + sign * hist_h * (hist_max_range - hist_min_range) / hist_range
+            end_label_y = hist_y2 + sign * hist_h * (hist_max_final_range - hist_min_final_range) / hist_range
+            
             dwg.add(svg.text.Text(
                     "%i%%" % hist_max_range,
                     insert=(label_x, end_label_y),
