@@ -11,7 +11,7 @@ from utils import reportutils as ru
 class AbstractWriter():
     ## PUBLIC METHODS
 
-    def write_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False):
+    def write_from_file(self, csv_path, out_path, ref_path="", pos_range=None, append_dt=False, commandStr=''):
         # Loading results from CSV
         cr = cu.CSVReader()
 
@@ -29,10 +29,10 @@ class AbstractWriter():
             filereader = fu.FileReader(verbose=False)
             ref = filereader.read_sequence(ref_path)[0][0][0]
         
-        self.write(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt)
+        self.write(out_path, freq, ref=ref, pos_range=pos_range, append_dt=append_dt, commandStr=commandStr)
 
     @abstractmethod
-    def write(self, out_path, freq, ref=None, pos_range=None, append_dt=False):
+    def write(self, out_path, freq, ref=None, pos_range=None, append_dt=False, commandStr=''):
         pass
 
 def get_single_pos_range(freq, ref, pos_range):

@@ -74,7 +74,7 @@ class CSVWriter():
         self._append_dt = append_dt
         self._double_line_mode = double_line_mode
 
-    def write_individual(self, root_name, results, ref):
+    def write_individual(self, root_name, results, ref, commandStr=''):
         file = fu.open_file(root_name, '_individual', 'csv', append_dt=self._append_dt)
 
         # Initialising string
@@ -85,6 +85,11 @@ class CSVWriter():
         for index, result in enumerate(results.values()):
             row = self._get_individual_result_line(result, index, ref)
             file.write(row)
+
+        # Adding argument line
+        if (commandStr != ''):
+            file.write('\n')
+            file.write('Command: '+commandStr+'\n')
 
         file.close()
 
@@ -131,8 +136,8 @@ class CSVWriter():
             new_row = new_row + seq2
 
         return new_row + '\n'
-        
-    def write_summary(self, root_name, freq, ref, error_count):
+
+    def write_summary(self, root_name, freq, ref, error_count, commandStr=''):
         file = fu.open_file(root_name, '_summary', 'csv', append_dt=self._append_dt)
 
         if freq is None:
@@ -159,6 +164,11 @@ class CSVWriter():
         # Adding a line for the number of errors
         row = self._get_summary_error_line(error_count)
         file.write(row)
+
+        # Adding argument line
+        if (commandStr != ''):
+            file.write('\n')
+            file.write('Command: '+commandStr+'\n')
 
         file.close()
 

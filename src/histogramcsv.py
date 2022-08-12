@@ -1,11 +1,21 @@
 import argparse
+import sys
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
 from utils import histogramwritercsv as hw
 
-def_hist_bin_width = 1
+# Using an enum rather than bool, so default can be set for argparse
+class SHOWHIDE(Enum):
+    HIDE = 'hide'
+    SHOW = 'show'
 
+    def __str__(self):
+        return str(self.value)
+
+### DEFAULT PARAMETER VALUES ###   
+def_hist_bin_width = 1
+def_command_vis = SHOWHIDE.SHOW
 
 ### ARGUMENT PARSING ###
 # Creating ArgumentParser
@@ -32,9 +42,14 @@ optional.add_argument("-pr", "--pos_range", type=int, default=[0,0], nargs=2, he
 
 optional.add_argument("-h_bw", "--hist_bin_width", type=int, default=def_hist_bin_width, help="Number of positions that will be binned into a single bar on the histogram.  Default: \"%.1f\".\n\n" % def_hist_bin_width)
 
+optional.add_argument("-cmv", "--command_vis", type=SHOWHIDE, default=def_command_vis, choices=list(SHOWHIDE), help="Controls whether the command line command is displayed at the top of the map.  Must be either \"show\" or \"hide\" (e.g. -cmv \"show\").  Default: \"%s\".\n\n" % def_command_vis)
+
 args = parser.parse_args()
 
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0] else None
+command_show = args.command_vis is SHOWHIDE.SHOW
 
 writer = hw.HistogramWriterCSV(hist_bin_width=args.hist_bin_width)
-writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+
+commandStr = ' '.join(sys.argv[:]) if command_show else ''
+writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime, commandStr=commandStr)

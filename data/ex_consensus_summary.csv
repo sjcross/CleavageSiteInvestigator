@@ -72,3 +72,5 @@ Blunt end,1,0.12706480304955528,1291,1291,False,GA,TC,5'...TCG|AGC...3'
 3' overhang,1,0.12706480304955528,1302,1291,False,CC,TC,5'...G AGCTCGGTACC|C...3'
 ,,,,,,,,3'...C|TCGAGCCATGG G...5'
 Error,213
+
+Command: .\src\csi.py -ca .\data\ex_cassette.fa -r .\data\ex_reference.fa -co .\data\ex_consensus.fa -ws -wi -whca

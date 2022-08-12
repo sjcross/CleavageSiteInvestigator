@@ -14,7 +14,7 @@ class HeatMapWriterCSV(aw.AbstractWriter):
         self._sum_show = sum_show
         self._count_show = count_show
 
-    def write(self, out_path, freq, ref, pos_range, append_dt):
+    def write(self, out_path, freq, ref, pos_range, append_dt, commandStr):
         # Getting pos ranges to plot based on available information
         pos_range = aw.get_double_pos_range(freq, ref, pos_range)
         if pos_range is None:
@@ -49,6 +49,11 @@ class HeatMapWriterCSV(aw.AbstractWriter):
             # Adding a blank line
             file.write("\n")
             file.write(f"N = {sum_events}")
+
+        # Adding argument line
+        if (commandStr != ''):
+            file.write('\n\n')
+            file.write('Command: '+commandStr+'\n')
 
         file.close()
                

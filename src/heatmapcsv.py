@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
@@ -18,6 +19,7 @@ class SHOWHIDE(Enum):
 def_event_label_decimal_places = 1
 def_sum_vis = SHOWHIDE.SHOW
 def_count_vis = SHOWHIDE.SHOW
+def_command_vis = SHOWHIDE.SHOW
 
 
 ### ARGUMENT PARSING ###
@@ -49,11 +51,16 @@ optional.add_argument("-sv", "--sum_vis", type=SHOWHIDE, default=def_sum_vis, ch
 
 optional.add_argument("-cv", "--count_vis", type=SHOWHIDE, default=def_count_vis, choices=list(SHOWHIDE), help="Controls whether the total number of events is displayed underneath the map.  Must be either \"show\" or \"hide\" (e.g. -cv \"show\").  Default: \"%s\".\n\n" % def_sum_vis)
 
+optional.add_argument("-cmv", "--command_vis", type=SHOWHIDE, default=def_command_vis, choices=list(SHOWHIDE), help="Controls whether the command line command is displayed at the top of the map.  Must be either \"show\" or \"hide\" (e.g. -cmv \"show\").  Default: \"%s\".\n\n" % def_command_vis)
+
 args = parser.parse_args()
 
 sum_show = args.sum_vis is SHOWHIDE.SHOW
 count_show = args.count_vis is SHOWHIDE.SHOW
+command_show = args.command_vis is SHOWHIDE.SHOW
 pos_range = tuple(args.pos_range) if args.pos_range != [0,0,0,0] else None
 
 writer = hmw.HeatMapWriterCSV(event_label_decimal_places = args.event_label_decimal_places, sum_show=sum_show, count_show=count_show)
-writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime)
+
+commandStr = ' '.join(sys.argv[:]) if command_show else ''
+writer.write_from_file(args.data_path, args.out_path, ref_path=args.ref_path, pos_range=pos_range, append_dt=args.append_datetime, commandStr=commandStr)

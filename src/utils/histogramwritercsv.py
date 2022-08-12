@@ -14,7 +14,7 @@ class HistogramWriterCSV(aw.AbstractWriter):
     def __init__(self, hist_bin_width=1):
         self._hist_bin_width = hist_bin_width
     
-    def write(self, out_path, freq, ref, pos_range, append_dt):
+    def write(self, out_path, freq, ref, pos_range, append_dt, commandStr):
         # Getting pos range to plot based on available information
         (pos_min, pos_max) = aw.get_single_pos_range(freq, ref, pos_range)
         
@@ -50,6 +50,11 @@ class HistogramWriterCSV(aw.AbstractWriter):
             str = str + "\n"
 
             file.write(str)
+
+        # Adding argument line
+        if (commandStr != ''):
+            file.write('\n')
+            file.write('Command: '+commandStr+'\n')
 
         file.close()
         
