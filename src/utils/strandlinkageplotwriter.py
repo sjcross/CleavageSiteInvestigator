@@ -4,6 +4,7 @@ import os
 import svgwrite as svg
 
 from enum import Enum
+from enums.oor_mode import OOR_mode
 from enums.eventtype import Eventtype
 from matplotlib import cm
 from rich import print
@@ -49,7 +50,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                  grid_label_opts=(True, 12, "gray", 500, 0.04),
                  cbar_opts=(True, 0.91, 0.02, 1),
                  cbar_label_opts=(True, 12, "gray", 25, 0.02),
-                 event_opts=(0.5, 2, "cool", 0, 100, True, 0.4, 1),
+                 event_opts=(0.5, 2, "cool", 0, 100, OOR_mode.ALL, 0.4, 1),
                  hist_opts=(True, 0, 100, 2, "darkgray", 0.16, 0.07, 20, 0, False),
                  hist_label_opts=(True, 12, "gray", 25, 0.01, HPOS.LEFT, True),
                  hist_grid_opts=(True, 1, "lightgray", 25),
@@ -106,7 +107,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         self._event_colourmap = event_opts[2]
         self._event_min_range = event_opts[3]
         self._event_max_range = event_opts[4]
-        self._event_outside_range_show = event_opts[5]
+        self._event_outside_range_mode = event_opts[5]
         self._event_opacity = event_opts[6]
         self._event_stack_order = event_opts[7]
 
@@ -161,7 +162,8 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                   freq,
                   ref=None,
                   pos_range=None,
-                  append_dt=False):
+                  append_dt=False,
+                  commandStr=''):
         if self._event_stack_order == 1:
             freq = ru.sort_results(freq, True)
         elif self._event_stack_order == 2:
@@ -502,7 +504,8 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
 
     def _add_hist(self, dwg, pos_min, pos_max, hist_xy, freq, n_events, min_range, max_range, label_interval, grid_interval, name, is_log, is_top):
         if len(freq) == 0:
-            return
+            hist_min_range = 0
+            hist_max_range = 0
 
         (hist_x1, hist_y1, hist_x2, hist_y2) = hist_xy
         bar_width = (hist_x2 - hist_x1) / (pos_max - pos_min)
@@ -681,7 +684,7 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
 
         for (cleavage_site_t, cleavage_site_b, split) in freq.keys():
             # Checking this event is within the rendered range
-            if self._event_outside_range_show:
+            if self._event_outside_range_mode is OOR_mode.ALL:
                 if split:
                     # Skipping any split events which don't span the displayed range
                     if (cleavage_site_t < pos_min or cleavage_site_t >= pos_max) and (cleavage_site_b < pos_min or cleavage_site_b >= pos_max):
@@ -690,9 +693,13 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
                     # Skipping any non-split events which don't span the displayed range
                     if (cleavage_site_t < pos_min and cleavage_site_b < pos_min) or (cleavage_site_t >= pos_max and cleavage_site_b >= pos_max):
                         continue
-            else:
-                # Skipping any events which don't start or end in the displayed range
+            elif self._event_outside_range_mode is OOR_mode.BOTH_IN:
+                # Skipping any events which don't start and end in the displayed range
                 if (cleavage_site_t < pos_min or cleavage_site_t >= pos_max) or (cleavage_site_b < pos_min or cleavage_site_b >= pos_max):
+                    continue
+            elif self._event_outside_range_mode is OOR_mode.ONE_IN:
+                # Skipping any events which don't start or end in the displayed range
+                if (cleavage_site_t < pos_min or cleavage_site_t >= pos_max) and (cleavage_site_b < pos_min or cleavage_site_b >= pos_max):
                     continue
 
             event_pc = (freq.get(

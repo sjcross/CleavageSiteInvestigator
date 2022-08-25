@@ -2,6 +2,7 @@ import argparse
 
 from argparse import RawTextHelpFormatter
 from enum import Enum
+from enums import oor_mode
 from utils import strandlinkageplotwriter as slpw
 
 
@@ -69,7 +70,7 @@ def_event_max_size = 2
 def_event_colourmap = "cool"
 def_event_min_range = 0
 def_event_max_range = 100
-def_event_outside_range_vis = SHOWHIDE.HIDE
+def_event_outside_range_mode = oor_mode.OOR_mode.BOTH_IN
 def_event_opacity = 1
 def_event_stack_order = 1
 
@@ -202,7 +203,7 @@ optional.add_argument("-e_c", "--event_colourmap", type=str, default=def_event_c
 
 optional.add_argument("-e_r", "--event_range", type=int, default=[def_event_min_range,def_event_max_range], nargs=2, help="Range of values colourscale will span (specified as percentage of all events).  For automatic range selection, set both values to -1 (e.g. -e_r -1 -1).  Default: \"%i %i\".\n\n" % (def_event_min_range,def_event_max_range))
 
-optional.add_argument("-e_orv", "--event_outside_range_vis", type=SHOWHIDE, default=def_event_outside_range_vis, choices=list(SHOWHIDE), help="Controls whether events not entirely within the displayed range are included in the strandlinkageplot.  Must be either \"show\" or \"hide\" (e.g. -e_orv \"show\").  Default: \"%s\".\n\n" % def_event_outside_range_vis)
+optional.add_argument("-e_orm", "--event_outside_range_mode", type=oor_mode.OOR_mode, default=def_event_outside_range_mode, choices=list(oor_mode.OOR_mode), help="Controls whether events not entirely within the displayed range are included in the strandlinkageplot.  Must be either \"all\" (shows all events, irrespective of whether they have ends within the specified range), \"both_in\" (both ends must be in the specified range) or \"one_in\" (at least one end must be in the specified range) (e.g. -e_orm \"both_in\").  Default: \"%s\".\n\n" % def_event_outside_range_mode)
 
 optional.add_argument("-e_o", "--event_opacity", type=float, default=def_event_opacity, help="Opacity of each event line.  Values in the range 0-1.  Default: \"%.1f\".\n\n" % def_event_opacity)
 
@@ -275,7 +276,6 @@ grid_show = args.grid_vis is SHOWHIDE.SHOW
 grid_label_show = args.grid_label_vis is SHOWHIDE.SHOW
 cbar_show = args.cbar_vis is SHOWHIDE.SHOW
 cbar_label_show = args.cbar_label_vis is SHOWHIDE.SHOW
-event_outside_range_vis = args.event_outside_range_vis is SHOWHIDE.SHOW
 hist_show = args.hist_vis is SHOWHIDE.SHOW
 hist_log_show = args.hist_log_vis is SHOWHIDE.SHOW
 hist_label_show = args.hist_label_vis is SHOWHIDE.SHOW
@@ -294,7 +294,7 @@ grid_opts = (grid_show,args.grid_size,args.grid_colour,args.grid_interval)
 grid_label_opts = (grid_label_show,args.grid_label_size,args.grid_label_colour,args.grid_label_interval,args.grid_label_rel_gap)
 cbar_opts = (cbar_show,args.cbar_rel_pos[0],args.cbar_rel_pos[1],args.cbar_size)
 cbar_label_opts = (cbar_label_show,args.cbar_label_size,args.cbar_label_colour,args.cbar_label_interval,args.cbar_label_rel_gap)
-event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],event_outside_range_vis,args.event_opacity,args.event_stack_order)
+event_opts = (args.event_min_size,args.event_max_size,args.event_colourmap,args.event_range[0],args.event_range[1],args.event_outside_range_mode,args.event_opacity,args.event_stack_order)
 hist_opts = (hist_show,args.hist_range[0],args.hist_range[1],args.hist_bin_width,args.hist_colour,args.hist_rel_height,args.hist_rel_gap,args.hist_pc_bar_gap,args.hist_overhang,hist_log_show)
 hist_label_opts = (hist_label_show,args.hist_label_size,args.hist_label_colour,args.hist_label_interval,args.hist_label_rel_gap,args.hist_label_position,hist_label_zero_show)
 hist_grid_opts = (hist_grid_show,args.hist_grid_size,args.hist_grid_colour,args.hist_grid_interval)
