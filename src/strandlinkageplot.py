@@ -128,10 +128,10 @@ required.add_argument("-d", "--data_path", type=str, required=True, help= "Path 
 
 required.add_argument("-o", "--out_path", type=str, help="Path to location where .svg file will be written.  This should be a complete path including the filename and extension.\n\n")
 
+required.add_argument("-r", "--ref_path", type=str, required=True, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
+
 # Reinserting optional arguments and defining new values
 parser._action_groups.append(optional)
-
-optional.add_argument("-r", "--ref_path", type=str, help="Path to reference sequence file.  This is the sequence which has been digested.\n\n")
 
 optional.add_argument("-ad", "--append_datetime", action='store_true', help="Append time and date to all output filenames (prevents accidental file overwriting)\n\n")
 

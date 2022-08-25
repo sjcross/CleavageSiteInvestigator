@@ -474,7 +474,8 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         hist_x2 = map_x2
         
         sign = -1 if is_top else 1
-
+        offs = 1 if self._hist_show else 0
+        
         min_range = self._splithist_min_range
         max_range = self._splithist_max_range
         label_interval = self._splithist_label_interval
@@ -482,21 +483,21 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         
         # Split hist 1
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y2 = hist_y2 + sign * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y2 = hist_y2 + sign * (offs) * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
         self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_5, n_events, min_range, max_range, label_interval, grid_interval, "5′ overhang", is_log, is_top)
 
         # Split hist 2
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y2 = hist_y2 + sign * 2 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y2 = hist_y2 + sign * (1+offs) * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
         self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_b, n_events, min_range, max_range, label_interval, grid_interval, "Blunt", is_log, is_top)
 
         # Split hist 3
         hist_y2 = (map_y1 if is_top else map_y2) + sign * (self._hist_rel_gap * self._im_h)
-        hist_y2 = hist_y2 + sign * 3 * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
+        hist_y2 = hist_y2 + sign * (2+offs) * (self._hist_rel_gap + self._splithist_rel_height) * self._im_h
         hist_y1 = hist_y2 + sign * self._im_h * self._splithist_rel_height
         hist_xy = (hist_x1, hist_y1, hist_x2, hist_y2)
         self._add_hist(dwg, pos_min, pos_max, hist_xy, freq_3, n_events, min_range, max_range, label_interval, grid_interval, "3′ overhang", is_log, is_top)
@@ -655,9 +656,6 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
             dwg.add(svg.text.Text(name, insert=(name_x, name_y), style=f"text-anchor:{anchor};font-family:{self._font};dominant-baseline:mathematical",
                         font_size=self._hist_name_size, fill=self._hist_name_colour))
 
-    def _add_splithist():
-        print("TO ADD - SPLITHIST (could just re-use main _add_hist function")
-
     def _add_event_lines(self, dwg, pos_min, pos_max, map_xy, freq, ref):
         if len(freq) == 0:
             return
@@ -791,18 +789,21 @@ class StrandLinkagePlotWriter(aw.AbstractWriter):
         rgba = cmap(norm_count)
         col = "rgb(%i,%i,%i)" % (rgba[0] * 255, rgba[1] * 255, rgba[2] * 255)
 
-        dwg.add(
-            svg.shapes.Line((event_t_x1, event_t_y1), (event_t_x2, event_t_y2),
-                            stroke=col,
-                            stroke_width=event_width,
-                            style="stroke-linecap:square;stroke-opacity:%f" %
-                            self._event_opacity))
-        dwg.add(
-            svg.shapes.Line((event_b_x1, event_b_y1), (event_b_x2, event_b_y2),
-                            stroke=col,
-                            stroke_width=event_width,
-                            style="stroke-linecap:square;stroke-opacity:%f" %
-                            self._event_opacity))
+        if (cleavage_site_t >= pos_min):
+            dwg.add(
+                svg.shapes.Line((event_t_x1, event_t_y1), (event_t_x2, event_t_y2),
+                                stroke=col,
+                                stroke_width=event_width,
+                                style="stroke-linecap:square;stroke-opacity:%f" %
+                                self._event_opacity))
+        
+        if (cleavage_site_b <= pos_max):
+            dwg.add(
+                svg.shapes.Line((event_b_x1, event_b_y1), (event_b_x2, event_b_y2),
+                                stroke=col,
+                                stroke_width=event_width,
+                                style="stroke-linecap:square;stroke-opacity:%f" %
+                                self._event_opacity))
 
     def _crop_events_to_range(self, t_x_in, t_y_in, b_x_in, b_y_in, map_xy):
         (map_x1, map_y1, map_x2, map_y2) = map_xy
